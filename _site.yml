@@ -1,0 +1,40 @@
+name: "Empirical evaluation of technical replication of polygenic scores"
+output_dir: "."
+navbar:
+  title: "PGS|Consistency"
+  right:
+    - text: "Intro"
+      href: index.html
+    - text: "Predictors"
+      href: 0_PredictorPrep.html
+    - text: "GRP_ChipData"
+      href: 1_GRP_ChipData.html
+    - text: "QIMR_ChipData"
+      href: 2_QIMR_ChipData.html
+    - text: "WGS"
+      href: 3_WGS.html
+    - text: "LowPass"
+      href: 4_LowPassSeq.html
+    - text: "Consistency"
+      href: 5_Consistency.html
+    - text: "Imputation Panel"
+      href: 10_Imputation_Panel_effect.html
+    - text: "MissingSNP"
+      href: 6_MissingSNP.html
+    - text: "Convert_function"
+      href: 11_convert_function.html
+    - text: "Benchmarking"
+      href: 7_Benchmarking.html
+
+
+output:
+  html_document:
+    theme: lumen
+    toc: no
+    toc_float: yes
+    toc_depth: 2
+    number_sections: yes
+    df_print: paged
+    code_folding: show
+    lib_dir: site_libs
+    self_contained: no

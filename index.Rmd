@@ -1,0 +1,30 @@
+---
+title: "Empirical evaluation of technical replication of polygenic scores"
+author: "Tian Lin, Naomi Wray"
+output: 
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# You need these libraries to run this template:
+library(rmarkdown)    # install.packages("rmarkdown") 
+library(epuRate)      # devtools::install_github("holtzy/epuRate", force=TRUE)
+```
+
+<br><br><br><br>
+
+
+
+
+
+The purpose of the study is to demonstrate the technical robustness of PGS despite genome-wide genetic data being generated on different platforms and processed in different pipelines. 
+
+Polygenic scores (PGS) have emerged as a widely-used approach in genetic research, positioned for translation into clinical application. However, the consistency of PGS measurements across different technical batches and platforms is not well documented.
+To address this, we accessed genome-wide data generated on two CEPH control samples which have been included as a technical benchmarks across each batch processed in our lab. These data were generated across multiple platforms: Illumina and Affymetrix arrays (up to 25 times per array type), ~1X low-pass whole genome sequence (WGS), as well as ~30X WGS sourced from the 1000G project's public dataset. Data were processed through standard quality control pipelines and imputed to the HRC reference hosted locally. 
+
+PGS were generated for each copy of the genome-wide data using the state-of-the-art method SBayesRC derived from genome-wide association data for 115 traits.  SBayesRC generates SNP weights for 7million SNPs with a default LD reference data; for a handful of traits the GWAS data available were sparse and so SNP weights for  only 1 million SNPs were generated for PGS calculation.
+
+Our results provide an empirical demonstration of minimal differences in PGS across genotyping batches and technical platforms particularly for the highly polygenic traits. For the small number of traits with very large effect SNPs, PGS are significantly impacted when the high effect SNPs are missed or incorrectly read. Our results provide the empirical support validating that PGS are subject to very little technical variability.

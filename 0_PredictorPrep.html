@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Tian Lin" />
+
+
+<title>Prepare Predictors using SBayesRC</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/lumen.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PGS|Consistency</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="index.html">Intro</a>
+</li>
+<li>
+  <a href="0_PredictorPrep.html">Predictors</a>
+</li>
+<li>
+  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+</li>
+<li>
+  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+</li>
+<li>
+  <a href="3_WGS.html">WGS</a>
+</li>
+<li>
+  <a href="4_LowPassSeq.html">LowPass</a>
+</li>
+<li>
+  <a href="5_Consistency.html">Consistency</a>
+</li>
+<li>
+  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
+</li>
+<li>
+  <a href="6_MissingSNP.html">MissingSNP</a>
+</li>
+<li>
+  <a href="11_convert_function.html">Convert_function</a>
+</li>
+<li>
+  <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Prepare Predictors using SBayesRC</h1>
+<h4 class="author">Tian Lin</h4>
+
+</div>
+
+
+<div id="intro" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Intro</h1>
+</div>
+<div id="gwas-summary-data" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> GWAS summary data</h1>
+<p>It has become a standard to share and make publicly available the
+summary-level data when publishing a GWAS study. However, there is not a
+unified format of the summay-level data. To make a gwas summary data
+into a proper input file for downstream analysis, such as <a
+href="https://cnsgenomics.com/software/gctb/#SBayesRCTutorial">SBayesRC</a>
+and <a
+href="https://yanglab.westlake.edu.cn/software/gcta/#COJO">COJO</a>, we
+need to format it and check the quality.</p>
+<p>This is a summary of formatting, QC and solving missing information
+of a GWAS sumstat for analysis using SBayesRC.</p>
+<pre class="r"><code># read in the data
+file.name = &quot;PGCALZ2sumstatsExcluding23andMe.txt&quot;
+gwas = data.frame(fread(file.name))</code></pre>
+<p>Start with an empty COJO format table. Column names and order are
+crucial for a lot of softwares. We will transfer the corresponding
+information from raw data to each column in the following sections.</p>
+<pre class="r"><code># make a new table in stardard format
+n.snp = nrow(gwas)
+formatted.gwas = data.frame(
+  matrix(NA, nrow = n.snp, ncol = 8)
+)
+colnames(formatted.gwas) = c(&quot;SNP&quot;, &quot;A1&quot;, &quot;A2&quot;, &quot;freq&quot;, &quot;b&quot;, &quot;se&quot;, &quot;p&quot;, &quot;N&quot;)</code></pre>
+<div id="snp-id" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> SNP ID</h2>
+<p>The commonly used SNP ID is dbSNP IDs, while sometimes there are only
+physical position of the SNPs and alleles, such as the example data we
+are using here.</p>
+<p>There are a lot of resources for dbSNP information, such as in <a
+href="https://www.ncbi.nlm.nih.gov/variation/docs/human_variation_vcf/">NCBI</a>,
+<a
+href="https://gatk.broadinstitute.org/hc/en-us/articles/360035890811-Resource-bundle">Resource
+bundle from GATK</a>, <a
+href="https://www.internationalgenome.org/data/">1000Genome study</a> or
+<a href="https://ega-archive.org/datasets/EGAD00001002729">Haplotype
+Reference Consortium</a>.</p>
+<p>All the data used in my study which need to refill SNP IDs were from
+human genome build 37, so we will use a reference data from the same
+build to infer the IDs.</p>
+<p>If the gwas data you are working are is using build 38, make sure you
+also use a reference data from build 38.</p>
+<p>For convenience, I will borrow the snp.info file from
+eigen-decomposed LD reference to refill the dbSNP IDs. Some of the SNPs
+in the summary data don’t exist in this reference data, so their
+information can’t be refilled in this practice, but it doesn’t matter to
+my further analysis of profiling PRS using the SBayesRC predictors.</p>
+<pre class="r"><code># read in a reference data for missing information
+freq.file=&quot;/data/module5/alz/snp.info&quot;
+ref.freq = data.frame(fread(freq.file))
+head(ref.freq)</code></pre>
+<p>By matching chromosome, bp position and allelele, we will get the
+dbSNP ID for the SNPs in our predictor, and put it in the formatted data
+frame.<br />
+Since the two alleles of a SNP can be regarded as effect allele or
+reference allele by chance, we will do a bit of trick in the matching by
+aligning them in character sequence.</p>
+<pre class="r"><code>colname.SNP = &quot;missing&quot;
+
+colname.chr = &quot;chr&quot;
+colname.pos = &quot;PosGRCh37&quot;
+colname.A1 = &quot;testedAllele&quot;
+colname.A2 = &quot;otherAllele&quot;</code></pre>
+<pre class="r"><code>if(   (colname.SNP != &quot;missing&quot;)  ){
+  
+  formatted.gwas$SNP = gwas[,colname.SNP]
+  
+}else{
+  
+  gwas$A = pmin(toupper(gwas[,colname.A1]), toupper(gwas[,colname.A2]))
+  gwas$B = pmax(toupper(gwas[,colname.A1]), toupper(gwas[,colname.A2]))
+  gwas$chrbpAB = paste0(gwas[,colname.chr], &quot;_&quot;, gwas[,colname.pos], &quot;_&quot;, gwas$A, &quot;_&quot;, gwas$B)
+  
+  ref.freq$A = with(ref.freq, pmin(A1, A2))
+  ref.freq$B = with(ref.freq, pmax(A1, A2))
+  ref.freq$chrbpAB = paste0(ref.freq$Chrom, &quot;_&quot;, ref.freq$PhysPos, &quot;_&quot;, ref.freq$A, &quot;_&quot;, ref.freq$B)
+  
+  gwas$matched_RSID = ref.freq[match(gwas$chrbpAB , ref.freq$chrbpAB), &quot;ID&quot;] 
+  gwas[ !(gwas$chrbpAB %in%ref.freq$chrbpAB), &quot;matched_RSID&quot;]  =  gwas[ !(gwas$chrbpAB %in%ref.freq$chrbpAB), &quot;chrbpAB&quot; ]  
+  
+  formatted.gwas$SNP = gwas$matched_RSID
+  
+}
+
+head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
+<p>All the target data and reference data we used are from human genome
+build 37.</p>
+</div>
+<div id="alleles" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Alleles</h2>
+<p>Naming of alleles can be various. They could be named as
+“EffectAllele” vs “NonEffectAllele”, or “A1” vs. “A2”, or
+“ReferenceAllele” vs. “AlternativeAllele”, etc. We need to make it clear
+which allele is the effect allele, by reading the README files or online
+instructions for the data.</p>
+<p>In COJO format GWAS file, we always have effect allele in the column
+A1.</p>
+<p>If the alleles are in lower case, make sure you make them uppercase
+in the formattted data.</p>
+<pre class="r"><code>formatted.gwas$A1= toupper(gwas[,colname.A1])
+formatted.gwas$A2 = toupper(gwas[,colname.A2])</code></pre>
+<p><strong>Alleles in a SNP must match up to the alleles in LD reference
+data.</strong> Most softwares do the allele match up for you, but you
+can also give it a check to make sure the same dbSNP ID in your data
+have the exactly same two alleles as in the LD reference data.</p>
+<p>If non-effect allele (A2) is missing, refill from reference:</p>
+<pre class="r"><code>if(colname.A2 != &quot;missing&quot;){
+  
+    formatted.gwas$A2 = toupper(gwas[,colname.A2])
+  
+}else{
+    ref.freq$A1A2= paste0(ref.freq$A1, ref.freq$A2)
+    gwas$A1A2 = ref.freq[match(gwas[,colname.SNP] , ref.freq$ID),&quot;A1A2&quot;]
+    gwas$A1A2 = as.character(gwas$A1A2)
+    gwas[,colname.A1] = as.character(gwas[,colname.A1])
+    
+    # Create new column &#39;other_allele&#39;
+    gwas$other_allele &lt;- mapply(function(a1a2, test_allele) {
+      paste0(setdiff(strsplit(a1a2, &quot;&quot;)[[1]], test_allele), collapse = &quot;&quot;)
+    }, gwas$A1A2, gwas[,colname.A1])
+    
+    formatted.gwas$A2 = gwas$other_allele
+
+}</code></pre>
+</div>
+<div id="p-value" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> p value</h2>
+<p>P value is commonly reported in the summary data. We can just take
+the column.<br />
+The p value can get very small values, and it is in scientific format.
+Sometimes some softwares would recognize it as characters. We can use
+as.numeric to force it as numeric.</p>
+<pre class="r"><code>colname.p = &quot;p&quot;
+formatted.gwas$p = as.numeric(gwas[,colname.p])
+
+head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
+<p>If p value column is in -log10 scale, we need convert it back to p,
+and be careful with the values of “inf”. Although this situation is very
+rare.</p>
+</div>
+<div id="sample-size" class="section level2" number="2.4">
+<h2><span class="header-section-number">2.4</span> Sample Size</h2>
+<p>Sample size is sometimes missing in the summary data, when we will
+have to find it out from the publication.</p>
+<p>Sometimes disease data would like to include the sample size as two
+columns, as cases and controls separately. If that’s the case, we will
+add them up, or calculate effective sample size. Be aware that, it’s
+recommended to use the real sample size (case + control) in SBayesRC
+method.</p>
+<p>If it is NCHROBS (number chromosomes observed) reported in summary
+data, we will divide the number by 2.</p>
+<pre class="r"><code>colname.N = &quot;N&quot;
+
+sample.size.names=unlist(strsplit(colname.N, &quot;,&quot;))
+
+if(length(sample.size.names)==1){
+  if(is.na(as.numeric(colname.N) )== T) {
+    if(colname.N == &quot;NCHROBS&quot;){
+      formatted.gwas$N = 0.5* (gwas[, colname.N])
+    }else{
+      formatted.gwas$N = gwas[, colname.N]
+    }
+  }else{
+    formatted.gwas$N = as.numeric(colname.N)
+  }
+}else{
+  formatted.gwas$N= gwas[, sample.size.names[1]] + gwas[,sample.size.names[2]]
+}
+
+head(formatted.gwas)</code></pre>
+<p><br> <br></p>
+<p>Per SNP sample size can be very different when the data is from a
+study of meta analysis. We can do a QC by excluding SNPs with too
+different sample size. Since the distribution is different for each
+study, it can be arbitrary to give it a cutline of sample size, or a
+specified number of SD. Another way of QC is to exclude the SNPs with
+very low number of sample size. At the same time, we don’t want to lose
+too many SNPs.</p>
+<p>There is not a standardized way of sample size QC, and the decision
+also depends on the downstream analysis. By checking the distribution of
+it, we can get a clue of what to fix when you get a killed job in the
+next step.</p>
+</div>
+<div id="allele-frequency" class="section level2" number="2.5">
+<h2><span class="header-section-number">2.5</span> Allele Frequency</h2>
+<p>The two alleles in reference data and in gwas summary data could be
+swapped. We will firstly calculate the effect allele frequency in the
+reference data.</p>
+<pre class="r"><code>ref.freq$gwasA1 = formatted.gwas[match(ref.freq$ID, formatted.gwas$SNP),&quot;A1&quot;]
+ref.freq$sign = sign(( as.numeric(ref.freq$gwasA1  == ref.freq$A1))-0.5)
+ref.freq$gwasA1freq= abs(as.numeric(ref.freq$gwasA1  != ref.freq$A1) - ref.freq$A1Freq)</code></pre>
+<p><br> <br></p>
+<p>Allele frequency is sometimes separately included for cases and
+controls. If that’s the case, we will do a calculation with the number
+of cases and controls.</p>
+<p><span class="math display">\[
+f = \frac{N_{\text{case}} f_{\text{case}} + N_{\text{ctrl}}
+f_{\text{ctrl}}}{N_{\text{case}} + N_{\text{ctrl}}}
+\]</span> - <em>f</em> is the allele frequency.<br />
+- <em>N</em> is the sample size</p>
+<p>If allele frequency is available, we can compare it to the reference
+data in a plot, and remove the outliers.</p>
+<p>If allele frequency is missing, we can borrow that information from a
+reference data. This is what happened in our toy data.</p>
+<pre class="r"><code>colname.freq = &quot;missing&quot;
+
+allele.frequency.names=unlist(strsplit(colname.freq, &quot;,&quot;))
+
+if(length(allele.frequency.names) == 2) {
+  
+  ## Allele frequency is sometimes separately included for cases and controls. 
+  freq.case = allele.frequency.names[1]
+  freq.control = allele.frequency.names[2]
+  N.case = sample.size.names[1]
+  N.control = sample.size.names[2]
+  
+  formatted.gwas$freq = ( (gwas[,freq.case] * gwas[,N.case]) + (gwas[,freq.control] * gwas[,N.control]) ) /(gwas[,N.case] + gwas[,N.control])
+  ref.freq$freq.in.gwas = formatted.gwas[match(ref.freq$ID, formatted.gwas$SNP) , &quot;freq&quot;]
+  freq.plot = ggplot(data = ref.freq, aes(x = gwasA1freq, y =freq.in.gwas )) + geom_point(size = 0.2) + xlab(&quot;AF in reference data&quot;) + ylab(&quot;AF in GWAS summary statistic&quot;)
+  ggsave(paste0(file.name, &quot;_AF_plot.png&quot;), freq.plot, height = 8, width = 8)
+  
+}else{
+  
+  ## allele frequency is sometimes missing
+  if(colname.freq == &quot;missing&quot;){
+    formatted.gwas$freq = ref.freq[match( formatted.gwas$SNP, ref.freq$ID),&quot;gwasA1freq&quot;]
+    
+  }else{
+    
+    # if freq is available, we will compare it with reference data and make a plot
+    formatted.gwas$freq = as.numeric( gwas[,colname.freq] )
+    ref.freq$freq.in.gwas = formatted.gwas[match(ref.freq$ID, formatted.gwas$SNP) , &quot;freq&quot;]
+    freq.plot = ggplot(data = ref.freq, aes(x = gwasA1freq, y =freq.in.gwas )) + 
+      geom_point(size = 0.2) + 
+      xlab(&quot;AF in reference data&quot;) + 
+      ylab(&quot;AF in GWAS summary statistic&quot;)
+    ggsave(paste0(file.name, &quot;_AF_plot.png&quot;), freq.plot, height = 8, width = 8)
+    
+  }
+}
+
+head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
+<p><br> <br></p>
+<p>Here is an example plot from another data. You can use a difference
+threshold 0.2 to exclude outlying SNPs.</p>
+<p>An example code to QC on allele frequency here:</p>
+<pre class="r"><code>## example command. Don&#39;t run it.
+freq.outlier = ref.freq[which(abs(ref.freq$gwasA1freq - ref.freq$freq.in.gwas) &gt; 0.2), &quot;ID&quot;]</code></pre>
+</div>
+<div id="effect-size" class="section level2" number="2.6">
+<h2><span class="header-section-number">2.6</span> Effect Size</h2>
+<p>Effect size is usually named as “effect” or “b”. If it’s reported as
+OR, odds ratio, we will do a log transformation.</p>
+<p>If effect size is missing, and only z score is supplied, we will
+calculate effect size with z score, allele frequency and sample size,
+assuming phenotypic variance is equal to 1.</p>
+<p><span class="math display">\[
+b = \frac{z}{\sqrt{2 \cdot f \cdot (1 - f) \cdot (N + z^2)}}
+\]</span></p>
+<p>where:<br />
+- <em>z</em> is the z-score.<br />
+- <em>f</em> is the allele frequency.<br />
+- <em>N</em> is the sample size.</p>
+<pre class="r"><code>colname.b = &quot;missing&quot; 
+colname.z = &quot;z&quot;
+
+
+if(colname.b == &quot;missing&quot; &amp; colname.z != &quot;missing&quot;){
+  formatted.gwas$z = gwas[,colname.z]
+  formatted.gwas$b = ( formatted.gwas$z )/( ((2 *(formatted.gwas$freq) * (1 - formatted.gwas$freq) * ( formatted.gwas$N + (formatted.gwas$z)^2)))^0.5 )
+}  else if(colname.b == &quot;OR&quot; | colname.b == &quot;odds_ratio&quot;){
+  formatted.gwas$b = log(gwas[,colname.b])
+}else{
+  formatted.gwas$b = gwas[,colname.b]
+}
+
+head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
+</div>
+<div id="standard-error-of-effect-size" class="section level2"
+number="2.7">
+<h2><span class="header-section-number">2.7</span> Standard error of
+effect size</h2>
+<p>If <em>se</em> is missing, we calculate it from effect size, allele
+frequency and sample size using the formula, assuming phenotypic
+variance is equal to 1.</p>
+<p><span class="math display">\[
+\text{se} = \frac{1}{\sqrt{2 \cdot f \cdot (1 - f) \cdot (N + z^2)}}
+\]</span></p>
+<p>where:<br />
+- <em>z</em> is the z-score.<br />
+- <em>f</em> is the allele frequency.<br />
+- <em>N</em> is the sample size.</p>
+<pre class="r"><code>colname.se = &quot;missing&quot;
+
+if(colname.se == &quot;missing&quot;){
+  
+  formatted.gwas$z = sign(formatted.gwas$b) * abs( qnorm(formatted.gwas$p/2) )
+  formatted.gwas$se =1/sqrt(2 * formatted.gwas$freq *(1 - formatted.gwas$freq) *(formatted.gwas$N +  (formatted.gwas$z ^ 2)  )  )
+  
+}else{
+  
+  formatted.gwas$se = gwas[,colname.se]
+  
+}
+
+head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
+</div>
+<div id="output-into-cojo-format" class="section level2" number="2.8">
+<h2><span class="header-section-number">2.8</span> output into cojo
+format</h2>
+<p>We can exclude the SNPs with missing information, or outlying sample
+size and allele frequency, before write it into a COJO file.</p>
+<p>We usually use .ma as the extension name for COJO files.</p>
+<pre class="r"><code>output = paste0(file.name, &quot;.ma&quot;)
+
+formatted.gwas = formatted.gwas[which(is.na(formatted.gwas$freq) == F) ,]
+
+formatted.gwas = formatted.gwas[which(!formatted.gwas$SNP %in% N.outlier.snps) ,]
+
+formatted.gwas = formatted.gwas[,1:8]
+
+write.table(formatted.gwas, file=output, quote = F, sep =&quot;\t&quot;, row.names = F)</code></pre>
+</div>
+<div id="executable-tool" class="section level2" number="2.9">
+<h2><span class="header-section-number">2.9</span> executable tool</h2>
+<p>For automation, use cojo_format.R with column name arguments as
+demonstrated. We didn’t include QC in this tool since SBayesRC in GCTB
+has included it.</p>
+<pre class="bash"><code>
+## input data path
+input=&quot;/data/module5/alz/PGCALZ2sumstatsExcluding23andMe.txt&quot;
+info=&quot;/data/module5/alz/snp.info&quot;
+exedir=&quot;/data/module5/alz/&quot;
+
+## output 
+output=&quot;PGCALZ2sumstatsExcluding23andMe.txt.ma&quot;
+
+## input column names
+A1=&quot;testedAllele&quot;
+A2=&quot;otherAllele&quot;
+PVAL=&quot;p&quot;
+Nsize=&quot;N&quot;
+
+## these columns are missing, so we declare them as missing.
+SNP=&quot;missing&quot;
+BETA=&quot;missing&quot;
+SE=&quot;missing&quot;
+AF=&quot;missing&quot;
+
+## these parameters and their flag in the code should be skipped if they are not provided or needed
+Z=&quot;z&quot;      
+chr=&quot;chr&quot;
+pos=&quot;PosGRCh37&quot;
+
+## run the code
+Rscript  ${exedir}/cojo_format.R  \
+  --file  ${input}  \
+  --out  ${output}   \
+  --SNP  $SNP   \
+  --chr $chr \
+  --pos $pos \
+  --A1  $A1    \
+  --A2   $A2    \
+  --freq  $AF   \
+  --pvalue  $PVAL  \
+  --beta  $BETA  \
+  --se  $SE   \
+  --z $Z  \
+  --samplesize  $Nsize  \
+  --ref  ${info}
+</code></pre>
+</div>
+</div>
+<div id="sbayesrc" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> SBayesRC</h1>
+<p>The practice is following the <a
+href="https://gctbhub.cloud.edu.au/software/gctb/#SBayesRCTutorial">tutorial
+in GCTB website</a>.</p>
+<div id="choose-ld-matrix" class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> choose LD matrix</h2>
+<p>We don’t want to impute more than 30% SNPs in the LD matrix. If the
+GWAS summary stat has less than 70% of the SNPs in the 7.3M LD
+reference, we will switch to the HapMap3 LD reference.</p>
+<pre class="bash"><code>## choose LD matrix based on number of SNPs
+ldm1=/QRISdata/Q3895/ldm/eigen/ukbEUR_Imputed/
+ldm2=/QRISdata/Q3895/ldm/eigen/ukbEUR_HM3/
+if [ $(wc -l  ${trait}/${gwas_file}  | awk &#39;{print $1}&#39;  ) -gt  5149563 ]; then   ldm=$ldm1 ; else  ldm=$ldm2; fi</code></pre>
+</div>
+<div id="impute" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> Impute</h2>
+<p>This method is based on a low-rank approximation which utilises the
+eigenvalues and eigenvectors of block-wise LD correlation matrices. It
+requires SNPs that are included in the LD reference to be also present
+in the GWAS samples. Thus, we need to impute the GWAS summary statistics
+for any missing SNPs that are only present in the LD reference.</p>
+<pre class="bash"><code>gctb --ldm-eigen $ldm --gwas-summary ${ma_file}.ma --impute-summary --out ${ma_file} --thread 10</code></pre>
+</div>
+<div id="sbayesrc-1" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> SBayesRC</h2>
+<p>This command will generate a text file for SNP effect estimates
+test.snpRes, text files for model parameters test.parRes and
+test.parSetRes, and a folder that stores the MCMC samples for all model
+parameters test.mcmcsamples.</p>
+<pre class="bash"><code>gctb   \
+--sbayes RC  \
+--ldm-eigen   ${ldm}   \
+--gwas-summary   ${ma_file}.imputed.ma   \
+--annot  $annot  \
+--out  ${trait}/SBayesRC/GCTB/${gwas_file}_sbrc_gctb   \
+--thread 10 </code></pre>
+</div>
+<div id="examine-sbayesrc-effect-size" class="section level2"
+number="3.4">
+<h2><span class="header-section-number">3.4</span> Examine SBayesRC
+effect size</h2>
+<p>At last we compare the marginal effect size with the effect size from
+SBayesRC with a simple plot.</p>
+<pre class="bash"><code>Rscript  effect_size_plot_updated.R    $trait   ${ma_file}.imputed.ma   ${ma_file}_sbrc_gctb.snpRes</code></pre>
+<pre class="r"><code>args=commandArgs(trailingOnly = TRUE)
+
+trait=args[1]
+gwas.file = args[2]
+predictor.file=args[3]
+
+library(data.table)
+library(ggplot2)
+
+gwas = data.frame(fread(paste0(trait, &quot;/&quot;, gwas.file)))
+predictor=data.frame(fread(paste0(trait, &quot;/&quot;, predictor.file)))
+
+
+predictor$effect.in.gwas = as.numeric(gwas[match(predictor$Name, gwas$SNP),&quot;b&quot;])
+predictor$A1.in.gwas =  gwas[match(predictor$Name, gwas$SNP),&quot;A1&quot;]
+
+predictor$marginal.effect = predictor[,&quot;effect.in.gwas&quot;] *(sign((as.numeric(predictor$A1 == predictor$A1.in.gwas) - 0.5)))
+
+predictor$gwas.se =  gwas[match(predictor$SNP, gwas$SNP),&quot;se&quot;]
+predictor$threshold = abs(predictor$effect.in.gwas) + 3*(predictor$gwas.se)
+predictor$outlier = (abs(predictor$BETA) &gt; abs(predictor$threshold))
+
+st=format(Sys.time(), &quot;%Y%m%d_%H_%M&quot;)
+
+effect.plot = ggplot(data = predictor, aes(x = marginal.effect, y = BETA,  color= outlier)) + geom_point(size = 0.4) +  
+  geom_abline(intercept=0, slope=1, color=&quot;blue&quot;)    +
+  labs(title=predictor.file,  x=&quot;GWAS marginal effect&quot;, y = &quot;SBayesR Effect size&quot;) 
+
+
+ggsave(effect.plot, filename = paste0(&quot;Figures/&quot;, trait, &quot;_&quot;  , predictor.file ,  &quot;_compare_marginal_effect_vs_SBayesRC_&quot;, st, &quot;.png&quot;), height = 8, width = 8)</code></pre>
+<p>We expect to see most SNPs plotted between the x axis and the diagnol
+line, indicating the shrinkage of joint effect. Here are a few patterns
+we see the most.</p>
+<p><img src="Figures/effect_size_examples.png" /></p>
+</div>
+</div>
+<div id="select-traits" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Select traits</h1>
+<p>We initially collected XX traits, but some of them have very low
+heritability, and the prediction accuracy is not good enough for
+consistency evaluation. Starting with a version of 149 traits collected
+before 2024.10.10, we selected the traits with liability scaled
+heritability &gt; 0.05. Since SBayesRC analysis uses sampling methods,
+the weights of SNPs are not the same when we rerun SBayesRC. We
+calculated the correlation of PGS between two independent SBayesRC
+resun, and selected only the traits with rerun correlation &gt; 0.85</p>
+<pre class="r"><code>predictors = read.csv(&quot;Data/Predictors/Predictor_Release_20241010.csv&quot;)
+predictors =predictors[which(predictors$unpicked_predictors_for_CEPH_project != &quot;Yes&quot;),]
+
+
+#merge the liability scaled heritability in the table
+hsq = read.csv(&quot;Data/Predictors/Prevalence_and_hsq_summary_updated_Oct29.2024.csv&quot;, row.names =1)
+hsq_extra_cols &lt;- setdiff(names(hsq), names(predictors))
+predictors_extended &lt;- predictors %&gt;%
+  left_join(hsq[, c(&quot;Predictor&quot;, hsq_extra_cols)], by = &quot;Predictor&quot;)
+
+#select based on rerun correlations
+rerun.cor = read.csv(&quot;Data/Predictors/correlation_of_reruns_and_hsq.csv&quot;)
+excluded.traits = rerun.cor[which(rerun.cor$cor_rerun0_rerun1 &lt; 0.85),]</code></pre>
+<p>From this plot, we can see that, we observed heritability is lower
+than 0.05, the rerun correlation will turn out low.</p>
+<p><img src="Figures/fig_cor_rerun0_rerun1_vs_SBayesRC_hsq.jpeg" /></p>
+<p>In this project, we made selection based on the liability scaled
+heritability and rerun correlation.</p>
+<p><img src="Figures/fig_cor_rerun0_rerun1_vs_hsq.jpeg" /></p>
+<pre class="r"><code>predictors_extended$selected = !(predictors_extended$Predictor %in% excluded.traits$variable | predictors_extended$Life_Risk_based_h2_in_liability_scale &lt; 0.05)</code></pre>
+</div>
+<div id="summary-the-traits" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> summary the traits</h1>
+<p>Most traits used 7.3M LD reference, but for those could not cover 70%
+of the SNPs, we switched to HapMap3 LD reference.</p>
+<pre class="r"><code>table(predictor.list$reference.version)</code></pre>
+<pre><code>## 
+##    7.3M Hapmap3 
+##     111       4</code></pre>
+<p>Here is a number of binary traits and quantitative traits.</p>
+<pre class="r"><code>table(predictor.list$QorB)</code></pre>
+<pre><code>## 
+##       Binary Quantitative 
+##           32           83</code></pre>
+<p>There are</p>
+<p>32 binary traits and<br />
+83 quantitative traits which includes</p>
+<blockquote>
+<p>23 collected quantitative traits<br />
+34 biomarker traits from uk biobank study<br />
+10 proteomics traits from uk biobank study<br />
+16 fatty acid from uk biobank study</p>
+</blockquote>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
