@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+<meta name="date" content="2025-06-09" />
+
+<title>Chip Data from HSU</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/lumen.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PGS|Consistency</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="index.html">Intro</a>
+</li>
+<li>
+  <a href="0_PredictorPrep.html">Predictors</a>
+</li>
+<li>
+  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+</li>
+<li>
+  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+</li>
+<li>
+  <a href="3_WGS.html">WGS</a>
+</li>
+<li>
+  <a href="4_LowPassSeq.html">LowPass</a>
+</li>
+<li>
+  <a href="5_Consistency.html">Consistency</a>
+</li>
+<li>
+  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
+</li>
+<li>
+  <a href="6_MissingSNP.html">MissingSNP</a>
+</li>
+<li>
+  <a href="11_convert_function.html">Convert_function</a>
+</li>
+<li>
+  <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Chip Data from HSU</h1>
+<h4 class="date">09 June 2025</h4>
+
+</div>
+
+
+<hr />
+<p>We have developed an in-house pipeline for processing raw plink data
+all the way to profiling their GPS of interested traits.</p>
+<p>The samples are genotyped by HSU, and exported into a raw data in
+Plink format, includes a MAP file and PED file, using Genome Studio.</p>
+<div id="pre-imputation-processing" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Pre-imputation
+processing</h1>
+<div id="convert-to-binary-format" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> convert to binary
+format</h2>
+<p>We usually transfer the data to binary format to save space and
+accelerate calculation speed.</p>
+<pre class="bash"><code>
+plink \
+--file ${inpath}/${data}  \
+--make-bed --out ${data}</code></pre>
+<p>This format is explained well in <a
+href="https://zzz.bwh.harvard.edu/plink/data.shtml#bed">plink manual
+page</a>.</p>
+</div>
+<div id="quality" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Quality</h2>
+<p>We can use Plink to generate summary stats at per-SNP and
+per-individual levels.</p>
+<pre class="bash"><code>plink  --bfile ${data}  --missing   --out   ${data}
+plink  --bfile ${data}  --freq      --out   ${data}
+plink  --bfile ${data}  --hardy     --out   ${data}</code></pre>
+<p>We used R to read in and make histograms of the summary
+statistics.</p>
+<pre class="r"><code>filename=&quot;target&quot;
+
+imiss &lt;- read.table(paste0(filename,&quot;.imiss&quot;), header=T, check.names=F)
+lmiss &lt;- read.table(paste0(filename,&quot;.lmiss&quot;), header=T, check.names=F)
+freq &lt;- read.table(paste0(filename,&quot;.frq&quot;), header=T,    check.names=F)
+hwe &lt;- read.table(paste0(filename,&quot;.hwe&quot;), header=T,   check.names=F)
+
+# You can either run the plotting function in interactive Jupyter R. 
+# Or un-mute the png and dev.off command lines to save the picture. 
+
+#png(paste0(filename,&quot;_Quality_of_genotype.png&quot;), type=&quot;cairo&quot;)
+par(mfrow=c(2,2))
+hist(1-imiss$F_MISS, breaks=&quot;sturges&quot;,main=&quot;Individuals&quot;,col=&quot;tan&quot;, 
+     xlab=&quot;Genotyping Rate&quot;, ylab=&quot;Number of Individuals&quot;)
+hist(1-lmiss$F_MISS, breaks=&quot;sturges&quot;, main=&quot;SNPs&quot;, col=&quot;tan&quot;, 
+     xlab=&quot;Genotyping Rate&quot;, ylab=&quot;Number of SNPs&quot;)
+hist(hwe$P, breaks=&quot;sturges&quot;, main=&quot;HWE P-Value&quot;, col=&quot;tan&quot;, 
+     xlab=&quot;HWE P-value&quot;, ylab=&quot;Number of SNPs&quot;)
+hist(freq$MAF, breaks=&quot;sturges&quot;, main=&quot;MAF&quot;, col=&quot;tan&quot;, 
+     xlab=&quot;MAF&quot;, ylab=&quot;Number of SNPs&quot;)
+#dev.off()</code></pre>
+</div>
+<div id="sex-check" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> Sex check</h2>
+<p>As a very useful way to confirm that the samples were not messed up
+in handling, we predict sex from heterozygosity in chromosome X, and
+compare it to the sex in phenotype column in the fam file.</p>
+<p>A PROBLEM arises if the two sexes do not match, or if the SNP data or
+pedigree data are ambiguous with regard to sex. More details are in <a
+href="https://zzz.bwh.harvard.edu/plink/summary.shtml#sexcheck">plink
+manual page</a>.</p>
+<p>We need chrX to do this check, but our predictor data has only
+autosomes, so we will leave out the X chromosome in next step.</p>
+<pre class="bash"><code># don&#39;t run this chunk with practical data. it does not have X chromosome
+plink  --bfile ${data}  --check-sex --out  ${data}</code></pre>
+</div>
+<div id="qc" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> QC</h2>
+<p>In QC step, we will use Plink to exclude the SNPs and individuals
+with high missingess, very low MAF, and SNPs that violate Hardy-Weinberg
+Equilibrium.</p>
+<p>It’s very often that our target data set has a small sample size,
+like one or two hundred. Some cross-sample QC methods don’t work very
+well in this circumstance. Comparing to what we have learnt in the QC
+steps for a GWAS data set, which usually have thousands of samples, we
+are doing less filtering here.</p>
+<pre class="bash"><code>
+plink  \
+ --bfile  ${data}  \
+ --mind 0.05 \
+ --geno 0.05 \
+ --hwe 0.000001 \
+ --maf 0.01 \
+ --make-bed  \
+ --out   ${data}_qced</code></pre>
+<p>Parameters in the command:<br />
+–mind: missingness per individual threshold<br />
+–geno: missingness per SNP threshold<br />
+–hwe: Hardy-Weinberg Equilibrium p-value threshold<br />
+–maf: Minor allele frequency thresohld</p>
+</div>
+<div id="flip-snps-on-minus-strand" class="section level2" number="1.5">
+<h2><span class="header-section-number">1.5</span> Flip SNPs on minus
+Strand</h2>
+<p>The chips don’t always have probes on the positive strands. We have
+to flip all the SNPs on minus strand to positive strand for matching to
+reference data. <a href="https://www.strand.org.uk">Strand</a> website
+has prepared strand files for a lot of chips. We downloaded the strand
+data for each chip we used, and used the
+<strong>update_build.sh</strong> tool to flip the strands.</p>
+<pre class="bash"><code></code></pre>
+</div>
+<div id="snp-id-consensus" class="section level2" number="1.6">
+<h2><span class="header-section-number">1.6</span> SNP ID consensus</h2>
+<p>If you find a lot of SNPs in your data using customized IDs, in a
+form such as kpg1234, gsa.101 or chr1:10011, you can use the following R
+package to update the bim file.</p>
+<pre class="r"><code>## don&#39;t need to run this chunk. It&#39;s just for showing you the R package.
+BiocManager::install(&quot;SNPlocs.Hsapiens.dbSNP144.GRCh37&quot;)
+library(SNPlocs.Hsapiens.dbSNP144.GRCh37) 
+ref &lt;- SNPlocs.Hsapiens.dbSNP144.GRCh37</code></pre>
+</div>
+<div id="align-to-reference-genome" class="section level2" number="1.7">
+<h2><span class="header-section-number">1.7</span> Align to reference
+genome</h2>
+<p>For imputation purpose, we will align the SNPs to reference human
+genome, which is to make sure that the SNPs in our data and the
+reference data have the same ID, same location, and the alleles are read
+from the same strand.</p>
+<p>Our example data has already got all SNPs aligned. We will skip this
+section in practice, but it’s very important to check through each
+aspect and process your data carefully in your research.</p>
+</div>
+</div>
+<div id="data-imputation" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Data Imputation</h1>
+<p>There are several online imputation servers you can use to impute
+your data, such as <a
+href="https://imputation.biodatacatalyst.nhlbi.nih.gov/#!">TOPMED
+imputation server</a> and <a
+href="https://imputation.sanger.ac.uk">Sanger imputation server</a>.
+Here we will use open resource tools and the reference data <a
+href="https://www.internationalgenome.org">1000Genome</a> to do it
+in-house.</p>
+<div id="fix-reference-allele" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Fix reference
+allele</h2>
+<p>We will convert the data from PLINK format to VCF format, and use
+BCFTools to align the reference alleles as used in human genome
+reference data.</p>
+<pre class="bash"><code>chr=22
+
+# Pull out data for relevant chromosome and convert to VCF. 
+plink --bfile ${data}_chr${chr}  --recode vcf --out  ${data}_chr${chr}
+
+# Sort and compress the VCF file
+vcf-sort ${data}_chr${chr}.vcf | bgzip -c &gt; ${data}_chr${chr}.vcf.gz
+
+# Fix the reference allele to match the GRCh37 reference fasta (human_g1k_v37.fasta). 
+ref2fix=${refpath}/human_g1k_v37.fasta
+BCFTOOLS_PLUGINS=/software/bin/
+bcftools \
+  +fixref \
+  ${data}_chr${chr}.vcf.gz \
+  -Oz \
+  -o fixed_${data}_chr${chr}.vcf.gz  \
+  -- -d \
+  -f ${ref2fix} \
+  -m flip
+
+zcat fixed_${data}_chr${chr}.vcf.gz | bgzip -c &gt; indexed_fixed_${data}_chr${chr}.vcf.gz
+
+# create index file. 
+tabix indexed_fixed_${data}_chr${chr}.vcf.gz</code></pre>
+</div>
+<div id="phasing" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Phasing</h2>
+<p>Although it is not required for all imputation softwares, here we
+will reconstruct the haplotypes from our data with external information,
+which is called phasing.</p>
+<p>Both of the haplotype reference and genetic map used here are from <a
+href="https://www.internationalgenome.org">1000Genome</a> project.</p>
+<p>There are many phasing tools. We will use <a
+href="https://alkesgroup.broadinstitute.org/Eagle/">Eagle v2.4.1</a> in
+our practice.</p>
+<pre class="bash"><code>geneticmap1=${refpath}/genetic_map_chr${chr}_combined_b37_modified.txt
+reference=${refpath}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
+
+# Use EAGLE to generate phased haplotypes
+# it takes about 4 minutes.
+eagle  \
+    --vcfRef=$reference  \
+    --vcfTarget=indexed_fixed_${data}_chr${chr}.vcf.gz  \
+    --geneticMapFile=$geneticmap1  \
+    --vcfOutFormat=z \
+    --outPrefix=phased_chr${chr} &gt; phasing.log
+
+# index the vcf.gz file
+tabix -p vcf  phased_chr${chr}.vcf.gz</code></pre>
+<p>You can take a look at the phased vcf file with zless.</p>
+<pre class="bash"><code>zless phased_chr${chr}.vcf.gz | less -S
+
+# less -S will align the columns for you, so the file is clearer to visualize. 
+# press q to exit from the file</code></pre>
+</div>
+<div id="imputation" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> Imputation</h2>
+<p>We use Impute5 to impute the phased data. To reduce computation time,
+we will only imputed a chunk of chromosome 22.</p>
+<pre class="bash"><code># CAUTION: genetic map file is different from the one used in phasing!
+# impute5 doesn&#39;t want the chr column in genetic map, so we removed that column
+
+# imputing chr22 takes around 8min. If you are in a hurry, try with next chunk. 
+
+geneticmap2=${refpath}/genetic_map_chr${chr}_combined_b37.txt
+reference=${refpath}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
+
+impute5_1.1.5_static \
+        --m  $geneticmap2 \
+        --h  $reference  \
+        --g  phased_chr${chr}.vcf.gz  \
+        --r  ${chr} \
+        --ne 20000   \
+        --threads 1 \
+        --o  imputed_chr${chr}.vcf.gz \
+        --l  imputed_chr${chr}.log</code></pre>
+<p>If the sample size is big, we can run imputation by chunks and
+parallel them.</p>
+<pre class="bash"><code># set the boundary of the chunk to impute
+intstart=40000001 
+intend=50000000
+
+impute5_1.1.5_static \
+        --m  $geneticmap2 \
+        --h  $reference  \
+        --g  phased_chr${chr}.vcf.gz  \
+        --r  ${chr}:${intstart}-${intend} \
+        --ne 20000   \
+        --threads 1 \
+        --o  imputed_chr${chr}_chunk.vcf.gz \
+        --l  imputed_chr${chr}_chunk.log
+</code></pre>
+</div>
+<div id="qc-and-format-the-imputed-data" class="section level2"
+number="2.4">
+<h2><span class="header-section-number">2.4</span> QC and format the
+imputed data</h2>
+<p>Imputed data is output as a zipped VCF file. We will change the
+format back to PLINK for following analysis.</p>
+<p>We will use BCFTOOL again to extract info score for the imputed SNPs
+from the VCF file, which stands for the imputation quality per SNP. Info
+score is sensitive to sample size, so be careful to use it when you have
+a very small sample size in real studies.</p>
+<p>1000G included a lot of InDels, which sometimes use the same SNP ID.
+Duplicated SNP IDs will introduce error, so we will simply remove them
+in our practice.</p>
+<p>If you are interested in these InDels or any SNPs with duplicate ID
+or missing ID, you can refill the bim file in R in the form of
+chr1:123456 or chr1:1234_dup2, since PLINK can’t deal with duplicated or
+missing SNP IDs.</p>
+<pre class="bash"><code>## convert the format using plink
+plink --vcf  imputed_chr${chr}.vcf.gz   \
+            --id-delim &#39;_&#39;  \
+            --keep-allele-order \
+            --make-bed \
+            --out  imputed_chr${chr}
+
+## get info score, need bcftools
+tabix -p vcf   imputed_chr${chr}.vcf.gz
+bcftools query -f &#39;%CHROM\t%ID\t%QUAL\t%POS\t%REF\t%ALT\t%INFO/AF\t%INFO/INFO\n&#39; \
+imputed_chr${chr}.vcf.gz &gt; imputed_chr${chr}.info
+
+## get the list of SNPs with info &gt; 0.3
+awk &#39; $8 &gt; 0.3 &#39; imputed_chr${chr}.info | awk &#39;{print $2}&#39; &gt; snps_with_invo_over_0.3.info
+
+## QC with info score 
+plink2 --bfile imputed_chr${chr}  \
+--extract snps_with_invo_over_0.3.info  \
+--rm-dup force-first  \
+--make-bed \
+--out imputed_chr${chr}_QCed
+
+## note that we are using plink2 here, since plink does not have function --rm-dup. 
+## plink and plink2 have slight difference, and each of them have a few specific functions. We are more used to plink, so I kept to plink for all the other steps. 
+</code></pre>
+<p>When we work with the <strong>whole genome</strong>, we can use the
+following example commands to merge imputed chunks and chromosome.</p>
+<pre class="bash"><code>## don&#39;t run this chunk. It&#39;s just an example, without usable inputs. 
+
+# in vcf format
+filelist=$(ls  imputed_chr*vcf.gz | tr &#39;\n&#39;   &#39;\t&#39;)  
+bcftools concat -Oz -o ${data}_imputed.vcf.gz  ${filelist}
+
+# in plink format
+plink \
+--bfile imputed_chr1_QCed  \
+--merge-list file_names_of_imputed_chr_2_to_22.txt \
+--allow-no-sex  \
+--make-bed  \
+--out  ${data}_imputed_qced_autosomes </code></pre>
+<p>Sometimes we would like to keep all tha SNPs no matter of the
+imputation quality, so that we won’t have missing SNPs which are in the
+predictor.</p>
+</div>
+</div>
+<div id="pgs-profiling" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> PGS profiling</h1>
+<pre class="bash"><code>ls /QRISdata/Q3046/Data/*/grp_pipeline_*_impute5_bunya/Imputed_plink_format/*_autosomes.bim</code></pre>
+<p>Taking the imputed data, we will profile the PGS scores using
+PLINK.</p>
+<pre class="bash"><code>plink  \
+--bfile  $bfile \
+--score  ${predictor}  2 5 8  header sum    \
+--out  $output</code></pre>
+<p>The parameters after your predictor file means</p>
+<ul>
+<li>1 2 3: Take only the first three columns in the predictor
+file.<br />
+</li>
+<li>header: The predictor file has a header row.<br />
+</li>
+<li>sum: Plink prefers to divide the score by the number of SNPs in
+predictor. Using “sum” will prevent the division step.</li>
+</ul>
+<pre class="bash"><code>#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=50G
+#SBATCH --time=5:00:00
+#SBATCH --job-name=profiling
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/CHIP/slurm_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/CHIP/slurm_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-7
+
+
+i=$SLURM_ARRAY_TASK_ID
+
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/CHIP/
+
+samplefile=all_grp_v4_data.txt 
+
+
+## define predictor
+#traitfile=&quot;/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt&quot;
+#traitfile=&quot;traits.not.profiled.yet.txt&quot;
+
+traitfile=&quot;traits.to.rerun.for.SARSCOV2.txt&quot;
+trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
+predictor=$(sed  &quot;${i}q;d&quot;  $traitfile  | awk &#39;{print $3}&#39; )
+echo $trait
+echo $predictor
+
+
+outdir=PRS_all_GCTB
+mkdir -p $outdir
+
+## define data
+
+for j in {1..74}; do 
+# j=75
+input=$(sed &quot;${j}q;d&quot;  $samplefile  | awk &#39;{print $4}&#39;  )   
+        cohort=$(sed &quot;${j}q;d&quot;  $samplefile  | awk &#39;{print $1}&#39; )
+        version=$(sed &quot;${j}q;d&quot;  $samplefile  | awk &#39;{print $2}&#39; )
+        data=$(sed &quot;${j}q;d&quot;  $samplefile  | awk &#39;{print $3}&#39;  )
+
+        plink \
+          --bfile  PLINK/${cohort}/${data}  \
+          --score  $predictor  2 5 8  header sum    \
+         --out ${outdir}/${cohort}_${version}_${trait}_SBayesRC     
+done
+</code></pre>
+</div>
+<div id="merge-the-files" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Merge the files</h1>
+<pre class="r"><code>cohorts.file = read.table(&quot;all_grp_v4_data.txt&quot;)
+
+trait.list = read.table(&quot;/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt&quot;)
+n.trait = nrow(trait.list)
+traitArray=trait.list$V1
+
+group=&quot;PRS_all_GCTB&quot;
+
+#for (i in 1:nrow(cohorts.file)) {
+
+i=75
+cohort=cohorts.file[i,&quot;V1&quot;]
+pipeline=cohorts.file[i,&quot;V2&quot;]
+data = cohorts.file[i,&quot;V3&quot;]
+
+fam=paste0(&quot;PLINK/&quot;, cohort , &quot;/&quot;, data)
+
+target.data =read.table(paste0(fam, &quot;.fam&quot;)) 
+target.data = target.data[,c(1,2)]
+colnames(target.data) = c(&quot;FID&quot;, &quot;IID&quot;)
+
+target.data$batch = cohort
+target.data$pipeline = pipeline
+  
+for (j in 1:length(traitArray)){
+  trait = traitArray[j]
+  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;,  pipeline, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
+  profile = read.table(file.name, header = T)
+  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
+  colnames(target.data)[ncol(target.data)] = trait
+  }
+  
+row.names(target.data) = target.data$IID
+target.data = target.data[,3:ncol(target.data)]
+write.csv(target.data, file= paste0( group, &quot;_&quot;,cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))
+
+# }</code></pre>
+<pre class="r"><code>cohorts.file = read.table(&quot;all_grp_v4_data.txt&quot;)
+group=&quot;PRS_all_GCTB&quot;
+
+merged.data=data.frame()
+for (i in 1:nrow(cohorts.file)) {
+cohort=cohorts.file[i,&quot;V1&quot;]
+pipeline=cohorts.file[i,&quot;V2&quot;]
+data = cohorts.file[i,&quot;V3&quot;]
+target.data = read.csv(paste0( group, &quot;_&quot;,cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))
+merged.data =  rbind(merged.data, target.data)
+}
+write.csv(merged.data, file = &quot;GRP_all_GCTB_PRS.csv&quot;)</code></pre>
+</div>
+<div id="sample-size" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> sample size</h1>
+<pre class="r"><code>grp.raw = read.csv(&quot;Data/GRP/GRP_all_GCTB_PRS.csv&quot;)
+batch.summary = data.frame(table(grp.raw$batch))
+dim(grp.raw)</code></pre>
+<pre><code>## [1] 8859  141</code></pre>
+<pre class="r"><code>length(table(grp.raw$batch))</code></pre>
+<pre><code>## [1] 75</code></pre>
+<pre class="r"><code>hist(batch.summary$Freq)</code></pre>
+<p><img src="1_GRP_ChipData_files/figure-html/unnamed-chunk-22-1.png" width="672" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
