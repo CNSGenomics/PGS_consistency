@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Tian Lin" />
+
+
+<title>Low Pass Sequencing data</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/lumen.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PGS|Consistency</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="index.html">Intro</a>
+</li>
+<li>
+  <a href="0_PredictorPrep.html">Predictors</a>
+</li>
+<li>
+  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+</li>
+<li>
+  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+</li>
+<li>
+  <a href="3_WGS.html">WGS</a>
+</li>
+<li>
+  <a href="4_LowPassSeq.html">LowPass</a>
+</li>
+<li>
+  <a href="5_Consistency.html">Consistency</a>
+</li>
+<li>
+  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
+</li>
+<li>
+  <a href="6_MissingSNP.html">MissingSNP</a>
+</li>
+<li>
+  <a href="11_convert_function.html">Convert_function</a>
+</li>
+<li>
+  <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Low Pass Sequencing data</h1>
+<h4 class="author">Tian Lin</h4>
+
+</div>
+
+
+<div id="intro" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Intro</h1>
+<p><a
+href="https://www.genewiz.com/Public/Services/Next-Generation-Sequencing/Low-Pass-WholeGenomeSequencing/"
+class="uri">https://www.genewiz.com/Public/Services/Next-Generation-Sequencing/Low-Pass-WholeGenomeSequencing/</a></p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/33770507/"
+class="uri">https://pubmed.ncbi.nlm.nih.gov/33770507/</a></p>
+<p>The sequencing data has been deposited into our raw data RDM, I
+believe you may already have access to this? The address is pasted
+below, if you do not have access to this Leanne could grant you access.
+<a
+href="smb://uq-adstl02.uq.edu.au/UQ-Inst-Gateway2/HSURAW2017-Q2045/220518_A00401_0424_AH7FNFDRX2"
+class="uri">smb://uq-adstl02.uq.edu.au/UQ-Inst-Gateway2/HSURAW2017-Q2045/220518_A00401_0424_AH7FNFDRX2</a>.
+I have attached a copy of the sample sheet that has the IDs of all the
+samples sequenced in this batch. The ID is a concatenated ID that
+consist of each participants Study ID followed by the collection ID used
+for that participant e.g 3728601_1001867102. I have also attached a copy
+of the quote from the UQ Seq facility that shows library prep and
+sequencing specifications, we went with option 2 which was sequencing at
+2 x 150 base pairs( i.e PE sequencing ) on an SP flow cell. I used
+Illuminas online coverage calculator to determine how many libraries to
+pool to achieve 1 x coverage on the SP flow cell, I have attached a copy
+of that output as well. I have also been given access to the run QC data
+on Basespace, I have not had a chance to look at it in depth but a quick
+glance shows that the sample libraries have performed well in sequencing
+and that we should have even representation of each sample. On average
+we have yielded 7.39Gbp per sample, which is just over one human genome
+(which is 6.41Gbps!) I hope I have covered all bases, do let me know if
+you need any more information. Next week is a bit busy in the lab for me
+but I might have some time on Thursday to catch up if you like.</p>
+<p>Cheers Shiv</p>
+<p><strong>Data processing file is X1WGS_report.Rmd</strong></p>
+</div>
+<div id="use-glympse2-to-impute-data" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> use GLYMPSE2 to impute
+data</h1>
+<div id="use-reference-data-to-make-chunk-files" class="section level2"
+number="2.1">
+<h2><span class="header-section-number">2.1</span> use reference data to
+make chunk files</h2>
+<pre class="bash"><code>
+# generate chunk file
+# this job will be paralleled by chromosomes
+
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=150G
+#SBATCH --time=25:00:00
+#SBATCH --job-name=profiling
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-22
+
+chr=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
+
+module load bcftools
+
+mapfile=1000GP_Phase3/genetic_map_chr${chr}_combined_b37.txt
+
+
+
+## 1000G version
+#reffile=ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
+#bcftools annotate --rename-chrs chr_name_conv.txt  1000G_haplotype_vcf/$reffile     | bgzip &gt; chr_renamed_1000G_haplotype_vcf/${reffile}
+#tabix -p vcf chr_renamed_1000G_haplotype_vcf/${reffile} 
+#
+#./GLIMPSE2/GLIMPSE2_chunk_static  --input  chr_renamed_1000G_haplotype_vcf/$reffile \
+#--sequential  \
+#--region chr${chr}  \
+#--output chunks_1000G.chr${chr}.txt \
+#--map $mapfile
+
+
+## HRC version
+reffile=HRC.r1-1.EGA.GRCh37.chr${chr}.haplotypes.vcf.gz 
+
+
+bcftools annotate --rename-chrs chr_name_conv.txt  /QRISdata/Q3046/Reference/HRC//$reffile     | bgzip &gt; chr_renamed_HRC_haplotype_vcf/${reffile}
+tabix -p vcf chr_renamed_HRC_haplotype_vcf/${reffile}
+
+
+./GLIMPSE2/GLIMPSE2_chunk_static  --input  chr_renamed_HRC_haplotype_vcf/$reffile \
+--sequential  \
+--region chr${chr}  \
+--output chunks_HRC.chr${chr}.txt \
+--map $mapfile
+
+
+
+########
+
+for i in {1..22}; do
+    cat &quot;chunk_files/chunks_HRC.chr${i}.txt&quot; &gt;&gt; chunks_HRC.txt
+done
+</code></pre>
+</div>
+<div id="chunk-the-reference-data" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> chunk the reference
+data</h2>
+<pre class="bash"><code>
+# this job will be paralleled by chunks. 
+
+
+## generate merged file
+for ((i = 1; i &lt;= 22; i++)); do
+  cat chunks_HRC.chr${i}.txt &gt;&gt; chunks_HRC.txt
+done
+
+
+
+
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=50G
+#SBATCH --time=25:00:00
+#SBATCH --job-name=phase
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-64
+
+
+
+LINE=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
+sample=NA06997_COR_S29
+refdata=HRC
+
+
+BAM=${sample}_recal_1_12.bam
+chunkfile=chunks_${refdata}_chr1.txt
+OUTDIR=GLIMPSE2_imputed_with_${refdata}
+mkdir -p $OUTDIR
+OUT=${OUTDIR}/${sample}_imputed
+CHR=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $2}&#39; )
+IRG=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $3}&#39; )
+ORG=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $4}&#39; )
+REGS=$(echo ${IRG} | cut -d&quot;:&quot; -f 2 | cut -d&quot;-&quot; -f1)
+REGE=$(echo ${IRG} | cut -d&quot;:&quot; -f 2 | cut -d&quot;-&quot; -f2)
+
+
+echo &quot;Job starts for &quot;
+echo $LINE
+echo $CHR
+echo $IRG
+echo $REGS
+echo $REGE
+
+
+mapfile=1000GP_Phase3/genetic_map_${CHR}_combined_b37.txt
+
+  ./GLIMPSE2/GLIMPSE2_split_reference_static \
+  --reference  chr_renamed_${refdata}_haplotype_vcf/HRC.r1-1.EGA.GRCh37.${CHR}.haplotypes.vcf.gz \
+  --map ${mapfile} \
+  --input-region ${IRG} \
+  --output-region ${ORG}  \
+  --output  Splitted_${refdata}_panel/${refdata}
+</code></pre>
+</div>
+<div id="impute-the-data" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> impute the data</h2>
+<pre class="bash"><code>
+./GLIMPSE2/GLIMPSE2_phase_static \
+--bam-file ${BAM} \
+--reference Splitted_${refdata}_panel/${refdata}_${CHR}_${REGS}_${REGE}.bin \
+--output ${OUT}_${CHR}_${REGS}_${REGE}.bcf</code></pre>
+</div>
+<div id="pipeline-the-imputation-for-all-samples" class="section level2"
+number="2.4">
+<h2><span class="header-section-number">2.4</span> pipeline the
+imputation for all samples</h2>
+<pre class="bash"><code>
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=150G
+#SBATCH --time=75:00:00
+#SBATCH --job-name=phase
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-771
+
+
+## chr1 has 64 chunks. we&#39;ll test it first. 
+
+LINE=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
+
+refdata=HRC
+OUTDIR=GLIMPSE2_imputed_with_${refdata}
+chunkfile=chunks_${refdata}.txt
+  
+CHR=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $2}&#39; )
+IRG=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $3}&#39; )
+ORG=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $4}&#39; )
+REGS=$(echo ${IRG} | cut -d&quot;:&quot; -f 2 | cut -d&quot;-&quot; -f1)
+REGE=$(echo ${IRG} | cut -d&quot;:&quot; -f 2 | cut -d&quot;-&quot; -f2)
+
+while IFS= read -r BAM; do
+
+  ./GLIMPSE2/GLIMPSE2_phase_static \
+  --bam-file  BQRS/${BAM}_recal_1_12.bam \
+  --reference Splitted_${refdata}_panel/${refdata}_${CHR}_${REGS}_${REGE}.bin \
+  --output ${OUTDIR}/${BAM}_imputed_${CHR}_${REGS}_${REGE}.bcf
+
+done &lt; bam_file_list.txt
+</code></pre>
+<p>latest build: <a
+href="https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_009914755.1/"
+class="uri">https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_009914755.1/</a></p>
+</div>
+<div id="ligate-the-imputed-chunks" class="section level2" number="2.5">
+<h2><span class="header-section-number">2.5</span> ligate the imputed
+chunks</h2>
+<pre class="bash"><code>
+# ligate
+
+while IFS= read -r BAM; do
+
+LST=GLIMPSE2_HRC_ligate/${BAM}_list.txt
+ls -1v GLIMPSE2_imputed_with_HRC/${BAM}_imputed_*.bcf &gt; ${LST}
+OUT=GLIMPSE2_HRC_ligate/${BAM}_ligated.bcf
+
+job_name=&quot;ligate_&quot;${BAM}  
+ligatesub=`qsubshcom &quot;  ./GLIMPSE2/GLIMPSE2_ligate_static --input ${LST} --output $OUT &quot; 1 150G $job_name 24:00:00 &quot;  &quot;   `
+
+done &lt; bam_file_list.txt
+</code></pre>
+</div>
+<div id="format-the-data" class="section level2" number="2.6">
+<h2><span class="header-section-number">2.6</span> format the data</h2>
+<pre class="bash"><code>
+
+## convert bcf to vcf
+while IFS= read -r BAM; do
+ bcftools convert -O v -o GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf   GLIMPSE2_HRC_ligate/${BAM}_ligated.bcf
+done &lt; bam_file_list.txt
+</code></pre>
+</div>
+<div id="connect-all-the-chromosomes-and-extract" class="section level2"
+number="2.7">
+<h2><span class="header-section-number">2.7</span> connect all the
+chromosomes and extract</h2>
+<pre class="bash"><code>
+
+
+## convert bcf to vcf
+while IFS= read -r BAM; do
+
+grep &quot;^#&quot; GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf &gt; ${BAM}_ligated_dbSNP.vcf 
+grep -v &quot;^#&quot;  GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf | grep -w -f SNPs_in_7.4M.txt &gt;&gt; ${BAM}_ligated_dbSNP.vcf 
+
+done &lt; bam_file_list.txt
+
+
+## merge all samples
+## did in both folder GLIMPSE2_HRC_ligate_vcf and dbSNP_of_GLIMPSE2_imputed_with_HRC
+
+for file in *.vcf; do
+    bgzip -c &quot;$file&quot; &gt; &quot;${file}.gz&quot;
+    bcftools index &quot;${file}.gz&quot;
+
+done
+
+qsubshcom &quot; bcftools merge -o LPS_all48samples.vcf.gz -O v -@ 4  *.vcf.gz &quot;  4 150G &quot;merge&quot; 56:00:00 &quot; &quot;   
+
+
+bcftools merge -o LPS_all48samples.vcf.gz -O v   *.vcf.gz
+</code></pre>
+</div>
+</div>
+<div id="profile-prs" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Profile PRS</h1>
+<pre class="bash"><code>
+##############################################
+
+
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=150G
+#SBATCH --time=25:00:00
+#SBATCH --job-name=profiling
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-141
+
+
+i=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
+
+traitfile=&quot;GCTB_SBayesRC_predictors.txt&quot;
+trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
+predictor=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $2}&#39; )
+
+echo $trait
+echo $predictor
+outdir=PRS_all_GCTB
+
+
+input=dbSNP_of_GLIMPSE2_imputed_with_HRC/LPS_dbSNP_set.vcf.gz
+cohort=&quot;LPS&quot;
+
+mkdir -p $outdir
+
+plink \
+   --vcf  $input \
+   --const-fid  \
+   --score  $predictor    2 5 8 header sum   \
+   --out ${outdir}/${cohort}_${trait}_SBayesRC
+</code></pre>
+<pre class="r"><code>#group=&quot;PRS_all_GCTB&quot;
+group=&quot;PRS_all_GCTB_Sanger&quot;
+
+
+trait.list = read.table(&quot;GCTB_SBayesRC_predictors.txt&quot;)
+n.trait = nrow(trait.list)
+traitArray=trait.list$V1
+cohort=&quot;LPS&quot;
+
+target.data =read.table(&quot;bam_file_list.txt&quot;) 
+colnames(target.data)[1] = &quot;IID&quot;
+
+for (j in 1:length(traitArray)){
+  trait = traitArray[j]
+  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
+  profile = read.table(file.name, header = T)
+  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
+  colnames(target.data)[ncol(target.data)] = trait
+  }
+  
+row.names(target.data) = target.data$IID
+write.csv(target.data, file= paste0( cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))</code></pre>
+<p>–score: 7356466 valid predictors loaded. –score: 1154511 valid
+predictors loaded.</p>
+<p>–score: 7356466 valid predictors loaded.</p>
+</div>
+<div id="get-corresponding-samples-from-chip-data"
+class="section level1" number="4">
+<h1><span class="header-section-number">4</span> get corresponding
+samples from chip data</h1>
+<pre class="bash"><code>
+
+
+traitfile=&quot;../GCTB_SBayesRC_predictors.txt&quot;
+trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
+predictor=$(sed  &quot;${i}q;d&quot;  $traitfile  | awk &#39;{print $2}&#39; )
+echo $trait
+
+
+outdir=PRS_all_GCTB
+mkdir -p $outdir
+
+
+cohort=MND_B3
+input=MND_B3_GSA_imputed_updated
+
+plink \
+   --bfile  $input \
+   --score  $predictor  2 5 8  header sum    \
+   --out ${outdir}/${cohort}_${trait}_SBayesRC
+</code></pre>
+<p>PRS_all_GCTB/ALS_AUS_ADHD_01_SBayesRC.log:–score: 5335624 valid
+predictors loaded. PRS_all_GCTB/ALS_AUS_BMI_01_SBayesRC.log:–score:
+938670 valid predictors loaded.</p>
+<p>PRS_all_GCTB/MND_B3_ADHD_01_SBayesRC.log:–score: 7099162 valid
+predictors loaded. PRS_all_GCTB/MND_B3_BMI_01_SBayesRC.log:–score:
+1115829 valid predictors loaded.</p>
+<pre class="r"><code>group=&quot;PRS_all_GCTB_Sanger&quot;
+cohort=&quot;MND_B3_GSA_Sanger&quot;
+
+
+trait.list = read.table(&quot;../GCTB_SBayesRC_predictors.txt&quot;)
+n.trait = nrow(trait.list)
+traitArray=trait.list$V1
+
+target.data =read.table(&quot;MND_B3_GSA_Sanger_imputed_autosomes.fam&quot;) 
+colnames(target.data)[2] = &quot;IID&quot;
+
+for (j in 1:length(traitArray)){
+  trait = traitArray[j]
+  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
+  profile = read.table(file.name, header = T)
+  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
+  colnames(target.data)[ncol(target.data)] = trait
+  }
+  
+row.names(target.data) = target.data$IID
+write.csv(target.data, file= paste0( cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))</code></pre>
+<pre class="r"><code>group=&quot;PRS_all_GCTB_fixed&quot;
+cohort=&quot;MND_B3_BCC_GSA&quot;
+
+
+trait.list = read.table(&quot;../GCTB_SBayesRC_predictors.txt&quot;)
+n.trait = nrow(trait.list)
+traitArray=trait.list$V1
+
+target.data =read.table(paste0(cohort,&quot;_imputed_autosomes_fixed.fam&quot;)) 
+colnames(target.data)[2] = &quot;IID&quot;
+
+for (j in 1:length(traitArray)){
+  trait = traitArray[j]
+  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
+  profile = read.table(file.name, header = T)
+  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
+  colnames(target.data)[ncol(target.data)] = trait
+  }
+  
+row.names(target.data) = target.data$IID
+write.csv(target.data, file= paste0( cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))</code></pre>
+</div>
+<div id="number-of-snps" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> Number of SNPs</h1>
+<p>Low_pass_sequencing/PRS_all_GCTB/LPS_ADHD_01_SBayesRC.log:–score:
+7356466 valid predictors loaded.<br />
+Low_pass_sequencing/Chip_data_for_LPS_samples/PRS_all_GCTB/MND_B3_BCC_GSA_ADHD_01_SBayesRC.log:–score:
+7356466 valid predictors loaded.</p>
+</div>
+<div id="starndardization" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Starndardization</h1>
+<pre class="r"><code>standardization.data = read.csv(&quot;Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv&quot;)
+
+
+## input PRS from low pass
+lps.prs = read.csv(&quot;Data/LowPass/LPS_all_141_traits_GCTB_PRS.csv&quot;)
+colnames(lps.prs)[1] = &quot;FID&quot;
+lps.prs$IID &lt;- sub(&quot;_.*&quot;, &quot;&quot;, lps.prs$FID)
+row.names(lps.prs) = lps.prs$IID
+lps.prs = lps.prs[,-c(1:2)]
+
+lps.prs = lps.prs[,colnames(lps.prs) %in%standardization.data$trait ]
+standardization.data= standardization.data[  match( colnames(lps.prs) , standardization.data$trait),]
+
+lps.prs.norm = sweep(
+  sweep (  lps.prs,  
+          2, standardization.data$mean),  
+  2, standardization.data$sd, FUN = &#39;/&#39;)</code></pre>
+<pre class="r"><code>## input inhouse imputed GSA data
+mnd.b3.bcc = read.csv(&quot;Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS.csv&quot;, row.names = 1)
+
+mnd.b3.bcc &lt;- mnd.b3.bcc %&gt;%
+  separate(IID, into = c(&quot;part1&quot;, &quot;part2&quot;, &quot;part3&quot;, &quot;part4&quot;), sep = &quot;_&quot;, fill = &quot;right&quot;) %&gt;%
+  mutate(
+    V1 = part2,                 # Combine part1 and part2 for V1
+    IID = if_else(is.na(part4), part3, paste(part3, part4, sep = &quot;_&quot;)) # Combine remaining parts for Study_ID
+  ) %&gt;%
+  select(V1,IID, everything(),-part1, -part2, -part3, -part4, -V3, -V4, -V5, -V6)
+
+row.names(mnd.b3.bcc) = mnd.b3.bcc$IID
+
+mnd.b3.bcc = mnd.b3.bcc[,-c(1:2)]
+
+
+mnd.b3.bcc = mnd.b3.bcc[,colnames(mnd.b3.bcc) %in%standardization.data$trait ]
+standardization.data= standardization.data[  match( colnames(mnd.b3.bcc) , standardization.data$trait),]
+
+mnd.b3.bcc.norm = sweep(
+  sweep (  mnd.b3.bcc,  
+          2, standardization.data$mean),  
+  2, standardization.data$sd, FUN = &#39;/&#39;)
+
+write.csv(mnd.b3.bcc.norm, &quot;Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS_standardized_with_GRP_benching.csv&quot;)</code></pre>
+<pre class="r"><code>lps.prs.norm$IID &lt;- row.names(lps.prs.norm)
+library(reshape2)
+melted.lps.prs.norm = reshape2::melt(lps.prs.norm, id.vars = &quot;IID&quot; ) 
+melted.lps.prs.norm$value = as.numeric(melted.lps.prs.norm$value)
+
+mnd.b3.bcc.norm$IID &lt;- row.names(mnd.b3.bcc.norm)
+melted.mnd.b3.bcc.norm = reshape2::melt(mnd.b3.bcc.norm, id.vars = &quot;IID&quot; )
+melted.mnd.b3.bcc.norm$value = as.numeric(melted.mnd.b3.bcc.norm$value)</code></pre>
+</div>
+<div id="trait-selection" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> Trait selection</h1>
+<pre class="r"><code>## select traits
+predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
+
+included_traits = predictor.list$Predictor
+
+
+## grouping traits
+traits_binary = predictor.list[which(predictor.list$QorB == &quot;Binary&quot; ),&quot;Predictor&quot;]
+traits_quanti = predictor.list[which(predictor.list$Location == &quot;Uno_Traits/Quantitative_Traits/&quot;),&quot;Predictor&quot;]
+traits_35bm   = predictor.list[which(predictor.list$Location == &quot;Lot_Traits/UKB_35BM_2021/&quot;),&quot;Predictor&quot;]
+traits_ppp   = predictor.list[which(predictor.list$Location == &quot;Lot_Traits/UKB_PPP_2022/&quot;),&quot;Predictor&quot;]
+traits_fa   = predictor.list[which(predictor.list$Location == &quot;Lot_Traits/UKB_Fatty_Acids/&quot;),&quot;Predictor&quot;]
+
+
+
+melted.mnd.b3.bcc.norm = melted.mnd.b3.bcc.norm[melted.mnd.b3.bcc.norm$variable %in% included_traits,]
+melted.lps.prs.norm = melted.lps.prs.norm[melted.lps.prs.norm$variable %in% included_traits,]</code></pre>
+</div>
+<div id="compare-pgs" class="section level1" number="8">
+<h1><span class="header-section-number">8</span> Compare PGS</h1>
+<p>There are 48 samples in the LPS pilot set.</p>
+<p>1 of them is a ceph control</p>
+<p>46 of them are also available in the MND B3 GSA data set</p>
+<p>The other 1 is available in ALS_AUS old data. (3728601, or
+MND_CON_252)</p>
+<div id="ancestry-of-als-samples" class="section level2" number="8.1">
+<h2><span class="header-section-number">8.1</span> ancestry of ALS
+samples</h2>
+<p>Here is the 46 overlap samples with PC projected to 1000g.</p>
+<p><img src="Figures/Ancestry_of_samples_in_LPS&amp;GSAv2.png" /></p>
+</div>
+<div id="merge-data" class="section level2" number="8.2">
+<h2><span class="header-section-number">8.2</span> merge data</h2>
+<pre class="r"><code>colnames(melted.mnd.b3.bcc.norm)[3] = &quot;GSAv2&quot;
+colnames(melted.lps.prs.norm)[3] = &quot;LPS&quot;
+
+melted.both =  merge(melted.lps.prs.norm, 
+                     melted.mnd.b3.bcc.norm[, c(&quot;IID&quot;, &quot;variable&quot;, &quot;GSAv2&quot;)], 
+                by = c(&quot;IID&quot;, &quot;variable&quot;), 
+                all.x = TRUE)
+
+melted.both$LPS = as.numeric(melted.both$LPS)
+melted.both$GSAv2 = as.numeric(melted.both$GSAv2)
+
+
+melted.both$Trait = predictor.list[match(melted.both$variable, predictor.list$Predictor),&quot;Label&quot;]</code></pre>
+</div>
+<div id="correlation" class="section level2" number="8.3">
+<h2><span class="header-section-number">8.3</span> correlation</h2>
+<pre class="r"><code>melted.SALSA = na.omit(melted.both)</code></pre>
+<div id="across-traits" class="section level3" number="8.3.1">
+<h3><span class="header-section-number">8.3.1</span> across traits</h3>
+<pre class="r"><code>result &lt;- melted.SALSA %&gt;%
+  group_by(variable) %&gt;%
+  summarise(correlation = cor(LPS, GSAv2, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;)
+
+result = data.frame(result)
+result$Trait = predictor.list[match(result$variable, predictor.list$Predictor),&quot;Label&quot;]
+
+result$cor = paste0(&quot;cor=&quot;, round(result$correlation, 2) )
+
+result %&gt;% filter(correlation &lt; 0.95) %&gt;% arrange((correlation))</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":["variable"],"name":[1],"type":["fct"],"align":["left"]},{"label":["correlation"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Trait"],"name":[3],"type":["chr"],"align":["left"]},{"label":["cor"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"C4_01","2":"0.3673743","3":"Complement Component 4","4":"cor=0.37"},{"1":"CeliacDisease_01","2":"0.7931693","3":"Celiac disease","4":"cor=0.79"},{"1":"PBC_01","2":"0.8986654","3":"Primary biliary cirrhosis","4":"cor=0.9"},{"1":"C3_01","2":"0.9082594","3":"Complement Component 3","4":"cor=0.91"},{"1":"UKB_PPP_2022_TNF","2":"0.9117453","3":"TNF-alpha","4":"cor=0.91"},{"1":"UKB_PPP_2022_IL10","2":"0.9239051","3":"IL-10","4":"cor=0.92"},{"1":"SLE_01","2":"0.9314831","3":"Systemic lupus erythematosus","4":"cor=0.93"},{"1":"UKB_PPP_2022_IL15","2":"0.9343848","3":"IL-15","4":"cor=0.93"},{"1":"UKB_35BM_2021_Non_albumin_protein","2":"0.9456492","3":"Non-albumin protein","4":"cor=0.95"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>hist(result$correlation)</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p>mean is 0.9709689</p>
+<p>SD is 0.062162</p>
+</div>
+<div id="across-samples" class="section level3" number="8.3.2">
+<h3><span class="header-section-number">8.3.2</span> across samples</h3>
+<pre class="r"><code>result.c.samples &lt;- melted.SALSA %&gt;%
+  group_by(IID) %&gt;%
+  summarise(correlation = cor(LPS, GSAv2))
+
+summary(result.c.samples$correlation)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##  0.9362  0.9658  0.9740  0.9703  0.9787  0.9885</code></pre>
+<pre class="r"><code>hist(result.c.samples$correlation)</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+</div>
+</div>
+<div id="plot" class="section level2" number="8.4">
+<h2><span class="header-section-number">8.4</span> plot</h2>
+<div id="binary" class="section level3" number="8.4.1">
+<h3><span class="header-section-number">8.4.1</span> binary</h3>
+<pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_binary,], aes(x = GSAv2, y = LPS)) +
+  facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
+  geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
+  geom_point(size = 0.8) + 
+  xlim(-3,3) + ylim(-3,3) + 
+    theme_classic(base_size = 12) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12),
+    strip.background = element_blank()
+  ) +
+  geom_text(data = result[result$variable %in% traits_binary,],aes(x = -1.5, y = 2, label = cor) )
+nbm.plot</code></pre>
+<pre><code>## Warning: Removed 85 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-25-1.png" width="1152" /></p>
+<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_binary_traits.jpeg&quot; , width = 12, height = 13)</code></pre>
+</div>
+<div id="quantitative" class="section level3" number="8.4.2">
+<h3><span class="header-section-number">8.4.2</span> quantitative</h3>
+<pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_quanti,], aes(x = GSAv2, y = LPS)) +
+  facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
+  geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
+  geom_point(size = 0.8) + 
+  xlim(-3,3) + ylim(-3,3) + 
+    theme_classic(base_size = 12) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12),
+    strip.background = element_blank()
+  ) +
+  geom_text(data = result[result$variable %in% traits_quanti,],aes(x = -1.5, y = 2, label = cor) )
+nbm.plot</code></pre>
+<pre><code>## Warning: Removed 52 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
+<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_quantitative_traits.jpeg&quot; , width = 12, height = 9)</code></pre>
+</div>
+<div id="biomarker" class="section level3" number="8.4.3">
+<h3><span class="header-section-number">8.4.3</span> Biomarker</h3>
+<pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_35bm,], aes(x = GSAv2, y = LPS)) +
+  facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
+  geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
+  geom_point(size = 0.8) + 
+  xlim(-3,3) + ylim(-3,3) + 
+    theme_classic(base_size = 12) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12),
+    strip.background = element_blank()
+  ) +
+  geom_text(data = result[result$variable %in% traits_35bm,],aes(x = -1.5, y = 2, label = cor) )
+nbm.plot</code></pre>
+<pre><code>## Warning: Removed 73 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-27-1.png" width="1152" /></p>
+<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_35BM.jpeg&quot; , width = 12, height = 13)</code></pre>
+</div>
+<div id="fatty-acid" class="section level3" number="8.4.4">
+<h3><span class="header-section-number">8.4.4</span> fatty acid</h3>
+<pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_fa,], aes(x = GSAv2, y = LPS)) +
+  facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
+  geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
+  geom_point(size = 0.8) + 
+  xlim(-3,3) + ylim(-3,3) + 
+    theme_classic(base_size = 12) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12),
+    strip.background = element_blank()
+  ) +
+  geom_text(data = result[result$variable %in% traits_fa,],aes(x = -1.5, y = 2, label = cor) )
+nbm.plot</code></pre>
+<pre><code>## Warning: Removed 38 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-28-1.png" width="1152" /></p>
+<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_FattyAcid_traits.jpeg&quot; , width = 12, height = 6.5)</code></pre>
+</div>
+<div id="ppp" class="section level3" number="8.4.5">
+<h3><span class="header-section-number">8.4.5</span> PPP</h3>
+<pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_ppp,], aes(x = GSAv2, y = LPS)) +
+  facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
+  geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
+  geom_point(size = 0.8) + 
+  xlim(-3,3) + ylim(-3,3) + 
+    theme_classic(base_size = 12) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12),
+    strip.background = element_blank()
+  ) +
+  geom_text(data = result[result$variable %in% traits_ppp,],aes(x = -1.5, y = 2, label = cor) )
+nbm.plot</code></pre>
+<pre><code>## Warning: Removed 21 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-29-1.png" width="1152" /></p>
+<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_PPP.jpeg&quot; , width = 12, height = 4.5)</code></pre>
+</div>
+<div id="per-person-plot" class="section level3" number="8.4.6">
+<h3><span class="header-section-number">8.4.6</span> per person
+plot</h3>
+<pre class="r"><code>person.plot = ggplot(data = melted.both[!melted.both$IID %in% c(&quot;NA06997&quot;,&quot;3728601&quot; ) ,], aes(x = GSAv2, y = LPS)) +
+  facet_wrap(~IID,  ncol= 6) + 
+  geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
+  geom_point(size = 0.8) + 
+  xlim(-3,3) + ylim(-3,3) + 
+    theme_classic(base_size = 12) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12),
+    strip.background = element_blank()
+  ) 
+
+person.plot</code></pre>
+<pre><code>## Warning: Removed 39 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-30-1.png" width="1152" /></p>
+<pre class="r"><code>#ggsave(plot = person.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_per_person.jpeg&quot; , width = 12, height = 16)</code></pre>
+</div>
+</div>
+</div>
+<div id="plot-outliers" class="section level1" number="9">
+<h1><span class="header-section-number">9</span> plot outliers</h1>
+<pre class="r"><code>result = data.frame(result)
+
+ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correlation &lt; 0.95), &quot;variable&quot;],], aes(x = GSAv2, y = LPS)) + 
+  geom_point(size = 0.1) + 
+  facet_wrap(~variable, ncol = 4) + 
+  xlim(-3,3) + ylim(-3,3)</code></pre>
+<pre><code>## Warning: Removed 2 rows containing missing values or values outside the scale range
+## (`geom_point()`).</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-31-1.png" width="1152" /></p>
+</div>
+<div id="pgs-of-ceph-samples" class="section level1" number="10">
+<h1><span class="header-section-number">10</span> PGS of CEPH
+samples</h1>
+<pre class="r"><code>ceph.lps = melted.lps.prs.norm[grep(&quot;NA&quot;, melted.lps.prs.norm$IID ),]
+ceph.gsa = melted.mnd.b3.bcc.norm[grep(&quot;NA&quot;, melted.mnd.b3.bcc.norm$IID ),]
+
+colnames(ceph.lps)[3] = &quot;PRS&quot; 
+colnames(ceph.gsa)[3] = &quot;PRS&quot;
+
+ceph.lps$Platform = &quot;LPS&quot;
+ceph.gsa$Platform = &quot;GSAv2&quot;
+
+ceph.norm = rbind(ceph.lps, ceph.gsa)
+ceph.norm$Study_ID = NA
+ceph.norm$Study_ID = sub(&quot;_.*&quot;, &quot;&quot;,ceph.norm$IID)
+
+# Display the updated data frame
+
+ggplot(data = ceph.norm[grep(&quot;_202&quot;, ceph.norm$variable, invert = T),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  )</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-32-1.png" width="864" /></p>
+<pre class="r"><code># Display the updated data frame
+
+ggplot(data = ceph.norm[grep(&quot;UKB_FA_2022&quot;, ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  )</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-33-1.png" width="864" /></p>
+<pre class="r"><code># Display the updated data frame
+
+ggplot(data = ceph.norm[grep(&quot;UKB_PPP_2022&quot;, ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  )</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-34-1.png" width="864" /></p>
+<pre class="r"><code># Display the updated data frame
+
+ggplot(data = ceph.norm[grep(&quot;UKB_35BM_2021&quot;, ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
+  )</code></pre>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-35-1.png" width="864" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

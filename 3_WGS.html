@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Tian Lin" />
+
+<meta name="date" content="2025-06-03" />
+
+<title>Whole Genome Sequencing data</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/lumen.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PGS|Consistency</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="index.html">Intro</a>
+</li>
+<li>
+  <a href="0_PredictorPrep.html">Predictors</a>
+</li>
+<li>
+  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+</li>
+<li>
+  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+</li>
+<li>
+  <a href="3_WGS.html">WGS</a>
+</li>
+<li>
+  <a href="4_LowPassSeq.html">LowPass</a>
+</li>
+<li>
+  <a href="8_PGS_Merge.html">PGS_Merge</a>
+</li>
+<li>
+  <a href="5_Consistency.html">Consistency</a>
+</li>
+<li>
+  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
+</li>
+<li>
+  <a href="6_MissingSNP.html">MissingSNP</a>
+</li>
+<li>
+  <a href="11_convert_function.html">Convert_function</a>
+</li>
+<li>
+  <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Whole Genome Sequencing data</h1>
+<h4 class="author">Tian Lin</h4>
+<h4 class="date">03 June 2025</h4>
+
+</div>
+
+
+<div id="intro" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Intro</h1>
+<p>Whole genome sequencing data is downloaded from the 1000 Genomes
+project, which did the high-coverage wgs.</p>
+<p><a href="https://www.internationalgenome.org/data-portal/sample"
+class="uri">https://www.internationalgenome.org/data-portal/sample</a></p>
+<p>citation: Marta Byrska-Bishop et al., High-coverage whole-genome
+sequencing of the expanded 1000 Genomes Project cohort including 602
+trios<br />
+<a
+href="https://www.cell.com/cell/fulltext/S0092-8674(22)00991-6#sectitle0030"
+class="uri">https://www.cell.com/cell/fulltext/S0092-8674(22)00991-6#sectitle0030</a></p>
+<pre class="bash"><code>
+## downloaded cram file 
+ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR398/ERR3989270/NA07029.final.cram 
+ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR398/ERR3989266/NA06997.final.cram
+ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR398/ERR3989299/NA10861.final.cram   
+
+## index the files
+samtools index -b ${sample}.final.cram
+</code></pre>
+<p>The files are alignment files, which were against the human genome
+build 38.</p>
+</div>
+<div id="process-downloaded-wgs-data" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> process downloaded WGS
+data</h1>
+<div id="call-variants-using-bp-resolution" class="section level2"
+number="2.1">
+<h2><span class="header-section-number">2.1</span> call variants using
+BP resolution</h2>
+<p>Alignment files are processed to call variants using GATK best
+practice.</p>
+<pre class="bash"><code>#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=150G
+#SBATCH --time=40:00:00
+#SBATCH --job-name=call_variants
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-22
+
+i=$SLURM_ARRAY_TASK_ID
+cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
+module load bcftools
+
+
+# sample=&quot;NA06997&quot;
+# sample=&quot;NA07029&quot;
+sample=&quot;NA10861&quot;
+
+# call variants
+
+Pipelines/gatk-4.1.9.0/gatk HaplotypeCaller  \
+-R $ref  \
+-I  withBuild38/Alighed_bam/${sample}.final.cram   \
+--dbsnp  Pipelines/hg38/dbsnp_146.hg38.vcf.gz  \
+--emit-ref-confidence BP_RESOLUTION     \
+-O  withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_from1KG_chr${i}.vcf.gz     \
+-L  chr${i}
+
+## separate multiallelic into rows
+bcftools norm -m - withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_from1KG_chr${i}.vcf.gz  &gt;  withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_biallelic_from1KG_chr${i}.vcf.gz</code></pre>
+</div>
+<div id="check-where-are-the-missing-snps" class="section level2"
+number="2.2">
+<h2><span class="header-section-number">2.2</span> check where are the
+missing SNPs</h2>
+<pre class="bash"><code>awk &#39;{print $2}&#39; PRS_uno/NA06997_WGS_ADHD_01_SBayesRC.nopred  &gt; missing_SNPs.txt 
+
+grep -w -f missing_SNPs.txt  SNP_lists/dbsnp_146.hg38.txt  &gt; missing_SNP_info_in_dbsnp_146.hg38.txt 
+</code></pre>
+</div>
+<div id="call-variants---option-2-define-snp-list-in-calling"
+class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> call variants -
+option 2 – define snp list in calling</h2>
+<pre class="r"><code># R get bed files
+
+bimfile = &quot;Genotype_concordance/MND_merged_2755.bim&quot;
+bim = read.table(bimfile)
+
+for (i in 1:22){
+chr = bim[bim$V1 == i, c(1, 4)]
+chr$V3 = chr$V4 + 1
+write.table(chr, file = paste0(&quot;Genotype_concordance/MND_merged_2755_chr&quot; , i, &quot;_interval.bed&quot;  ) , quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)
+
+}</code></pre>
+<pre class="bash"><code>#!/bin/bash
+
+cd /scratch/60days/uqtlin5/
+chrID=$TASK_ID
+ref=CW_pipeline/references/hg19/hg19_new.fa
+interval=GSA_SNP_calling/GSA_chr${chrID}_interval.bed
+
+
+gatk-4.1.9.0/gatk   GenotypeGVCFs  \
+        -R $ref \
+        --include-non-variant-sites \
+        --variant     VCFs/combined.${chrID}.vcf \
+        --intervals   $interval \
+        --only-output-calls-starting-in-intervals \
+        --output      GSA_SNP_calling/FL_GSA_chr${chrID}.vcf
+   
+</code></pre>
+</div>
+</div>
+<div id="annotate-snps" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Annotate SNPs</h1>
+<p>Although we used the annotate option in GATK with <em>–dbsnp
+Pipelines/hg38/dbsnp_146.hg38.vcf.gz</em>, due to the limit of samples
+in allele coverage, most of the SNPs are not annotated properly. We will
+have to annotate them based on the alleles pairs in our predictors.</p>
+<pre class="bash"><code>
+#https://www.biostars.org/p/9554277/
+wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz
+wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz.tbi
+
+grep rs  Pipelines/HRC.r1-1.GRCh37.wgs.mac5.sites.tab  | awk &#39;{print $3}&#39;  &gt; HRC.SNPs.with.dbSNP.IDs.txt
+
+zless  Pipelines/hg38/dbsnp_146.hg38.vcf.gz  | grep -w -f HRC.SNPs.with.dbSNP.IDs.txt  &gt; ../SNP_lists/dbsnp_146.hg38_in_HRCpanel.txt</code></pre>
+<p>Since we have only one sample in each VCF file, we are going to do
+annotation by reading it into R.</p>
+<pre class="bash"><code>
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=150G
+#SBATCH --time=40:00:00
+#SBATCH --job-name=extract_HRC
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-22
+
+i=$SLURM_ARRAY_TASK_ID
+
+sample=&quot;NA06997&quot;
+cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
+
+target=${sample}_dbSNP_biallelic_from1KG_chr${i}
+
+zless  withBuild38/Called_Variants/ref_confidence_BP_resolution/${target}.vcf.gz  &gt; ${target}.vcf
+
+grep &quot;^#&quot; ${target}.vcf  &gt; ${target}.vcf.header
+
+Rscript  annotate_vcf_updated.R  ${sample} ${i}
+
+cat ${target}.vcf.header  ${target}.vcf_annotated.txt  &gt; ${target}_annotated.vcf
+</code></pre>
+<p>This is the R script to annotate SNPs.</p>
+<pre class="r"><code>## this is annotate_vcf_updated.R
+#setwd(&quot;/scratch/project_mnt/S0007/uqtlin5/CEPH_samples/WGS&quot;)
+
+args=commandArgs(trailingOnly = TRUE)
+library(data.table)
+sample=args[1]
+chr=args[2]
+
+#sample=&quot;NA06997&quot;
+#chr=22
+
+info.file = &quot;/QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info&quot;
+info = data.frame(fread(info.file))
+
+geno.file =  paste0( sample, &quot;_dbSNP_biallelic_from1KG_chr&quot;, chr, &quot;.vcf&quot;)
+dbsnp.file =  paste0(&quot;SNP_lists/&quot;, &quot;dbsnp_146.hg38_in_HRC_chr&quot;, chr,&quot;.txt&quot;)
+
+geno = read.table(geno.file)
+dbsnp = read.table(dbsnp.file)
+
+geno$chr_pos = paste0(geno$V1, &quot;_&quot;, geno$V2)
+dbsnp$chr_pos = paste0(dbsnp$V1, &quot;_&quot;, dbsnp$V2)
+
+geno$A1.in.dbsnp = dbsnp[match(geno$chr_pos, dbsnp$chr_pos), &quot;V4&quot;]
+geno$A2.in.dbsnp = dbsnp[match(geno$chr_pos, dbsnp$chr_pos), &quot;V5&quot;]
+geno$rsID = dbsnp[match(geno$chr_pos, dbsnp$chr_pos), &quot;V3&quot;]
+
+geno$A1.in.pred = info[match(geno$rsID, info$ID),&quot;A1&quot;]
+geno$A2.in.pred = info[match(geno$rsID, info$ID),&quot;A2&quot;]
+
+## keep useful geno
+geno = geno[geno$rsID%in%info$ID,]
+
+## with alt SNPs
+geno.group2 = geno[which(geno$V5 != &quot;&lt;NON_REF&gt;&quot;), ]
+selected.geno.group2 = geno.group2[( (geno.group2[,&quot;V4&quot;] == geno.group2[, &quot;A1.in.pred&quot;] ) &amp;  
+                                       (geno.group2[,&quot;V5&quot;] == geno.group2[, &quot;A2.in.pred&quot;] ))|
+                                   ( (geno.group2[,&quot;V4&quot;] == geno.group2[, &quot;A2.in.pred&quot;] ) &amp;  
+                                       (geno.group2[,&quot;V5&quot;] == geno.group2[, &quot;A1.in.pred&quot;] ))
+                                   ,]
+
+## non alt SNPs
+geno.group1 = geno[which(geno$V5 == &quot;&lt;NON_REF&gt;&quot; &amp; geno$V4 ==geno$A1.in.pred ),]
+geno.group1 = geno.group1[ !geno.group1$rsID %in% selected.geno.group2$rsID ,]
+geno.group1$V5 = geno.group1$A2.in.pred
+
+geno.group3 = geno[which(geno$V5 == &quot;&lt;NON_REF&gt;&quot; &amp; geno$V4 ==geno$A2.in.pred),]
+geno.group3 = geno.group3[ !geno.group3$rsID %in% selected.geno.group2$rsID ,]
+geno.group3$V5 = geno.group3$A1.in.pred
+
+## merge back
+ant.geno = rbind(geno.group1, selected.geno.group2, geno.group3)
+sort.geno= ant.geno[order(ant.geno$V2),]
+
+write.table(sort.geno[,c(&quot;V1&quot;, &quot;V2&quot;, &quot;rsID&quot;, &quot;V4&quot;, &quot;V5&quot;, &quot;V6&quot;, &quot;V7&quot;, &quot;V8&quot;, &quot;V9&quot;, &quot;V10&quot;)], paste0(geno.file, &quot;_annotated.txt&quot; ), quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)</code></pre>
+<p>Example of missing SNP:</p>
+<pre class="r"><code> geno[which(geno$rsID== &quot;rs242078&quot;),]
+#             V1       V2       V3        V4        V5     V6 V7
+# 32897331 chr22 32832706 rs242078 ATAATACTT         A 335.64  .
+# 32897332 chr22 32832706 rs242078 ATAATACTT GTAATACTT 335.64  .
+# 32897333 chr22 32832706 rs242078 ATAATACTT &lt;NON_REF&gt; 335.64  .
+#                                                                                                                              V8
+# 32897331   BaseQRankSum=-0.933;DB;DP=36;ExcessHet=3.0103;MLEAC=0;MLEAF=0;MQRankSum=0;RAW_MQandDP=129600,36;ReadPosRankSum=0.166
+# 32897332 BaseQRankSum=-0.933;DB;DP=36;ExcessHet=3.0103;MLEAC=1;MLEAF=0.5;MQRankSum=0;RAW_MQandDP=129600,36;ReadPosRankSum=0.166
+# 32897333   BaseQRankSum=-0.933;DB;DP=36;ExcessHet=3.0103;MLEAC=0;MLEAF=0;MQRankSum=0;RAW_MQandDP=129600,36;ReadPosRankSum=0.166
+#                         V9                                 V10        chr_pos
+# 32897331 GT:AD:DP:GQ:PL:SB 0/0:15,0:30:99:343,430,1302:9,6,9,6 chr22_32832706
+# 32897332 GT:AD:DP:GQ:PL:SB   0/1:15,13:30:99:343,0,438:9,6,9,6 chr22_32832706
+# 32897333 GT:AD:DP:GQ:PL:SB 0/0:15,2:30:99:343,422,1130:9,6,9,6 chr22_32832706
+#          A1.in.dbsnp A2.in.dbsnp     rsID A1.in.pred A2.in.pred
+# 32897331           A           G rs242078          G          A
+# 32897332           A           G rs242078          G          A
+# 32897333           A           G rs242078          G          A</code></pre>
+</div>
+<div id="combine-data" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> combine data</h1>
+<p>The annotated chromosomes of each data are merged into one vcf
+file.</p>
+<pre class="bash"><code>
+module load vcftools 
+samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
+for sample in &quot;${samples[@]}&quot;; do
+vcf-concat  ${sample}_dbSNP_biallelic_from1KG_chr1_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr2_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr3_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr4_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr5_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr6_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr7_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr8_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr9_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr10_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr11_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr12_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr13_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr14_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr15_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr16_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr17_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr18_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr19_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr20_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr21_annotated.vcf \
+            ${sample}_dbSNP_biallelic_from1KG_chr22_annotated.vcf \
+             &gt; ${sample}_combined_SBRC_SNPs.vcf
+done
+</code></pre>
+</div>
+<div id="profile-prs" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> profile PRS</h1>
+<div id="r-version-sbayesrc-predictors" class="section level2"
+number="5.1">
+<h2><span class="header-section-number">5.1</span> R version SBayesRC
+predictors</h2>
+<pre class="bash"><code>#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=50G
+#SBATCH --time=4:00:00
+#SBATCH --job-name=prs
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-72
+
+i=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
+
+traitfile=&quot;../../AGDS_PRS_profiling/uno_predictors_v3.txt&quot;
+trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
+predictor=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $2}&#39; )
+echo $trait
+echo $predictor
+
+outdir=PRS_uno
+mkdir -p $outdir
+
+
+
+samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
+
+for sample in &quot;${samples[@]}&quot;; do
+  cohort=${sample}_WGS
+  input=${sample}_combined_SBRC_SNPs.vcf
+
+plink \
+   --vcf  $input \
+   --double-id  \
+   --score  $predictor    1 2 3 header  sum  \
+   --out ${outdir}/${cohort}_${trait}_SBayesRC
+
+done
+</code></pre>
+</div>
+<div id="gctb-version" class="section level2" number="5.2">
+<h2><span class="header-section-number">5.2</span> GCTB version</h2>
+<p>to calculate variance captured</p>
+<pre class="bash"><code>#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=50G
+#SBATCH --time=4:00:00
+#SBATCH --job-name=profile
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-140
+
+
+i=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
+
+
+traitfile=&quot;/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt&quot;
+trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
+predictor=$(sed  &quot;${i}q;d&quot;  $traitfile  | awk &#39;{print $3}&#39; )
+echo $trait
+
+
+outdir=PRS_all_GCTB
+mkdir -p $outdir
+
+
+samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
+
+for sample in &quot;${samples[@]}&quot;; do
+  cohort=${sample}_WGS
+  input=${sample}_combined_SBRC_SNPs.vcf
+
+  plink \
+   --vcf  $input \
+   --double-id  \
+   --score  $predictor  2 5 8  header sum    \
+   --out ${outdir}/${cohort}_${trait}_SBayesRC
+
+done
+</code></pre>
+</div>
+</div>
+<div id="combine-prs" class="section level1" number="6">
+<h1><span class="header-section-number">6</span> Combine PRS</h1>
+<pre class="bash"><code>
+outdir=PRS_all_GCTB
+
+samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
+
+for sample in &quot;${samples[@]}&quot;; do
+
+grep ${sample}  ${outdir}/*profile | \
+sed &quot;s/${outdir}\/${sample}_WGS_//&quot; | \
+sed &#39;s/_SBayesRC.profile://&#39;  | \
+awk &#39;{print $1, $5, $6, $7}&#39;  \
+&gt; ${sample}_WGS_PRS_vGCTB.txt
+
+done
+</code></pre>
+<pre class="r"><code>wgs.sample.list = c(&quot;NA07029&quot; , &quot;NA06997&quot;, &quot;NA10861&quot;)
+
+merged.wgs.prs = data.frame()
+
+for (i in 1:length(wgs.sample.list)){
+  sample.id = wgs.sample.list[i]
+  wgs.prs= read.table(paste0(&quot;Data/WGS/&quot;, sample.id , &quot;_WGS_PRS_vGCTB.txt&quot;))
+  colnames(wgs.prs) = c(&quot;Trait&quot;  , paste0(sample.id, c(&quot;_CNT&quot;, &quot;_CNT2&quot;, &quot;&quot;  ) ) )
+ if (nrow(merged.wgs.prs) == 0) {  # Initialize merged.wgs.prs with the first file&#39;s data
+    merged.wgs.prs = wgs.prs
+  } else {
+    merged.wgs.prs = merge(merged.wgs.prs, wgs.prs, by = &quot;Trait&quot;, all = TRUE)
+  }
+
+}
+
+head(merged.wgs.prs)
+row.names(merged.wgs.prs) = merged.wgs.prs$Trait
+merged.wgs.prs = merged.wgs.prs[,-1]
+write.csv(merged.wgs.prs, file = &quot;Data/WGS/WGS_merged_GCTB_PRS.csv&quot;)</code></pre>
+</div>
+<div id="finding-the-missing-snps" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> Finding the missing
+SNPs</h1>
+<pre class="bash"><code>awk &#39;{print $2}&#39; PRS_uno/NA07029_WGS_ADHD_01_SBayesRC.nopred  &gt; NA07029_missing_SNPs.txt
+awk &#39;{print $2}&#39; PRS_uno/NA06997_WGS_ADHD_01_SBayesRC.nopred  &gt; NA06997_missing_SNPs.txt
+
+grep -w -f NA07029_missing_SNPs.txt   SNP_lists/dbsnp_146.hg38.txt  &gt;  NA07029_missing_SNPs_in_hg38.txt 
+grep -w -f NA06997_missing_SNPs.txt   SNP_lists/dbsnp_146.hg38.txt  &gt;  NA06997_missing_SNPs_in_hg38.txt 
+
+
+
+#!/bin/bash
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem=150G
+#SBATCH --time=40:00:00
+#SBATCH --job-name=extract_HRC
+#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
+#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
+#SBATCH --partition=general
+#SBATCH --account=a_mcrae
+#SBATCH --array=1-22
+
+i=$SLURM_ARRAY_TASK_ID
+
+cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
+
+samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
+
+
+for sample in &quot;${samples[@]}&quot;; do
+
+Rscript  find_missing_SNPs.R  ${sample} ${i}
+
+done</code></pre>
+<pre class="r"><code>args=commandArgs(trailingOnly = TRUE)
+library(data.table)
+sample=args[1]
+chr=args[2]
+
+geno.file =  paste0( sample, &quot;_dbSNP_biallelic_from1KG_chr&quot;, chr, &quot;.vcf&quot;)
+geno = read.table(geno.file)
+
+
+missing.snp = read.table(paste0(sample, &quot;_missing_SNPs_in_hg38.txt&quot;) )
+missing.snp = missing.snp[which(missing.snp$V1 == paste0(&quot;chr&quot; , chr )),]
+
+geno.for.missing = geno[which(geno$V2 %in% missing.snp$V2),]
+
+write.table(geno.for.missing, paste0(geno.file, &quot;_recoverable.txt&quot; ), quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)</code></pre>
+</div>
+<div id="snp-coverage" class="section level1" number="8">
+<h1><span class="header-section-number">8</span> SNP coverage</h1>
+<pre class="r"><code>library(VennDiagram)</code></pre>
+<pre><code>## Loading required package: futile.logger</code></pre>
+<pre><code>## 
+## Attaching package: &#39;VennDiagram&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:ggpubr&#39;:
+## 
+##     rotate</code></pre>
+<pre class="r"><code>a = read.table(&quot;Data/nopred/SNPs_in_NA06997_WGS_ADHD_01_SBayesRC.nopred&quot;)
+b = read.table(&quot;Data/nopred/SNPs_in_NA07029_WGS_ADHD_01_SBayesRC.nopred&quot;)
+c = read.table(&quot;Data/nopred/SNPs_in_NA10861_WGS_ADHD_01_SBayesRC.nopred&quot;)
+
+# Create a Venn diagram
+venn.plot &lt;- venn.diagram(
+  x = list(
+    Vector1 = a$V1,
+    Vector2 = b$V1,
+    Vector3 = c$V1
+  ),
+  category.names = c(&quot;NA06997&quot;, &quot;NA07029&quot;, &quot;NA10861&quot;),
+  filename = NULL,  # Use NULL to display the diagram in RStudio
+  output = TRUE
+)
+
+grid.newpage()
+
+grid.draw(venn.plot)</code></pre>
+<p><img src="3_WGS_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+</div>
+<div id="variance-captured" class="section level1" number="9">
+<h1><span class="header-section-number">9</span> Variance captured</h1>
+<pre class="r"><code>var.exp = read.csv(&quot;Data/Predictors/Variance_captured_in_each_data.csv&quot;, row.names = 1)
+
+predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot; )
+included_traits = predictor.list$Predictor
+var.exp = var.exp[(var.exp$V1)%in%included_traits,]</code></pre>
+<pre class="r"><code># Convert the matrix to a dataframe and reshape it for ggplot
+df &lt;- var.exp[,c(&quot;V1&quot;, &quot;NA06997_WGS&quot;, &quot;NA07029_WGS&quot;, &quot;NA10861_WGS&quot;)]
+df_melt &lt;- melt(df, id.vars = &quot;V1&quot;)
+
+df_melt$Label = predictor.list[match(df_melt$V1, predictor.list$Predictor),&quot;Label&quot;]
+
+df_melt$Group &lt;- ifelse(grepl(&quot;_0&quot;, df_melt$V1), 1, 0)
+
+
+# Create the heatmap
+heatmap_plot1 &lt;- ggplot(df_melt, aes(x = variable , y = Label, fill = value)) +
+  geom_tile() +
+  scale_fill_gradient(low = &quot;red&quot;, high = &quot;white&quot;) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
+
+# Save the heatmap as a PDF with the desired size (width x height in inches)
+#ggsave(&quot;Figures/heatmap_var_cptured_of_tarits.pdf&quot;, plot = heatmap_plot1, width = 10, height = 14)
+heatmap_plot1</code></pre>
+<p><img src="3_WGS_files/figure-html/unnamed-chunk-19-1.png" width="768" /></p>
+<pre class="r"><code>head(df)</code></pre>
+<div data-pagedtable="false">
+<script data-pagedtable-source type="application/json">
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["V1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["NA06997_WGS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["NA07029_WGS"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["NA10861_WGS"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"IPF_01","2":"0.9999634","3":"0.9999673","4":"0.9999474","_rn_":"1"},{"1":"MDD_04","2":"0.9999643","3":"0.9999558","4":"0.9999668","_rn_":"3"},{"1":"Migraine_01","2":"0.9999239","3":"0.9999082","4":"0.9999046","_rn_":"4"},{"1":"ADHD_01","2":"0.9999633","3":"0.9999583","4":"0.9999700","_rn_":"6"},{"1":"AF_01","2":"0.9997744","3":"0.9998684","4":"0.9998655","_rn_":"7"},{"1":"ALS_02","2":"0.9999421","3":"0.9999505","4":"0.9999451","_rn_":"8"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+  </script>
+</div>
+<pre class="r"><code>ggarrange(
+ggplot(df, aes(x = NA06997_WGS, y = NA07029_WGS))  + geom_point() + geom_text_repel(data = subset(df, NA06997_WGS&lt;0.96), aes(label = V1 )),
+ggplot(df, aes(x = NA06997_WGS, y = NA10861_WGS))  + geom_point()+ geom_text_repel(data = subset(df, NA06997_WGS&lt;0.96), aes(label = V1 )),
+ncol = 2
+)</code></pre>
+<p><img src="3_WGS_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
