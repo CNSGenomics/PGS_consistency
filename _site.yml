@@ -3,26 +3,24 @@ output_dir: "."
 navbar:
   title: "PGS|Consistency"
   right:
-    - text: "Intro"
+    - text: "Introduction"
       href: index.html
     - text: "Predictors"
       href: 0_PredictorPrep.html
-    - text: "GRP_ChipData"
+    - text: "HSU Data"
       href: 1_GRP_ChipData.html
-    - text: "QIMR_ChipData"
+    - text: "QIMR Data"
       href: 2_QIMR_ChipData.html
-    - text: "WGS"
+    - text: "WGS data"
       href: 3_WGS.html
-    - text: "LowPass"
+    - text: "lcWGS data"
       href: 4_LowPassSeq.html
     - text: "Consistency"
       href: 5_Consistency.html
     - text: "Imputation Panel"
       href: 10_Imputation_Panel_effect.html
-    - text: "MissingSNP"
+    - text: "Missingness"
       href: 6_MissingSNP.html
-    - text: "Convert_function"
-      href: 11_convert_function.html
     - text: "Benchmarking"
       href: 7_Benchmarking.html
 
