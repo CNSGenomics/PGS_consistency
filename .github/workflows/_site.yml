@@ -1,0 +1,22 @@
+name: "Empirical evaluation of technical replication of polygenic scores"
+output_dir: "."
+navbar:
+  title: "PGS|Consistency"
+  right:
+    - text: "Intro"
+      href: index.html
+    - text: "Predictors"
+      href: 0_PredictorPrep.html
+
+
+output:
+  html_document:
+    theme: lumen
+    toc: no
+    toc_float: yes
+    toc_depth: 2
+    number_sections: yes
+    df_print: paged
+    code_folding: show
+    lib_dir: site_libs
+    self_contained: no
