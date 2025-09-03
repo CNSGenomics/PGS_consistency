@@ -1,6 +1,5 @@
 ---
 title: "Chip Data from HSU"
-date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   html_document:
     toc: TRUE
@@ -38,19 +37,48 @@ We usually transfer the data to binary format to save space and accelerate calcu
 
 plink \
 --file ${inpath}/${data}  \
---make-bed --out ${data}
+--make-bed --out ${dir}/Original/${data}
 ```
 
 This format is explained well in [plink manual page](https://zzz.bwh.harvard.edu/plink/data.shtml#bed).
 
+## match missing alleles
+
+Since the sample size in each batch is very small, a lot of SNPs didn't get alternative alleles in the data. 
+We filled in the alternative allele in bim file by matching to the strand file of the chip. 
+
+```{r, eval = F}
+args=commandArgs(trailingOnly = T)
+bim.file = args[1]
+strand.file = args[2]
+
+bim =  read.table(bim.file)
+strand.A = read.table(strand.file)
+
+bim$strand = strand.A[match(bim$V2, strand.A$V1),"V6"]
+bim$index = c(1:nrow(bim))
+bim.tofill = bim[(bim[,"V5"] == 0 & bim[,"V6"] != 0 & bim[,"strand"]%in%
+                      c("AT", "CG", "AC", "AG", "CT", "CA","GA", "GT", "GC","TA","TC","TG" )), ]
+bim.nottofill = bim[!bim$V2%in%bim.tofill$V2,]
+
+for(i in 1:nrow(bim.tofill)){
+    bim.tofill[i,"V5"] = gsub(bim.tofill[i,"V6"], "" , bim.tofill[i, "strand"])
+  }
+
+bim.c = rbind(bim.tofill, bim.nottofill)
+bim.c = bim.c[order(bim.c$index),]
+write.table(bim.c[,1:6], file=paste0(bim.file, "_missing_filled.txt"), 
+            quote = F, sep ="\t", row.names = F, col.names = F)
+```
+
 ## Quality
 
-We can use Plink to generate summary stats at per-SNP and per-individual levels. 
+We use Plink to generate summary stats at per-SNP and per-individual levels. 
 
 ```{bash, eval = F}
-plink  --bfile ${data}  --missing   --out   ${data}
-plink  --bfile ${data}  --freq      --out   ${data}
-plink  --bfile ${data}  --hardy     --out   ${data}
+plink  --bfile ${dir}/Original/${data}  --missing   --out   ${dir}/Original/${data}
+plink  --bfile ${dir}/Original/${data}  --freq      --out   ${dir}/Original/${data}
+plink  --bfile ${dir}/Original/${data}  --hardy     --out   ${dir}/Original/${data}
 ```
 
 We used R to read in and make histograms of the summary statistics. 
@@ -90,28 +118,42 @@ We need chrX to do this check, but our predictor data has only autosomes, so we 
 
 ```{bash, eval = F}
 # don't run this chunk with practical data. it does not have X chromosome
-plink  --bfile ${data}  --check-sex --out  ${data}
+plink  --bfile ${dir}/Original/${data}  --check-sex --out  ${dir}/Original/${data}
+```
+
+
+## Flip SNPs on minus Strand 
+
+The chips don't always have probes on the positive strands. We have to flip all the SNPs on minus strand to positive strand for matching to reference data.
+[Strand](https://www.strand.org.uk) website has prepared strand files for a lot of chips. We downloaded the strand data for each chip we used, and used the **update_build.sh** tool to flip the strands. 
+
+
+
+```{r, out.width = "300px", echo = F, fig.align='center'}
+knitr::include_graphics("Figures/strand_display.png")
+```
+
+```{bash, eval = F}
+plink --bfile ${dir}/Original/${data} --flip ${refdir}/$strand  --recode  --make-bed  --out  ${dir}/Original/flipped_${data}
 ```
 
 
 ## QC
 
-In QC step, we will use Plink to exclude the SNPs and individuals with high missingess, very low MAF, and SNPs that violate Hardy-Weinberg Equilibrium. 
 
-It's very often that our target data set has a small sample size, like one or two hundred. Some cross-sample QC methods don't work very well in this circumstance. 
-Comparing to what we have learnt in the QC steps for a GWAS data set, which usually have thousands of samples, we are doing less filtering here. 
+In QC step, we  use Plink to exclude the SNPs and individuals with high missingess, very low MAF, and SNPs that violate Hardy-Weinberg Equilibrium. 
 
 
 ```{bash, eval = F}
 
 plink  \
- --bfile  ${data}  \
+ --bfile  ${dir}/Original/lipped_${data}  \
  --mind 0.05 \
  --geno 0.05 \
  --hwe 0.000001 \
- --maf 0.01 \
  --make-bed  \
- --out   ${data}_qced
+ --maf  0.01 \
+ --out    ${dir}/Original/cleaned_flipped_${data}
 ```
 
 
@@ -122,41 +164,16 @@ Parameters in the command:
   --maf: Minor allele frequency thresohld  
 
 
-## Flip SNPs on minus Strand 
+It's very often that our target data set has a small sample size, around one or two hundred. Some cross-sample QC methods don't work very well in this circumstance. 
+We made a QCed SNP list from pooled samples, and use it to extract high quality SNPs from small batches. 
 
-The chips don't always have probes on the positive strands. We have to flip all the SNPs on minus strand to positive strand for matching to reference data.
-[Strand](https://www.strand.org.uk) website has prepared strand files for a lot of chips. We downloaded the strand data for each chip we used, and used the **update_build.sh** tool to flip the strands. 
-
-```{bash, eval = F}
-
-
+```{bash, eval  =F}
+plink --bfile    ${dir}/Original/flipped_${data}  \
+--mind 0.05  \
+--chr 1-22  QCedSNPs_Preimputed.txt  \
+--make-bed  \
+--out   ${dir}/Original/cleaned_flipped_${data}
 ```
-
-## SNP ID consensus
-
-If you find a lot of SNPs in your data using customized IDs, in a form such as kpg1234, gsa.101 or chr1:10011, you can use the following R package to update the bim file.
-
-```{r, eval = F}
-## don't need to run this chunk. It's just for showing you the R package.
-BiocManager::install("SNPlocs.Hsapiens.dbSNP144.GRCh37")
-library(SNPlocs.Hsapiens.dbSNP144.GRCh37) 
-ref <- SNPlocs.Hsapiens.dbSNP144.GRCh37
-```
-
-
-## Align to reference genome
-
-For imputation purpose, we will align the SNPs to reference human genome, which is to make sure that the SNPs in our data and the reference data have the same ID, same location, and the alleles are read from the same strand.
-
-
-
-```{r, out.width = "300px", echo = F, fig.align='center', eval = F}
-knitr::include_graphics("Figures/strand_display.png")
-```
-
-Our example data has already got all SNPs aligned. We will skip this section in practice, but it's very important to check through each aspect and process your data carefully in your research.   
-
-
 
 
 
@@ -207,147 +224,124 @@ There are many phasing tools. We will use [Eagle v2.4.1](https://alkesgroup.broa
 
 
 ```{bash, eval = F}
-geneticmap1=${refpath}/genetic_map_chr${chr}_combined_b37_modified.txt
-reference=${refpath}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
 
 # Use EAGLE to generate phased haplotypes
-# it takes about 4 minutes.
-eagle  \
-    --vcfRef=$reference  \
-    --vcfTarget=indexed_fixed_${data}_chr${chr}.vcf.gz  \
-    --geneticMapFile=$geneticmap1  \
-    --vcfOutFormat=z \
-    --outPrefix=phased_chr${chr} > phasing.log
+	${exedir}/tools/eagle \
+    		--vcfRef=${refdir}/HRC/HRC.r1-1.EGA.GRCh37.chr${chr}.haplotypes.vcf.gz  \
+    		--vcfTarget=${dir}/Fixed/cleaned_flipped_${data}_fixed_index_chr${chr}.vcf.gz  \
+    		--geneticMapFile=${refdir}/genetic_map_modified/genetic_map_chr${chr}_combined_b37_modified.txt \
+    		--vcfOutFormat=z \
+	    	--numThreads=10 \
+    		--outPrefix=${dir}/Phased/${data}_phased_chr${chr} \
+    		2>&1 | tee ${dir}/Phased/${data}_phasing_chr${chr}.log
+
 
 # index the vcf.gz file
 tabix -p vcf  phased_chr${chr}.vcf.gz
 ```
 
 
-You can take a look at the phased vcf file with zless. 
-
-```{bash, eval = F}
-zless phased_chr${chr}.vcf.gz | less -S
-
-# less -S will align the columns for you, so the file is clearer to visualize. 
-# press q to exit from the file
-```
-
 ## Imputation
 
-We use Impute5 to impute the phased data. To reduce computation time, we will only imputed a chunk of chromosome 22. 
+Imputation was done with chunks for time efficiency. 
 
 ```{bash, eval = F}
 # CAUTION: genetic map file is different from the one used in phasing!
 # impute5 doesn't want the chr column in genetic map, so we removed that column
 
-# imputing chr22 takes around 8min. If you are in a hurry, try with next chunk. 
+# Chunk details
+chr=$(head -n ${SLURM_ARRAY_TASK_ID}      ${refdir}/HRC/chunk.list.${imputetool}.txt | tail -n 1  | awk '{print $1}' )
+intstart=$(head -n ${SLURM_ARRAY_TASK_ID} ${refdir}/HRC/chunk.list.${imputetool}.txt | tail -n 1  | awk '{print $3}' )
+intend=$(head -n ${SLURM_ARRAY_TASK_ID}   ${refdir}/HRC/chunk.list.${imputetool}.txt | tail -n 1  | awk '{print $4}' )
+row=$(head -n ${SLURM_ARRAY_TASK_ID}      ${refdir}/HRC/chunk.list.${imputetool}.txt | tail -n 1  | awk '{print $2}' )
 
-geneticmap2=${refpath}/genetic_map_chr${chr}_combined_b37.txt
-reference=${refpath}/ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
+# impute chunks
 
-impute5_1.1.5_static \
-        --m  $geneticmap2 \
-        --h  $reference  \
-        --g  phased_chr${chr}.vcf.gz  \
-        --r  ${chr} \
+	${exedir}/tools/impute5_v1.1.5/impute5_1.1.5_static \
+        --m  ${refdir}/1000GP_Phase3/genetic_map_chr${chr}_combined_b37.txt  \
+        --h  ${refdir}/HRC/HRC.r1-1.EGA.GRCh37.chr${chr}.haplotypes.vcf.gz \
+        --g  ${dir}/Phased/${data}_phased_chr${chr}.vcf.gz  \
+        --r  ${chr}:${intstart}-${intend}  \
         --ne 20000   \
         --threads 1 \
-        --o  imputed_chr${chr}.vcf.gz \
-        --l  imputed_chr${chr}.log
-```
+        --o  ${dir}/Imputed_Chunks/${data}_${imputetool}_chr${chr}_${row}_imputed.vcf.gz \
+        --l  ${dir}/Imputed_Chunks/${data}_${imputetool}_chr${chr}_${row}_imputed.log
 
-
-
-If the sample size is big, we can run imputation by chunks and parallel them. 
-
-```{bash , eval = F}
-# set the boundary of the chunk to impute
-intstart=40000001 
-intend=50000000
-
-impute5_1.1.5_static \
-        --m  $geneticmap2 \
-        --h  $reference  \
-        --g  phased_chr${chr}.vcf.gz  \
-        --r  ${chr}:${intstart}-${intend} \
-        --ne 20000   \
-        --threads 1 \
-        --o  imputed_chr${chr}_chunk.vcf.gz \
-        --l  imputed_chr${chr}_chunk.log
 
 ```
 
-## QC and format the imputed data
+## format the imputed data
 
 Imputed data is output as a zipped VCF file. We will change the format back to PLINK for following analysis.   
 
 We will use BCFTOOL again to extract info score for the imputed SNPs from the VCF file, which stands for the imputation quality per SNP. Info score is sensitive to sample size, so be careful to use it when you have a very small sample size in real studies.  
 
-1000G included a lot of InDels, which sometimes use the same SNP ID. Duplicated SNP IDs will introduce error, so we will simply remove them in our practice.
-
-If you are interested in these InDels or any SNPs with duplicate ID or missing ID, you can refill the bim file in R in the form of chr1:123456 or chr1:1234_dup2, since PLINK can't deal with duplicated or missing SNP IDs. 
 
 ```{bash, eval = F}
-## convert the format using plink
-plink --vcf  imputed_chr${chr}.vcf.gz   \
-            --id-delim '_'  \
-            --keep-allele-order \
-            --make-bed \
-            --out  imputed_chr${chr}
+	filelist=$(ls  Imputed_Chunks/*vcf.gz | grep chr${TASK_ID}_    |   tr '\t'   '\n' | awk '{print $1, $1}' | sed "s/Imputed_Chunks\/${data}_${imputetool}_chr${TASK_ID}_//"  | sed "s/_imputed.vcf.gz//" | sort -g -k 1  | awk '{print $2}'  | tr '\n'   '\t')
 
-## get info score, need bcftools
-tabix -p vcf   imputed_chr${chr}.vcf.gz
-bcftools query -f '%CHROM\t%ID\t%QUAL\t%POS\t%REF\t%ALT\t%INFO/AF\t%INFO/INFO\n' \
-imputed_chr${chr}.vcf.gz > imputed_chr${chr}.info
+	## merge
+	bcftools concat -Oz -o ${dir}/Imputed_Chromosomes/${data}_${imputetool}_chr${TASK_ID}_imputed.vcf.gz  ${filelist}
 
-## get the list of SNPs with info > 0.3
-awk ' $8 > 0.3 ' imputed_chr${chr}.info | awk '{print $2}' > snps_with_invo_over_0.3.info
+	## convert to plink format
+	plink --vcf ${dir}/Imputed_Chromosomes/${data}_${imputetool}_chr${TASK_ID}_imputed.vcf.gz  \
+	--const-fid \
+	--keep-allele-order \
+	--make-bed \
+	--out  ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID} 
 
-## QC with info score 
-plink2 --bfile imputed_chr${chr}  \
---extract snps_with_invo_over_0.3.info  \
---rm-dup force-first  \
---make-bed \
---out imputed_chr${chr}_QCed
+	## generate info score file
+	tabix -p vcf   "${dir}/Imputed_Chromosomes/${data}_${imputetool}_chr${TASK_ID}_imputed.vcf.gz"
+	bcftools query -f '%CHROM\t%ID\t%QUAL\t%POS\t%REF\t%ALT\t%INFO/AF\t%INFO/INFO\n' ${dir}"/Imputed_Chromosomes/"${data}"_${imputetool}_chr"${TASK_ID}"_imputed.vcf.gz" > $dir"/Imputed_Chromosomes/"${data}"_chr"${TASK_ID}".info"
 
-## note that we are using plink2 here, since plink does not have function --rm-dup. 
-## plink and plink2 have slight difference, and each of them have a few specific functions. We are more used to plink, so I kept to plink for all the other steps. 
+	## update RS IDs in plink data
+	Rscript  $imputation_module/update_imputed_SNPs_from_${imputetool}.R  ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.bim
+	mv ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.bim  ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.bim_ori
+	mv ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.bim_refilled ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.bim
+
+	## update RS IDs in info file
+	Rscript  $imputation_module/update_imputed_SNPs_from_${imputetool}.R  "${dir}/Imputed_Chromosomes/${data}_chr${TASK_ID}.info"
+	mv ${dir}/Imputed_Chromosomes/${data}_chr${TASK_ID}.info_refilled  ${dir}/Imputed_Chromosomes/${data}_imputed_chr${TASK_ID}_rs_updated.info
+
+	## fix fam IDs
+	cp ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.fam ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.fam_ori
+	sed 's/_/\t/' ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.fam_ori | awk '{print $2, $3, $4, $5, $6, $7}'  > ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${TASK_ID}.fam
 
 ```
 
-
-
-When we work with the **whole genome**, we can use the following example commands to merge imputed chunks and chromosome. 
+We then merge all the chromosomes into one file. 
 
 ```{bash, eval = F}
-## don't run this chunk. It's just an example, without usable inputs. 
+mkdir  -p  ${dir}/Imputed_plink_format
+rm -f  $dir/Imputed_plink_format/${data}_all_imputed_plink_files.txt
 
-# in vcf format
-filelist=$(ls  imputed_chr*vcf.gz | tr '\n'   '\t')  
-bcftools concat -Oz -o ${data}_imputed.vcf.gz  ${filelist}
+for chr in $(seq 2 22)
+do
+echo  "${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${chr}.bed \
+${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${chr}.bim \
+${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr${chr}.fam"  \
+>> $dir/Imputed_plink_format/${data}_all_imputed_plink_files.t
+xt
+done
 
-# in plink format
-plink \
---bfile imputed_chr1_QCed  \
---merge-list file_names_of_imputed_chr_2_to_22.txt \
---allow-no-sex  \
---make-bed  \
---out  ${data}_imputed_qced_autosomes 
+# merge the plink files of each chromosome
+required="$required:$mergechunk_sub"
+merge_plink="plink --bfile ${dir}/Imputed_Chromosomes/${data}_${imputetool}_imputed_chr1  \
+--merge-list $dir/Imputed_plink_format/${data}_all_imputed_plink_files.txt \
+--allow-no-sex  --make-bed  \
+--out  $dir/Imputed_plink_format/${data}_${imputetool}_imputed_autosomes "
+
+mergeplink_sub=`qsubshcom "$merge_plink" 1 100G merge_plink  1:00:00  "$clusterconfig -wait=$required"  `
+
 ```
 
-Sometimes we would like to keep all tha SNPs no matter of the imputation quality, so that we won't have missing SNPs which are in the predictor. 
+Here we keep all the SNPs no matter of the imputation quality, so that we won't have missing SNPs which are in the predictor. 
 
 
 
 # PGS profiling
 
-```{bash, eval = F}
-ls /QRISdata/Q3046/Data/*/grp_pipeline_*_impute5_bunya/Imputed_plink_format/*_autosomes.bim
-```
-
-
-Taking the imputed data, we will profile the PGS scores using PLINK.
+PGS are profiled using PLINK with all the SBayesRC predictors in our collection.
 
 
 ```{bash, eval = F}
@@ -360,190 +354,9 @@ plink  \
 
 The parameters after your predictor file means
 
- + 1 2 3: Take only the first three columns in the predictor file.   
+ + 2 5 8: the three useful columns in the predictor file.   
  + header: The predictor file has a header row.  
  + sum: Plink prefers to divide the score by the number of SNPs in predictor. Using "sum" will prevent the division step.   
-
-
-
-```{bash, eval = F}
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=5:00:00
-#SBATCH --job-name=profiling
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/CHIP/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/CHIP/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-7
-
-
-i=$SLURM_ARRAY_TASK_ID
-
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/CHIP/
-
-samplefile=all_grp_v4_data.txt 
-
-
-## define predictor
-#traitfile="/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt"
-#traitfile="traits.not.profiled.yet.txt"
-
-traitfile="traits.to.rerun.for.SARSCOV2.txt"
-trait=$(sed "${i}q;d" $traitfile | awk '{print $1}' )
-predictor=$(sed  "${i}q;d"  $traitfile  | awk '{print $3}' )
-echo $trait
-echo $predictor
-
-
-outdir=PRS_all_GCTB
-mkdir -p $outdir
-
-## define data
-
-for j in {1..74}; do 
-# j=75
-input=$(sed "${j}q;d"  $samplefile  | awk '{print $4}'  )	
-		cohort=$(sed "${j}q;d"  $samplefile  | awk '{print $1}' )
-		version=$(sed "${j}q;d"  $samplefile  | awk '{print $2}' )
-		data=$(sed "${j}q;d"  $samplefile  | awk '{print $3}'  )
-
-		plink \
-	 	  --bfile  PLINK/${cohort}/${data}  \
-	 	  --score  $predictor  2 5 8  header sum    \
-	  	 --out ${outdir}/${cohort}_${version}_${trait}_SBayesRC 	
-done
-
-```
-
-# Merge the files
-
-
-```{r, eval = F}
-
-cohorts.file = read.table("all_grp_v4_data.txt")
-
-trait.list = read.table("/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt")
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-group="PRS_all_GCTB"
-
-#for (i in 1:nrow(cohorts.file)) {
-
-i=75
-cohort=cohorts.file[i,"V1"]
-pipeline=cohorts.file[i,"V2"]
-data = cohorts.file[i,"V3"]
-
-fam=paste0("PLINK/", cohort , "/", data)
-
-target.data =read.table(paste0(fam, ".fam")) 
-target.data = target.data[,c(1,2)]
-colnames(target.data) = c("FID", "IID")
-
-target.data$batch = cohort
-target.data$pipeline = pipeline
-  
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, "/",cohort, "_",  pipeline, "_", trait, "_SBayesRC.profile")
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),"SCORESUM"]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-target.data = target.data[,3:ncol(target.data)]
-write.csv(target.data, file= paste0( group, "_",cohort, "_all_", n.trait , "_traits_GCTB_PRS.csv"))
-
-# }
-
-```
-
-
-
-
-```{r, eval = F}
-cohorts.file = read.table("all_grp_v4_data.txt")
-group="PRS_all_GCTB"
-
-merged.data=data.frame()
-for (i in 1:nrow(cohorts.file)) {
-cohort=cohorts.file[i,"V1"]
-pipeline=cohorts.file[i,"V2"]
-data = cohorts.file[i,"V3"]
-target.data = read.csv(paste0( group, "_",cohort, "_all_", n.trait , "_traits_GCTB_PRS.csv"))
-merged.data =  rbind(merged.data, target.data)
-}
-write.csv(merged.data, file = "GRP_all_GCTB_PRS.csv")
-
-```
-
-```{r, eval = F, echo = F}
-
-## fix the 35BM traits.
-merged.data = read.csv("Data/GRP/GRP_all_GCTB_PRS.csv", row.names = 1)
-merged.data[,grep("UKB_35BM", colnames(merged.data))] =  -merged.data[,grep("UKB_35BM", colnames(merged.data))] 
-
-write.csv(merged.data,  "Data/GRP/GRP_all_GCTB_PRS.csv", row.names = F)
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# sample size
-
-```{r}
-
-grp.raw = read.csv("Data/GRP/GRP_all_GCTB_PRS.csv")
-batch.summary = data.frame(table(grp.raw$batch))
-dim(grp.raw)
-
-length(table(grp.raw$batch))
-
-hist(batch.summary$Freq)
-```
-
-
-
-
-
 
 
 

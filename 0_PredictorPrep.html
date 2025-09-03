@@ -329,22 +329,22 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="index.html">Intro</a>
+  <a href="index.html">Introduction</a>
 </li>
 <li>
   <a href="0_PredictorPrep.html">Predictors</a>
 </li>
 <li>
-  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+  <a href="1_GRP_ChipData.html">HSU Data</a>
 </li>
 <li>
-  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+  <a href="2_QIMR_ChipData.html">QIMR Data</a>
 </li>
 <li>
-  <a href="3_WGS.html">WGS</a>
+  <a href="3_WGS.html">WGS data</a>
 </li>
 <li>
-  <a href="4_LowPassSeq.html">LowPass</a>
+  <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
 <li>
   <a href="5_Consistency.html">Consistency</a>
@@ -353,10 +353,7 @@ div.tocify {
   <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
 </li>
 <li>
-  <a href="6_MissingSNP.html">MissingSNP</a>
-</li>
-<li>
-  <a href="11_convert_function.html">Convert_function</a>
+  <a href="6_MissingSNP.html">Missingness</a>
 </li>
 <li>
   <a href="7_Benchmarking.html">Benchmarking</a>
@@ -871,29 +868,6 @@ than 0.05, the rerun correlation will turn out low.</p>
 heritability and rerun correlation.</p>
 <p><img src="Figures/fig_cor_rerun0_rerun1_vs_hsq.jpeg" /></p>
 <pre class="r"><code>predictors_extended$selected = !(predictors_extended$Predictor %in% excluded.traits$variable | predictors_extended$Life_Risk_based_h2_in_liability_scale &lt; 0.05)</code></pre>
-</div>
-<div id="summary-the-traits" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> summary the traits</h1>
-<p>Most traits used 7.3M LD reference, but for those could not cover 70%
-of the SNPs, we switched to HapMap3 LD reference.</p>
-<pre class="r"><code>table(predictor.list$reference.version)</code></pre>
-<pre><code>## 
-##    7.3M Hapmap3 
-##     111       4</code></pre>
-<p>Here is a number of binary traits and quantitative traits.</p>
-<pre class="r"><code>table(predictor.list$QorB)</code></pre>
-<pre><code>## 
-##       Binary Quantitative 
-##           32           83</code></pre>
-<p>There are</p>
-<p>32 binary traits and<br />
-83 quantitative traits which includes</p>
-<blockquote>
-<p>23 collected quantitative traits<br />
-34 biomarker traits from uk biobank study<br />
-10 proteomics traits from uk biobank study<br />
-16 fatty acid from uk biobank study</p>
-</blockquote>
 </div>
 
 
