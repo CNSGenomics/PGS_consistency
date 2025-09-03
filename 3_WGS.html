@@ -9,9 +9,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Tian Lin" />
 
-<meta name="date" content="2025-06-03" />
 
 <title>Whole Genome Sequencing data</title>
 
@@ -330,40 +328,22 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="index.html">Intro</a>
+  <a href="index.html">Introduction</a>
 </li>
 <li>
   <a href="0_PredictorPrep.html">Predictors</a>
 </li>
 <li>
-  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+  <a href="1_GRP_ChipData.html">HSU Data</a>
 </li>
 <li>
-  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+  <a href="2_QIMR_ChipData.html">QIMR Data</a>
 </li>
 <li>
-  <a href="3_WGS.html">WGS</a>
+  <a href="3_WGS.html">WGS data</a>
 </li>
 <li>
-  <a href="4_LowPassSeq.html">LowPass</a>
-</li>
-<li>
-  <a href="8_PGS_Merge.html">PGS_Merge</a>
-</li>
-<li>
-  <a href="5_Consistency.html">Consistency</a>
-</li>
-<li>
-  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
-</li>
-<li>
-  <a href="6_MissingSNP.html">MissingSNP</a>
-</li>
-<li>
-  <a href="11_convert_function.html">Convert_function</a>
-</li>
-<li>
-  <a href="7_Benchmarking.html">Benchmarking</a>
+  <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
       </ul>
     </div><!--/.nav-collapse -->
@@ -383,16 +363,14 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Whole Genome Sequencing data</h1>
-<h4 class="author">Tian Lin</h4>
-<h4 class="date">03 June 2025</h4>
 
 </div>
 
 
-<div id="intro" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Intro</h1>
-<p>Whole genome sequencing data is downloaded from the 1000 Genomes
-project, which did the high-coverage wgs.</p>
+<div id="data-resource" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Data resource</h1>
+<p>High coverage whole genome sequencing data was downloaded from the
+1000 Genomes project.</p>
 <p><a href="https://www.internationalgenome.org/data-portal/sample"
 class="uri">https://www.internationalgenome.org/data-portal/sample</a></p>
 <p>citation: Marta Byrska-Bishop et al., High-coverage whole-genome
@@ -410,42 +388,22 @@ ftp://ftp.sra.ebi.ac.uk/vol1/run/ERR398/ERR3989299/NA10861.final.cram
 ## index the files
 samtools index -b ${sample}.final.cram
 </code></pre>
-<p>The files are alignment files, which were against the human genome
-build 38.</p>
+<p>The files are alignment files, which were alighed against the human
+genome build 38.</p>
 </div>
-<div id="process-downloaded-wgs-data" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> process downloaded WGS
-data</h1>
-<div id="call-variants-using-bp-resolution" class="section level2"
-number="2.1">
-<h2><span class="header-section-number">2.1</span> call variants using
-BP resolution</h2>
-<p>Alignment files are processed to call variants using GATK best
-practice.</p>
-<pre class="bash"><code>#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=40:00:00
-#SBATCH --job-name=call_variants
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
+<div id="process-wgs-data" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> process WGS data</h1>
+<div id="call-variants" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> call variants</h2>
+<p>Alignment files are processed to call variants at BP resolution using
+GATK best practice.</p>
+<pre class="bash"><code>
 i=$SLURM_ARRAY_TASK_ID
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
 module load bcftools
+samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
 
-
-# sample=&quot;NA06997&quot;
-# sample=&quot;NA07029&quot;
-sample=&quot;NA10861&quot;
-
+for samples in &quot;${samples[@]}&quot;; do
 # call variants
-
 Pipelines/gatk-4.1.9.0/gatk HaplotypeCaller  \
 -R $ref  \
 -I  withBuild38/Alighed_bam/${sample}.final.cram   \
@@ -455,53 +413,11 @@ Pipelines/gatk-4.1.9.0/gatk HaplotypeCaller  \
 -L  chr${i}
 
 ## separate multiallelic into rows
-bcftools norm -m - withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_from1KG_chr${i}.vcf.gz  &gt;  withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_biallelic_from1KG_chr${i}.vcf.gz</code></pre>
+bcftools norm -m - withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_from1KG_chr${i}.vcf.gz  &gt;  withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_biallelic_from1KG_chr${i}.vcf.gz
+done</code></pre>
 </div>
-<div id="check-where-are-the-missing-snps" class="section level2"
-number="2.2">
-<h2><span class="header-section-number">2.2</span> check where are the
-missing SNPs</h2>
-<pre class="bash"><code>awk &#39;{print $2}&#39; PRS_uno/NA06997_WGS_ADHD_01_SBayesRC.nopred  &gt; missing_SNPs.txt 
-
-grep -w -f missing_SNPs.txt  SNP_lists/dbsnp_146.hg38.txt  &gt; missing_SNP_info_in_dbsnp_146.hg38.txt 
-</code></pre>
-</div>
-<div id="call-variants---option-2-define-snp-list-in-calling"
-class="section level2" number="2.3">
-<h2><span class="header-section-number">2.3</span> call variants -
-option 2 – define snp list in calling</h2>
-<pre class="r"><code># R get bed files
-
-bimfile = &quot;Genotype_concordance/MND_merged_2755.bim&quot;
-bim = read.table(bimfile)
-
-for (i in 1:22){
-chr = bim[bim$V1 == i, c(1, 4)]
-chr$V3 = chr$V4 + 1
-write.table(chr, file = paste0(&quot;Genotype_concordance/MND_merged_2755_chr&quot; , i, &quot;_interval.bed&quot;  ) , quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)
-
-}</code></pre>
-<pre class="bash"><code>#!/bin/bash
-
-cd /scratch/60days/uqtlin5/
-chrID=$TASK_ID
-ref=CW_pipeline/references/hg19/hg19_new.fa
-interval=GSA_SNP_calling/GSA_chr${chrID}_interval.bed
-
-
-gatk-4.1.9.0/gatk   GenotypeGVCFs  \
-        -R $ref \
-        --include-non-variant-sites \
-        --variant     VCFs/combined.${chrID}.vcf \
-        --intervals   $interval \
-        --only-output-calls-starting-in-intervals \
-        --output      GSA_SNP_calling/FL_GSA_chr${chrID}.vcf
-   
-</code></pre>
-</div>
-</div>
-<div id="annotate-snps" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Annotate SNPs</h1>
+<div id="annotate-snps" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Annotate SNPs</h2>
 <p>Although we used the annotate option in GATK with <em>–dbsnp
 Pipelines/hg38/dbsnp_146.hg38.vcf.gz</em>, due to the limit of samples
 in allele coverage, most of the SNPs are not annotated properly. We will
@@ -516,33 +432,14 @@ grep rs  Pipelines/HRC.r1-1.GRCh37.wgs.mac5.sites.tab  | awk &#39;{print $3}&#39
 zless  Pipelines/hg38/dbsnp_146.hg38.vcf.gz  | grep -w -f HRC.SNPs.with.dbSNP.IDs.txt  &gt; ../SNP_lists/dbsnp_146.hg38_in_HRCpanel.txt</code></pre>
 <p>Since we have only one sample in each VCF file, we are going to do
 annotation by reading it into R.</p>
-<pre class="bash"><code>
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=40:00:00
-#SBATCH --job-name=extract_HRC
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
-i=$SLURM_ARRAY_TASK_ID
+<pre class="bash"><code>i=$SLURM_ARRAY_TASK_ID
 
 sample=&quot;NA06997&quot;
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
 target=${sample}_dbSNP_biallelic_from1KG_chr${i}
 
 zless  withBuild38/Called_Variants/ref_confidence_BP_resolution/${target}.vcf.gz  &gt; ${target}.vcf
-
 grep &quot;^#&quot; ${target}.vcf  &gt; ${target}.vcf.header
-
 Rscript  annotate_vcf_updated.R  ${sample} ${i}
-
 cat ${target}.vcf.header  ${target}.vcf_annotated.txt  &gt; ${target}_annotated.vcf
 </code></pre>
 <p>This is the R script to annotate SNPs.</p>
@@ -601,6 +498,8 @@ ant.geno = rbind(geno.group1, selected.geno.group2, geno.group3)
 sort.geno= ant.geno[order(ant.geno$V2),]
 
 write.table(sort.geno[,c(&quot;V1&quot;, &quot;V2&quot;, &quot;rsID&quot;, &quot;V4&quot;, &quot;V5&quot;, &quot;V6&quot;, &quot;V7&quot;, &quot;V8&quot;, &quot;V9&quot;, &quot;V10&quot;)], paste0(geno.file, &quot;_annotated.txt&quot; ), quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)</code></pre>
+<p>Some SNPs in our 7.3M SBayesRC predictors can’t be detected in the
+few WGS data, lacking proper alleles.</p>
 <p>Example of missing SNP:</p>
 <pre class="r"><code> geno[which(geno$rsID== &quot;rs242078&quot;),]
 #             V1       V2       V3        V4        V5     V6 V7
@@ -620,8 +519,9 @@ write.table(sort.geno[,c(&quot;V1&quot;, &quot;V2&quot;, &quot;rsID&quot;, &quot
 # 32897332           A           G rs242078          G          A
 # 32897333           A           G rs242078          G          A</code></pre>
 </div>
-<div id="combine-data" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> combine data</h1>
+<div id="merge-chromosomes" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> merge
+chromosomes</h2>
 <p>The annotated chromosomes of each data are merged into one vcf
 file.</p>
 <pre class="bash"><code>
@@ -654,124 +554,43 @@ vcf-concat  ${sample}_dbSNP_biallelic_from1KG_chr1_annotated.vcf \
 done
 </code></pre>
 </div>
-<div id="profile-prs" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> profile PRS</h1>
-<div id="r-version-sbayesrc-predictors" class="section level2"
-number="5.1">
-<h2><span class="header-section-number">5.1</span> R version SBayesRC
-predictors</h2>
-<pre class="bash"><code>#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=4:00:00
-#SBATCH --job-name=prs
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-72
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
-traitfile=&quot;../../AGDS_PRS_profiling/uno_predictors_v3.txt&quot;
-trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
-predictor=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $2}&#39; )
-echo $trait
-echo $predictor
-
-outdir=PRS_uno
-mkdir -p $outdir
-
-
-
-samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
-
-for sample in &quot;${samples[@]}&quot;; do
-  cohort=${sample}_WGS
-  input=${sample}_combined_SBRC_SNPs.vcf
-
-plink \
-   --vcf  $input \
-   --double-id  \
-   --score  $predictor    1 2 3 header  sum  \
-   --out ${outdir}/${cohort}_${trait}_SBayesRC
-
-done
-</code></pre>
 </div>
-<div id="gctb-version" class="section level2" number="5.2">
-<h2><span class="header-section-number">5.2</span> GCTB version</h2>
-<p>to calculate variance captured</p>
-<pre class="bash"><code>#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=4:00:00
-#SBATCH --job-name=profile
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-140
-
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
-
+<div id="profile-prs" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> profile PRS</h1>
+<p>We profiled PRS from the annotated VCF files with all the SBayesRC
+predictors.</p>
+<pre class="bash"><code>i=$SLURM_ARRAY_TASK_ID
 traitfile=&quot;/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt&quot;
 trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
 predictor=$(sed  &quot;${i}q;d&quot;  $traitfile  | awk &#39;{print $3}&#39; )
-echo $trait
-
-
 outdir=PRS_all_GCTB
 mkdir -p $outdir
-
-
 samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
-
 for sample in &quot;${samples[@]}&quot;; do
   cohort=${sample}_WGS
   input=${sample}_combined_SBRC_SNPs.vcf
-
   plink \
    --vcf  $input \
    --double-id  \
    --score  $predictor  2 5 8  header sum    \
    --out ${outdir}/${cohort}_${trait}_SBayesRC
-
-done
-</code></pre>
-</div>
-</div>
-<div id="combine-prs" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> Combine PRS</h1>
+done</code></pre>
+<p>The PGS were merged together for each sample.</p>
 <pre class="bash"><code>
 outdir=PRS_all_GCTB
-
 samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
 
 for sample in &quot;${samples[@]}&quot;; do
-
-grep ${sample}  ${outdir}/*profile | \
-sed &quot;s/${outdir}\/${sample}_WGS_//&quot; | \
-sed &#39;s/_SBayesRC.profile://&#39;  | \
-awk &#39;{print $1, $5, $6, $7}&#39;  \
-&gt; ${sample}_WGS_PRS_vGCTB.txt
-
+  grep ${sample}  ${outdir}/*profile | \
+  sed &quot;s/${outdir}\/${sample}_WGS_//&quot; | \
+  sed &#39;s/_SBayesRC.profile://&#39;  | \
+  awk &#39;{print $1, $5, $6, $7}&#39;  \
+  &gt; ${sample}_WGS_PRS_vGCTB.txt
 done
 </code></pre>
+<p>Then the three files are merged into one.</p>
 <pre class="r"><code>wgs.sample.list = c(&quot;NA07029&quot; , &quot;NA06997&quot;, &quot;NA10861&quot;)
-
 merged.wgs.prs = data.frame()
-
 for (i in 1:length(wgs.sample.list)){
   sample.id = wgs.sample.list[i]
   wgs.prs= read.table(paste0(&quot;Data/WGS/&quot;, sample.id , &quot;_WGS_PRS_vGCTB.txt&quot;))
@@ -781,85 +600,27 @@ for (i in 1:length(wgs.sample.list)){
   } else {
     merged.wgs.prs = merge(merged.wgs.prs, wgs.prs, by = &quot;Trait&quot;, all = TRUE)
   }
-
 }
-
-head(merged.wgs.prs)
 row.names(merged.wgs.prs) = merged.wgs.prs$Trait
 merged.wgs.prs = merged.wgs.prs[,-1]
 write.csv(merged.wgs.prs, file = &quot;Data/WGS/WGS_merged_GCTB_PRS.csv&quot;)</code></pre>
 </div>
-<div id="finding-the-missing-snps" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> Finding the missing
-SNPs</h1>
-<pre class="bash"><code>awk &#39;{print $2}&#39; PRS_uno/NA07029_WGS_ADHD_01_SBayesRC.nopred  &gt; NA07029_missing_SNPs.txt
-awk &#39;{print $2}&#39; PRS_uno/NA06997_WGS_ADHD_01_SBayesRC.nopred  &gt; NA06997_missing_SNPs.txt
-
-grep -w -f NA07029_missing_SNPs.txt   SNP_lists/dbsnp_146.hg38.txt  &gt;  NA07029_missing_SNPs_in_hg38.txt 
-grep -w -f NA06997_missing_SNPs.txt   SNP_lists/dbsnp_146.hg38.txt  &gt;  NA06997_missing_SNPs_in_hg38.txt 
-
-
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=40:00:00
-#SBATCH --job-name=extract_HRC
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
-samples=(&quot;NA06997&quot; &quot;NA07029&quot; &quot;NA10861&quot;)
-
-
-for sample in &quot;${samples[@]}&quot;; do
-
-Rscript  find_missing_SNPs.R  ${sample} ${i}
-
-done</code></pre>
-<pre class="r"><code>args=commandArgs(trailingOnly = TRUE)
-library(data.table)
-sample=args[1]
-chr=args[2]
-
-geno.file =  paste0( sample, &quot;_dbSNP_biallelic_from1KG_chr&quot;, chr, &quot;.vcf&quot;)
-geno = read.table(geno.file)
-
-
-missing.snp = read.table(paste0(sample, &quot;_missing_SNPs_in_hg38.txt&quot;) )
-missing.snp = missing.snp[which(missing.snp$V1 == paste0(&quot;chr&quot; , chr )),]
-
-geno.for.missing = geno[which(geno$V2 %in% missing.snp$V2),]
-
-write.table(geno.for.missing, paste0(geno.file, &quot;_recoverable.txt&quot; ), quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)</code></pre>
-</div>
-<div id="snp-coverage" class="section level1" number="8">
-<h1><span class="header-section-number">8</span> SNP coverage</h1>
-<pre class="r"><code>library(VennDiagram)</code></pre>
-<pre><code>## Loading required package: futile.logger</code></pre>
-<pre><code>## 
-## Attaching package: &#39;VennDiagram&#39;</code></pre>
-<pre><code>## The following object is masked from &#39;package:ggpubr&#39;:
-## 
-##     rotate</code></pre>
-<pre class="r"><code>a = read.table(&quot;Data/nopred/SNPs_in_NA06997_WGS_ADHD_01_SBayesRC.nopred&quot;)
-b = read.table(&quot;Data/nopred/SNPs_in_NA07029_WGS_ADHD_01_SBayesRC.nopred&quot;)
-c = read.table(&quot;Data/nopred/SNPs_in_NA10861_WGS_ADHD_01_SBayesRC.nopred&quot;)
+<div id="snp-coverage" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> SNP coverage</h1>
+<p>When we profile PGS using plink, the SNPs in predictors but not
+target genotype data will be put into a nopred file. We checked these
+SNPs across the three samples.</p>
+<pre class="r"><code>library(VennDiagram)
+a = read.table(&quot;Data/nopred/NA06997_WGS_ADHD_01_SBayesRC.nopred&quot;)
+b = read.table(&quot;Data/nopred/NA07029_WGS_ADHD_01_SBayesRC.nopred&quot;)
+c = read.table(&quot;Data/nopred/NA10861_WGS_ADHD_01_SBayesRC.nopred&quot;)
 
 # Create a Venn diagram
 venn.plot &lt;- venn.diagram(
   x = list(
-    Vector1 = a$V1,
-    Vector2 = b$V1,
-    Vector3 = c$V1
+    Vector1 = a$V2,
+    Vector2 = b$V2,
+    Vector3 = c$V2
   ),
   category.names = c(&quot;NA06997&quot;, &quot;NA07029&quot;, &quot;NA10861&quot;),
   filename = NULL,  # Use NULL to display the diagram in RStudio
@@ -867,49 +628,8 @@ venn.plot &lt;- venn.diagram(
 )
 
 grid.newpage()
-
 grid.draw(venn.plot)</code></pre>
-<p><img src="3_WGS_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
-</div>
-<div id="variance-captured" class="section level1" number="9">
-<h1><span class="header-section-number">9</span> Variance captured</h1>
-<pre class="r"><code>var.exp = read.csv(&quot;Data/Predictors/Variance_captured_in_each_data.csv&quot;, row.names = 1)
-
-predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot; )
-included_traits = predictor.list$Predictor
-var.exp = var.exp[(var.exp$V1)%in%included_traits,]</code></pre>
-<pre class="r"><code># Convert the matrix to a dataframe and reshape it for ggplot
-df &lt;- var.exp[,c(&quot;V1&quot;, &quot;NA06997_WGS&quot;, &quot;NA07029_WGS&quot;, &quot;NA10861_WGS&quot;)]
-df_melt &lt;- melt(df, id.vars = &quot;V1&quot;)
-
-df_melt$Label = predictor.list[match(df_melt$V1, predictor.list$Predictor),&quot;Label&quot;]
-
-df_melt$Group &lt;- ifelse(grepl(&quot;_0&quot;, df_melt$V1), 1, 0)
-
-
-# Create the heatmap
-heatmap_plot1 &lt;- ggplot(df_melt, aes(x = variable , y = Label, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient(low = &quot;red&quot;, high = &quot;white&quot;) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-
-# Save the heatmap as a PDF with the desired size (width x height in inches)
-#ggsave(&quot;Figures/heatmap_var_cptured_of_tarits.pdf&quot;, plot = heatmap_plot1, width = 10, height = 14)
-heatmap_plot1</code></pre>
-<p><img src="3_WGS_files/figure-html/unnamed-chunk-19-1.png" width="768" /></p>
-<pre class="r"><code>head(df)</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["V1"],"name":[1],"type":["chr"],"align":["left"]},{"label":["NA06997_WGS"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["NA07029_WGS"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["NA10861_WGS"],"name":[4],"type":["dbl"],"align":["right"]}],"data":[{"1":"IPF_01","2":"0.9999634","3":"0.9999673","4":"0.9999474","_rn_":"1"},{"1":"MDD_04","2":"0.9999643","3":"0.9999558","4":"0.9999668","_rn_":"3"},{"1":"Migraine_01","2":"0.9999239","3":"0.9999082","4":"0.9999046","_rn_":"4"},{"1":"ADHD_01","2":"0.9999633","3":"0.9999583","4":"0.9999700","_rn_":"6"},{"1":"AF_01","2":"0.9997744","3":"0.9998684","4":"0.9998655","_rn_":"7"},{"1":"ALS_02","2":"0.9999421","3":"0.9999505","4":"0.9999451","_rn_":"8"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>ggarrange(
-ggplot(df, aes(x = NA06997_WGS, y = NA07029_WGS))  + geom_point() + geom_text_repel(data = subset(df, NA06997_WGS&lt;0.96), aes(label = V1 )),
-ggplot(df, aes(x = NA06997_WGS, y = NA10861_WGS))  + geom_point()+ geom_text_repel(data = subset(df, NA06997_WGS&lt;0.96), aes(label = V1 )),
-ncol = 2
-)</code></pre>
-<p><img src="3_WGS_files/figure-html/unnamed-chunk-20-1.png" width="672" /></p>
+<p><img src="Figures/fig_wgs_missing_SNPs_overlap.png" /></p>
 </div>
 
 

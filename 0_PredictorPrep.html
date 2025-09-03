@@ -379,11 +379,8 @@ div.tocify {
 </div>
 
 
-<div id="intro" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Intro</h1>
-</div>
-<div id="gwas-summary-data" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> GWAS summary data</h1>
+<div id="gwas-summary-data" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> GWAS summary data</h1>
 <p>It has become a standard to share and make publicly available the
 summary-level data when publishing a GWAS study. However, there is not a
 unified format of the summay-level data. To make a gwas summary data
@@ -406,8 +403,8 @@ formatted.gwas = data.frame(
   matrix(NA, nrow = n.snp, ncol = 8)
 )
 colnames(formatted.gwas) = c(&quot;SNP&quot;, &quot;A1&quot;, &quot;A2&quot;, &quot;freq&quot;, &quot;b&quot;, &quot;se&quot;, &quot;p&quot;, &quot;N&quot;)</code></pre>
-<div id="snp-id" class="section level2" number="2.1">
-<h2><span class="header-section-number">2.1</span> SNP ID</h2>
+<div id="snp-id" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> SNP ID</h2>
 <p>The commonly used SNP ID is dbSNP IDs, while sometimes there are only
 physical position of the SNPs and alleles, such as the example data we
 are using here.</p>
@@ -470,8 +467,8 @@ head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
 <p>All the target data and reference data we used are from human genome
 build 37.</p>
 </div>
-<div id="alleles" class="section level2" number="2.2">
-<h2><span class="header-section-number">2.2</span> Alleles</h2>
+<div id="alleles" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> Alleles</h2>
 <p>Naming of alleles can be various. They could be named as
 “EffectAllele” vs “NonEffectAllele”, or “A1” vs. “A2”, or
 “ReferenceAllele” vs. “AlternativeAllele”, etc. We need to make it clear
@@ -507,8 +504,8 @@ have the exactly same two alleles as in the LD reference data.</p>
 
 }</code></pre>
 </div>
-<div id="p-value" class="section level2" number="2.3">
-<h2><span class="header-section-number">2.3</span> p value</h2>
+<div id="p-value" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> p value</h2>
 <p>P value is commonly reported in the summary data. We can just take
 the column.<br />
 The p value can get very small values, and it is in scientific format.
@@ -522,8 +519,8 @@ head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
 and be careful with the values of “inf”. Although this situation is very
 rare.</p>
 </div>
-<div id="sample-size" class="section level2" number="2.4">
-<h2><span class="header-section-number">2.4</span> Sample Size</h2>
+<div id="sample-size" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> Sample Size</h2>
 <p>Sample size is sometimes missing in the summary data, when we will
 have to find it out from the publication.</p>
 <p>Sometimes disease data would like to include the sample size as two
@@ -565,8 +562,8 @@ also depends on the downstream analysis. By checking the distribution of
 it, we can get a clue of what to fix when you get a killed job in the
 next step.</p>
 </div>
-<div id="allele-frequency" class="section level2" number="2.5">
-<h2><span class="header-section-number">2.5</span> Allele Frequency</h2>
+<div id="allele-frequency" class="section level2" number="1.5">
+<h2><span class="header-section-number">1.5</span> Allele Frequency</h2>
 <p>The two alleles in reference data and in gwas summary data could be
 swapped. We will firstly calculate the effect allele frequency in the
 reference data.</p>
@@ -631,8 +628,8 @@ threshold 0.2 to exclude outlying SNPs.</p>
 <pre class="r"><code>## example command. Don&#39;t run it.
 freq.outlier = ref.freq[which(abs(ref.freq$gwasA1freq - ref.freq$freq.in.gwas) &gt; 0.2), &quot;ID&quot;]</code></pre>
 </div>
-<div id="effect-size" class="section level2" number="2.6">
-<h2><span class="header-section-number">2.6</span> Effect Size</h2>
+<div id="effect-size" class="section level2" number="1.6">
+<h2><span class="header-section-number">1.6</span> Effect Size</h2>
 <p>Effect size is usually named as “effect” or “b”. If it’s reported as
 OR, odds ratio, we will do a log transformation.</p>
 <p>If effect size is missing, and only z score is supplied, we will
@@ -661,8 +658,8 @@ if(colname.b == &quot;missing&quot; &amp; colname.z != &quot;missing&quot;){
 head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
 </div>
 <div id="standard-error-of-effect-size" class="section level2"
-number="2.7">
-<h2><span class="header-section-number">2.7</span> Standard error of
+number="1.7">
+<h2><span class="header-section-number">1.7</span> Standard error of
 effect size</h2>
 <p>If <em>se</em> is missing, we calculate it from effect size, allele
 frequency and sample size using the formula, assuming phenotypic
@@ -689,8 +686,8 @@ if(colname.se == &quot;missing&quot;){
 
 head(formatted.gwas[(grep(&quot;rs&quot;, formatted.gwas$SNP)),])</code></pre>
 </div>
-<div id="output-into-cojo-format" class="section level2" number="2.8">
-<h2><span class="header-section-number">2.8</span> output into cojo
+<div id="output-into-cojo-format" class="section level2" number="1.8">
+<h2><span class="header-section-number">1.8</span> output into cojo
 format</h2>
 <p>We can exclude the SNPs with missing information, or outlying sample
 size and allele frequency, before write it into a COJO file.</p>
@@ -705,8 +702,8 @@ formatted.gwas = formatted.gwas[,1:8]
 
 write.table(formatted.gwas, file=output, quote = F, sep =&quot;\t&quot;, row.names = F)</code></pre>
 </div>
-<div id="executable-tool" class="section level2" number="2.9">
-<h2><span class="header-section-number">2.9</span> executable tool</h2>
+<div id="executable-tool" class="section level2" number="1.9">
+<h2><span class="header-section-number">1.9</span> executable tool</h2>
 <p>For automation, use cojo_format.R with column name arguments as
 demonstrated. We didn’t include QC in this tool since SBayesRC in GCTB
 has included it.</p>
@@ -755,13 +752,13 @@ Rscript  ${exedir}/cojo_format.R  \
 </code></pre>
 </div>
 </div>
-<div id="sbayesrc" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> SBayesRC</h1>
+<div id="sbayesrc" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> SBayesRC</h1>
 <p>The practice is following the <a
 href="https://gctbhub.cloud.edu.au/software/gctb/#SBayesRCTutorial">tutorial
 in GCTB website</a>.</p>
-<div id="choose-ld-matrix" class="section level2" number="3.1">
-<h2><span class="header-section-number">3.1</span> choose LD matrix</h2>
+<div id="choose-ld-matrix" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> choose LD matrix</h2>
 <p>We don’t want to impute more than 30% SNPs in the LD matrix. If the
 GWAS summary stat has less than 70% of the SNPs in the 7.3M LD
 reference, we will switch to the HapMap3 LD reference.</p>
@@ -770,8 +767,8 @@ ldm1=/QRISdata/Q3895/ldm/eigen/ukbEUR_Imputed/
 ldm2=/QRISdata/Q3895/ldm/eigen/ukbEUR_HM3/
 if [ $(wc -l  ${trait}/${gwas_file}  | awk &#39;{print $1}&#39;  ) -gt  5149563 ]; then   ldm=$ldm1 ; else  ldm=$ldm2; fi</code></pre>
 </div>
-<div id="impute" class="section level2" number="3.2">
-<h2><span class="header-section-number">3.2</span> Impute</h2>
+<div id="impute" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Impute</h2>
 <p>This method is based on a low-rank approximation which utilises the
 eigenvalues and eigenvectors of block-wise LD correlation matrices. It
 requires SNPs that are included in the LD reference to be also present
@@ -779,8 +776,8 @@ in the GWAS samples. Thus, we need to impute the GWAS summary statistics
 for any missing SNPs that are only present in the LD reference.</p>
 <pre class="bash"><code>gctb --ldm-eigen $ldm --gwas-summary ${ma_file}.ma --impute-summary --out ${ma_file} --thread 10</code></pre>
 </div>
-<div id="sbayesrc-1" class="section level2" number="3.3">
-<h2><span class="header-section-number">3.3</span> SBayesRC</h2>
+<div id="sbayesrc-1" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> SBayesRC</h2>
 <p>This command will generate a text file for SNP effect estimates
 test.snpRes, text files for model parameters test.parRes and
 test.parSetRes, and a folder that stores the MCMC samples for all model
@@ -794,8 +791,8 @@ parameters test.mcmcsamples.</p>
 --thread 10 </code></pre>
 </div>
 <div id="examine-sbayesrc-effect-size" class="section level2"
-number="3.4">
-<h2><span class="header-section-number">3.4</span> Examine SBayesRC
+number="2.4">
+<h2><span class="header-section-number">2.4</span> Examine SBayesRC
 effect size</h2>
 <p>At last we compare the marginal effect size with the effect size from
 SBayesRC with a simple plot.</p>
@@ -836,8 +833,8 @@ we see the most.</p>
 <p><img src="Figures/effect_size_examples.png" /></p>
 </div>
 </div>
-<div id="select-traits" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> Select traits</h1>
+<div id="select-traits" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Select traits</h1>
 <p>We initially collected XX traits, but some of them have very low
 heritability, and the prediction accuracy is not good enough for
 consistency evaluation. Starting with a version of 149 traits collected

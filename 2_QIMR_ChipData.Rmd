@@ -238,10 +238,16 @@ The same plink command line was used to profile PGS from the 6 QIMR data sets.
 
 
 ```{bash, eval = F}
+i=$SLURM_ARRAY_TASK_ID
+traitfile="/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt"
+trait=$(sed "${i}q;d" $traitfile | awk '{print $1}' )
+predictor=$(sed  "${i}q;d"  $traitfile  | awk '{print $3}' )
+outdir=PRS_all_GCTB
+
 plink  \
 --bfile  $bfile \
 --score  ${predictor}  2 5 8  header sum    \
---out  $output
+--out ${outdir}/${cohort}_${trait}_SBayesRC
 ```
 
 

@@ -563,10 +563,16 @@ done
 <h1><span class="header-section-number">3</span> PGS profiling</h1>
 <p>The same plink command line was used to profile PGS from the 6 QIMR
 data sets.</p>
-<pre class="bash"><code>plink  \
+<pre class="bash"><code>i=$SLURM_ARRAY_TASK_ID
+traitfile=&quot;/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt&quot;
+trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
+predictor=$(sed  &quot;${i}q;d&quot;  $traitfile  | awk &#39;{print $3}&#39; )
+outdir=PRS_all_GCTB
+
+plink  \
 --bfile  $bfile \
 --score  ${predictor}  2 5 8  header sum    \
---out  $output</code></pre>
+--out ${outdir}/${cohort}_${trait}_SBayesRC</code></pre>
 <p>The parameters after your predictor file means</p>
 <ul>
 <li>2 5 8: the three useful columns in the predictor file.<br />

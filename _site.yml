@@ -15,14 +15,6 @@ navbar:
       href: 3_WGS.html
     - text: "lcWGS data"
       href: 4_LowPassSeq.html
-    - text: "Consistency"
-      href: 5_Consistency.html
-    - text: "Imputation Panel"
-      href: 10_Imputation_Panel_effect.html
-    - text: "Missingness"
-      href: 6_MissingSNP.html
-    - text: "Benchmarking"
-      href: 7_Benchmarking.html
 
 
 output:

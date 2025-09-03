@@ -1,6 +1,5 @@
 ---
-title: "Low Pass Sequencing data"
-author: "Tian Lin"
+title: "Low Coverage Whole Genome Sequencing data"
 output:
   html_document:
     toc: TRUE

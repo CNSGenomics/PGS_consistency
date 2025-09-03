@@ -31,7 +31,7 @@ library(dplyr)
 ```
 
 
-# Introduction
+# Data resource
 
 High coverage whole genome sequencing data was downloaded from the 1000 Genomes project.
 
@@ -55,37 +55,20 @@ samtools index -b ${sample}.final.cram
 
 The files are alignment files, which were alighed against the human genome build 38. 
 
-# process downloaded WGS data
+# process WGS data
 
-## call variants using BP resolution
+## call variants 
 
-Alignment files are processed to call variants using GATK best practice. 
+Alignment files are processed to call variants at BP resolution using GATK best practice. 
 
 ```{bash, eval = F}
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=40:00:00
-#SBATCH --job-name=call_variants
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
 
 i=$SLURM_ARRAY_TASK_ID
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
 module load bcftools
+samples=("NA06997" "NA07029" "NA10861")
 
-
-# sample="NA06997"
-# sample="NA07029"
-sample="NA10861"
-
+for samples in "${samples[@]}"; do
 # call variants
-
 Pipelines/gatk-4.1.9.0/gatk HaplotypeCaller  \
 -R $ref  \
 -I  withBuild38/Alighed_bam/${sample}.final.cram   \
@@ -96,65 +79,12 @@ Pipelines/gatk-4.1.9.0/gatk HaplotypeCaller  \
 
 ## separate multiallelic into rows
 bcftools norm -m - withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_from1KG_chr${i}.vcf.gz  >  withBuild38/Called_Variants/ref_confidence_BP_resolution/${sample}_dbSNP_biallelic_from1KG_chr${i}.vcf.gz
-```
-
-## check where are the missing SNPs
-
-
-```{bash, eval = F}
-awk '{print $2}' PRS_uno/NA06997_WGS_ADHD_01_SBayesRC.nopred  > missing_SNPs.txt 
-
-grep -w -f missing_SNPs.txt  SNP_lists/dbsnp_146.hg38.txt  > missing_SNP_info_in_dbsnp_146.hg38.txt 
-
-
-```
-
-## call variants - option 2 -- define snp list in calling
-
-```{r, eval = F}
-
-# R get bed files
-
-bimfile = "Genotype_concordance/MND_merged_2755.bim"
-bim = read.table(bimfile)
-
-for (i in 1:22){
-chr = bim[bim$V1 == i, c(1, 4)]
-chr$V3 = chr$V4 + 1
-write.table(chr, file = paste0("Genotype_concordance/MND_merged_2755_chr" , i, "_interval.bed"  ) , quote = F, sep ="\t", row.names = F, col.names = F)
-
-}
-
-```
-
-
-```{bash, eval = F}
-#!/bin/bash
-
-cd /scratch/60days/uqtlin5/
-chrID=$TASK_ID
-ref=CW_pipeline/references/hg19/hg19_new.fa
-interval=GSA_SNP_calling/GSA_chr${chrID}_interval.bed
-
-
-gatk-4.1.9.0/gatk   GenotypeGVCFs  \
-        -R $ref \
-        --include-non-variant-sites \
-        --variant     VCFs/combined.${chrID}.vcf \
-        --intervals   $interval \
-        --only-output-calls-starting-in-intervals \
-        --output      GSA_SNP_calling/FL_GSA_chr${chrID}.vcf
-   
-
-
-
+done
 ```
 
 
 
-
-
-# Annotate SNPs
+## Annotate SNPs
 
 Although we used the annotate option in GATK with *--dbsnp  Pipelines/hg38/dbsnp_146.hg38.vcf.gz*, due to the limit of samples in allele coverage, most of the SNPs are not annotated properly. We will have to annotate them based on the alleles pairs in our predictors. 
 
@@ -174,33 +104,14 @@ Since we have only one sample in each VCF file, we are going to do annotation by
 
 
 ```{bash, eval = F}
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=40:00:00
-#SBATCH --job-name=extract_HRC
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
 i=$SLURM_ARRAY_TASK_ID
 
 sample="NA06997"
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
 target=${sample}_dbSNP_biallelic_from1KG_chr${i}
 
 zless  withBuild38/Called_Variants/ref_confidence_BP_resolution/${target}.vcf.gz  > ${target}.vcf
-
 grep "^#" ${target}.vcf  > ${target}.vcf.header
-
 Rscript  annotate_vcf_updated.R  ${sample} ${i}
-
 cat ${target}.vcf.header  ${target}.vcf_annotated.txt  > ${target}_annotated.vcf
 
 ```
@@ -267,6 +178,7 @@ write.table(sort.geno[,c("V1", "V2", "rsID", "V4", "V5", "V6", "V7", "V8", "V9",
 
 ```
 
+Some SNPs in our 7.3M SBayesRC predictors can't be detected in the few WGS data, lacking proper alleles. 
 
 Example of missing SNP:
 
@@ -295,7 +207,7 @@ Example of missing SNP:
 
 
 
-# combine data
+## merge chromosomes
 
 The annotated chromosomes of each data are merged into one vcf file. 
 
@@ -333,133 +245,50 @@ done
 
 # profile PRS
 
-## R version SBayesRC predictors
-
-```{bash , eval = F}
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=4:00:00
-#SBATCH --job-name=prs
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-72
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
-traitfile="../../AGDS_PRS_profiling/uno_predictors_v3.txt"
-trait=$(sed "${i}q;d" $traitfile | awk '{print $1}' )
-predictor=$(sed "${i}q;d" $traitfile | awk '{print $2}' )
-echo $trait
-echo $predictor
-
-outdir=PRS_uno
-mkdir -p $outdir
-
-
-
-samples=("NA06997" "NA07029" "NA10861")
-
-for sample in "${samples[@]}"; do
-  cohort=${sample}_WGS
-  input=${sample}_combined_SBRC_SNPs.vcf
-
-plink \
-   --vcf  $input \
-   --double-id  \
-   --score  $predictor    1 2 3 header  sum  \
-   --out ${outdir}/${cohort}_${trait}_SBayesRC
-
-done
-
-
-```
-
-## GCTB version
-
-to calculate variance captured
+We profiled PRS from the annotated VCF files with all the SBayesRC predictors. 
 
 ```{bash, eval = F}
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=4:00:00
-#SBATCH --job-name=profile
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-140
-
-
 i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
-
 traitfile="/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt"
 trait=$(sed "${i}q;d" $traitfile | awk '{print $1}' )
 predictor=$(sed  "${i}q;d"  $traitfile  | awk '{print $3}' )
-echo $trait
-
-
 outdir=PRS_all_GCTB
 mkdir -p $outdir
-
-
 samples=("NA06997" "NA07029" "NA10861")
-
 for sample in "${samples[@]}"; do
   cohort=${sample}_WGS
   input=${sample}_combined_SBRC_SNPs.vcf
-
   plink \
    --vcf  $input \
    --double-id  \
    --score  $predictor  2 5 8  header sum    \
    --out ${outdir}/${cohort}_${trait}_SBayesRC
-
 done
-
-
 ```
 
-# Combine PRS
+The PGS were merged together for each sample.  
 
 ```{bash , eval = F}
 
 outdir=PRS_all_GCTB
-
 samples=("NA06997" "NA07029" "NA10861")
 
 for sample in "${samples[@]}"; do
-
-grep ${sample}  ${outdir}/*profile | \
-sed "s/${outdir}\/${sample}_WGS_//" | \
-sed 's/_SBayesRC.profile://'  | \
-awk '{print $1, $5, $6, $7}'  \
-> ${sample}_WGS_PRS_vGCTB.txt
-
+  grep ${sample}  ${outdir}/*profile | \
+  sed "s/${outdir}\/${sample}_WGS_//" | \
+  sed 's/_SBayesRC.profile://'  | \
+  awk '{print $1, $5, $6, $7}'  \
+  > ${sample}_WGS_PRS_vGCTB.txt
 done
 
 ```
 
-
+Then the three files are merged into one. 
 
 ```{r, eval = F}
 
 wgs.sample.list = c("NA07029" , "NA06997", "NA10861")
-
 merged.wgs.prs = data.frame()
-
 for (i in 1:length(wgs.sample.list)){
   sample.id = wgs.sample.list[i]
   wgs.prs= read.table(paste0("Data/WGS/", sample.id , "_WGS_PRS_vGCTB.txt"))
@@ -469,10 +298,7 @@ for (i in 1:length(wgs.sample.list)){
   } else {
     merged.wgs.prs = merge(merged.wgs.prs, wgs.prs, by = "Trait", all = TRUE)
   }
-
 }
-
-head(merged.wgs.prs)
 row.names(merged.wgs.prs) = merged.wgs.prs$Trait
 merged.wgs.prs = merged.wgs.prs[,-1]
 write.csv(merged.wgs.prs, file = "Data/WGS/WGS_merged_GCTB_PRS.csv")
@@ -480,89 +306,22 @@ write.csv(merged.wgs.prs, file = "Data/WGS/WGS_merged_GCTB_PRS.csv")
 ```
 
 
-
-# Finding the missing SNPs
-
-
-```{bash, eval = F}
-awk '{print $2}' PRS_uno/NA07029_WGS_ADHD_01_SBayesRC.nopred  > NA07029_missing_SNPs.txt
-awk '{print $2}' PRS_uno/NA06997_WGS_ADHD_01_SBayesRC.nopred  > NA06997_missing_SNPs.txt
-
-grep -w -f NA07029_missing_SNPs.txt   SNP_lists/dbsnp_146.hg38.txt  >  NA07029_missing_SNPs_in_hg38.txt 
-grep -w -f NA06997_missing_SNPs.txt   SNP_lists/dbsnp_146.hg38.txt  >  NA06997_missing_SNPs_in_hg38.txt 
-
-
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=40:00:00
-#SBATCH --job-name=extract_HRC
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS/slurm_backward_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/WGS
-
-samples=("NA06997" "NA07029" "NA10861")
-
-
-for sample in "${samples[@]}"; do
-
-Rscript  find_missing_SNPs.R  ${sample} ${i}
-
-done
-```
-
-
-
-
-
-```{r, eval = F}
-
-
-args=commandArgs(trailingOnly = TRUE)
-library(data.table)
-sample=args[1]
-chr=args[2]
-
-geno.file =  paste0( sample, "_dbSNP_biallelic_from1KG_chr", chr, ".vcf")
-geno = read.table(geno.file)
-
-
-missing.snp = read.table(paste0(sample, "_missing_SNPs_in_hg38.txt") )
-missing.snp = missing.snp[which(missing.snp$V1 == paste0("chr" , chr )),]
-
-geno.for.missing = geno[which(geno$V2 %in% missing.snp$V2),]
-
-write.table(geno.for.missing, paste0(geno.file, "_recoverable.txt" ), quote = F, sep ="\t", row.names = F, col.names = F)
-
-
-```
-
 # SNP coverage
 
+When we profile PGS using plink, the SNPs in predictors but not target genotype data will be put into a nopred file. We checked these SNPs across the three samples.
 
-
-
-```{r}
+```{r, eval = F}
 library(VennDiagram)
-a = read.table("Data/nopred/SNPs_in_NA06997_WGS_ADHD_01_SBayesRC.nopred")
-b = read.table("Data/nopred/SNPs_in_NA07029_WGS_ADHD_01_SBayesRC.nopred")
-c = read.table("Data/nopred/SNPs_in_NA10861_WGS_ADHD_01_SBayesRC.nopred")
+a = read.table("Data/nopred/NA06997_WGS_ADHD_01_SBayesRC.nopred")
+b = read.table("Data/nopred/NA07029_WGS_ADHD_01_SBayesRC.nopred")
+c = read.table("Data/nopred/NA10861_WGS_ADHD_01_SBayesRC.nopred")
 
 # Create a Venn diagram
 venn.plot <- venn.diagram(
   x = list(
-    Vector1 = a$V1,
-    Vector2 = b$V1,
-    Vector3 = c$V1
+    Vector1 = a$V2,
+    Vector2 = b$V2,
+    Vector3 = c$V2
   ),
   category.names = c("NA06997", "NA07029", "NA10861"),
   filename = NULL,  # Use NULL to display the diagram in RStudio
@@ -570,105 +329,7 @@ venn.plot <- venn.diagram(
 )
 
 grid.newpage()
-
 grid.draw(venn.plot)
-
 ```
 
-
-
-# Variance captured
-
-```{r}
-var.exp = read.csv("Data/Predictors/Variance_captured_in_each_data.csv", row.names = 1)
-
-predictor.list = read.csv("Tables/SupTable2_Predictors.csv" )
-included_traits = predictor.list$Predictor
-var.exp = var.exp[(var.exp$V1)%in%included_traits,]
-
-```
-
-
-
-
-```{r, fig.width= 8, fig.height=12}
-
-# Convert the matrix to a dataframe and reshape it for ggplot
-df <- var.exp[,c("V1", "NA06997_WGS", "NA07029_WGS", "NA10861_WGS")]
-df_melt <- melt(df, id.vars = "V1")
-
-df_melt$Label = predictor.list[match(df_melt$V1, predictor.list$Predictor),"Label"]
-
-df_melt$Group <- ifelse(grepl("_0", df_melt$V1), 1, 0)
-
-
-# Create the heatmap
-heatmap_plot1 <- ggplot(df_melt, aes(x = variable , y = Label, fill = value)) +
-  geom_tile() +
-  scale_fill_gradient(low = "red", high = "white") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
-
-# Save the heatmap as a PDF with the desired size (width x height in inches)
-#ggsave("Figures/heatmap_var_cptured_of_tarits.pdf", plot = heatmap_plot1, width = 10, height = 14)
-heatmap_plot1
-
-```
-
-```{r}
-
-head(df)
-ggarrange(
-ggplot(df, aes(x = NA06997_WGS, y = NA07029_WGS))  + geom_point() + geom_text_repel(data = subset(df, NA06997_WGS<0.96), aes(label = V1 )),
-ggplot(df, aes(x = NA06997_WGS, y = NA10861_WGS))  + geom_point()+ geom_text_repel(data = subset(df, NA06997_WGS<0.96), aes(label = V1 )),
-ncol = 2
-)
-```
-
-
-
-
-```{r, fig.width=8, fig.height=25, eval = F, echo = F}
-## UKB_35BM_2021_Alkaline_phosphatase
-
-wgs.missing.snps <- Reduce(intersect, list(a$V1, b$V1, c$V1))
-
-UKB_35BM_2021_Alkaline_phosphatase = data.frame(fread("../Large_Data/Alkaline_phosphatase.imp_SBayesRC.snpRes"))
-
-UKB_35BM_2021_Alkaline_phosphatase$missing_in_WGS =   (UKB_35BM_2021_Alkaline_phosphatase$Name %in% wgs.missing.snps)
-
-
-ggplot(data = UKB_35BM_2021_Alkaline_phosphatase[which(abs(UKB_35BM_2021_Alkaline_phosphatase$A1Effect)>0.01 ), ], aes(x = Position, y = A1Effect)) + 
-  geom_point(size = 0.2) + 
-  facet_wrap(.~Chrom, ncol =1) + geom_point(data =UKB_35BM_2021_Alkaline_phosphatase[which(UKB_35BM_2021_Alkaline_phosphatase$missing_in_WGS == "TRUE"),] , aes(x = Position, y = A1Effect, color =  "red"))
-
-
-ggplot(data = UKB_35BM_2021_Alkaline_phosphatase[which(abs(UKB_35BM_2021_Alkaline_phosphatase$A1Effect) > 0.001),], aes(x = A1Effect, y = VarExplained, color = missing_in_WGS )) + geom_point()
-
-```
-
-
-
-
-
-
-
-
-```{r, fig.width=8, fig.height=25, eval = F, echo = F}
-
-## UKB_PPP_2022_ICAM1
-
-UKB_PPP_2022_ICAM1 = data.frame(fread("../Large_Data/ICAM1_P05362_OID20411_v1_Cardiometabolic_SBayesRC.snpRes"))
-
-UKB_PPP_2022_ICAM1$missing_in_WGS = 
-  (UKB_PPP_2022_ICAM1$Name %in% wgs.missing.snps)
-
-
-ggplot(data = UKB_PPP_2022_ICAM1[which(abs(UKB_PPP_2022_ICAM1$A1Effect)>0.01 ), ], aes(x = Position, y = A1Effect)) + 
-  geom_point(size = 0.2) + 
-  facet_wrap(.~Chrom, ncol =1) + geom_point(data =UKB_PPP_2022_ICAM1[which(UKB_PPP_2022_ICAM1$missing_in_WGS == "TRUE"),] , aes(x = Position, y = A1Effect, color =  "red"))
-
-
-ggplot(data = UKB_PPP_2022_ICAM1[which(abs(UKB_PPP_2022_ICAM1$A1Effect) > 0.001),], aes(x = A1Effect, y = VarExplained, color = missing_in_WGS )) + geom_point()
-
-```
+![](Figures/fig_wgs_missing_SNPs_overlap.png)
