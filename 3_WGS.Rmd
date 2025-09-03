@@ -1,7 +1,5 @@
 ---
-title: "Whole Genome Sequencing data "
-author: "Tian Lin"
-date: "`r format(Sys.time(), '%d %B %Y')`"
+title: "Whole Genome Sequencing data"
 output:
   html_document:
     toc: TRUE
@@ -27,19 +25,15 @@ library(ggpubr)
 library(kableExtra)
 library(openxlsx)
 library(ggrepel)
-
 library(plotROC)
 library(pROC)
-
 library(dplyr)
-
-
 ```
 
 
-# Intro
+# Introduction
 
-Whole genome sequencing data is downloaded from the 1000 Genomes project, which did the high-coverage wgs. 
+High coverage whole genome sequencing data was downloaded from the 1000 Genomes project.
 
 https://www.internationalgenome.org/data-portal/sample
 
@@ -59,7 +53,7 @@ samtools index -b ${sample}.final.cram
 
 ```
 
-The files are alignment files, which were against the human genome build 38. 
+The files are alignment files, which were alighed against the human genome build 38. 
 
 # process downloaded WGS data
 

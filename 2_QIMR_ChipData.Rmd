@@ -1,5 +1,5 @@
 ---
-title: "Profile PGS from External imputed Chip Data"
+title: "Chip data from QIMR"
 output:
   html_document:
     toc: TRUE
@@ -25,111 +25,42 @@ library(cowplot)
 library(ggpubr)
 library(kableExtra)
 library(openxlsx)
-
 library(plotROC)
 library(pROC)
-
 library(dplyr)
 library(tidyr)
-
-
 ```
 
 
-# Intro
+<br>
+
+CEPH samples were used as technical control in QIMR projects too. Scott helped to extract all the CEPH samples with around 200 samples, and imputed them with two imputation servers, Michigan and TopMed. The data is both useful to compare across other studies, and compare two different imputation panels.
+
+<br>
 
 
-QIMR have many batches of data and they were processed with standard QC with MAF >=1%, and flip to hg19 ‘+’ strand (which I know, based on Will Rayner’s BLAST search results)..
+# Data QC and Imputation
 
-Process is this (for each chip family (GSA, Omni, HapMap-based; Omni is just one batch) :
 
-1.  Identify all of the NA/GM control samples which passed QC, and the sample IDs which they were read as after extracting from GenomeStudio.
+QIMR have many batches of data and they were processed with standard QC with MAF >=1%, and flip to hg19 ‘+’ strand (which I know, based on Will Rayner’s BLAST search results).
 
-2.  Make a tiny PLINK binary-format file which has their raw genotypes under those IDs (still distinct), but restricted to just the markers which passed QC in their batch. In the Omni case I added 50 ordinary individuals who passed QC in the same batch, otherwise there were too few for the Imputation Server to accept the job. and added 200 individuals added to each batch of genotyping for a decent sample size.(Scott just chose the first 200/batch which were covered by the UQ data transfer agreement)
+For each chip family (GSA, Omni, HapMap-based), Scott processed the data in steps of:
+
+1. Identify all of the NA/GM control samples which passed QC, and the sample IDs which they were read as after extracting from GenomeStudio.
+
+2. Make a tiny PLINK binary-format file which has their raw genotypes under those IDs (still distinct), but restricted to just the markers which passed QC in their batch. In the Omni case I added 50 ordinary individuals who passed QC in the same batch, otherwise there were too few for the Imputation Server to accept the job. and added 200 individuals added to each batch of genotyping for a decent sample size.(Scott just chose the first 200/batch which were covered by the UQ data transfer agreement)
 
 3. Merge the batches from one chip family for the set of markers used in the original imputation run (which is the lowest common denominator of QC-passing markers across a number of batches), and flip to hg19 ‘+’ strand (which I know, based on Will Rayner’s BLAST search results).
 
 4.  Upload to Michigan Imputation Server (3 uploads per chip family : (a) autosomes; (b) chr X PAR regions; (c) chr X non-PAR region).
+
 5.  Uploaded to TOPMED imputation server for TOPMed (r3) reference
 
-5.  Download and extract the files and transfer to Tian through RDM.
+6.  Download and extract the files and transfer to Tian through RDM.
  
 
-There are 6 folders named after the reference panel and also the family of Illumina chips which it covers (ie. GSA, Omni/1000G-based (‘Omni’) and HapMap-based (‘Hap’)). Within each is a set of imputation runs. There are a set of 2 VCF files + a .info file and log file for each chromosome.
- 
-Chromosomes will be 1 through 22 + chr X (the non-PAR region) with an extra ‘X PAR region’ (XY) for the two newer chip families which have markers in PAR1 and PAR2.
- 
-Within each VCF you will find the QC controls (IDs beginning with NA or in one case GM) plus a set of other samples from the same batch (usually 200). The FID is the batch name in each case but as usual the FID and IID have been joined together. You may need to do some minor parsing of the IDs.
-
-
-We hypothesize that having fewer SNPs for imputation will may the PGS more variable. Actually quantifying this would be useful.
-
-Using the background distribution from QIMR may be complex for the reason Scott says, and is not a priority. We should just be able to scale the PGS with our scaling factor.
-
-
-
-
-From QIMR we only use data from the NA07029 who we have genotyped and then for the 4 individuals that were genotyped many times. (NB I have updated GM06997 to NA06997 because they are the same).
-
-For those 4 QIMR individuals you should be able to download the WGS data from the Corriell website as you did for the two that we have **download and process!**
 
  
-# QIMR Samples summary
-
-
-Here N=A(B) where 
->  A = non-control individuals which you have ethics approval to receive genotypes for (assuming I added up the studies correctly);     
->  B = total number of QIMR GenEpi non-controls in the batch, if I can provide summary scores for only.(before QC and dropping ancestry outliers etc.)   
- 
-ALCO_CIDR : N=4340 (4340)  
-GL_CIDR : N=0 (674)  
-OPIOID_CIDR : N=177 (202)  
-ANXASTHMA_DIAM : N=927 (1493)  
-ALCO_Broad : N=182 (316)  
-MelanomaMDD_NCI_GSA : N=4882 (4882)  
-MDDBP_ATGC_GSA : N=214 (806)  
- 
- 
-MelanomaMDD_NCI_GSA genotyped about 4,460 melanoma cases and 4,880 from our depression study (AGDS) which various people at UQ are involved in. 
-
-If you want close to the full set of observed markers then the only ones which you could really combine are (a) the two GSA batches (would reduce from 470046 and 515479 markers down to 455736); (b) GL_CIDR and ANXASTHMA_DIAM which are both Illumina 610K-quad (would reduce from 537190 and 536343 markers down to 527925).
-
-
-Here are the CEPH control samples we could do comparison with:
-
-
-```{r}
-samplesheet= data.frame(read_xlsx("Data/QIMR/QIMRGenotyping_NA_GM_controlsample_stats.xlsx", sheet="NA, GM control samples", range = "A2:H83"))
-wgs.availability = read.table("Data/QIMR/available_samples_in_1000G.txt")
-
-```
-
-
-```{r}
-samplesheet[grep("06997|07029", samplesheet$ID),]
-
-```
-
-```{r}
-
-samplesheet[grep("06990|07023|07057|10861", samplesheet$ID),]
-
-```
-
-
-
-
-```{r}
-
-batch.and.chip= data.frame(read_xlsx("Data/QIMR/QIMRGenotyping_NA_GM_controlsample_stats.xlsx", sheet="Batches description", range = "A1:D8"))
-batch.and.chip
-
-```
-
-
-
-
-
 # Post-imputation processing
 
 
@@ -137,32 +68,6 @@ batch.and.chip
 
 
 ```{bash, eval = F}
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=convert
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-71
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR
-
-listfile="HRC_list_of_dose_vcf.txt"
-
-folder=$(sed "${i}q;d" $listfile | awk '{print $1}' )
-chr=$(sed "${i}q;d" $listfile | awk '{print $2}' )
-vcffile=${folder}/${chr}.dose.vcf.gz
-plinkfile=${folder}_PLINK/${folder}_${chr}
-
-mkdir -p ${folder}_PLINK
-
 plink --vcf  $vcffile   --const-fid  --keep-allele-order --make-bed --out $plinkfile  
 
 mkdir -p ${folder}_PLINK/${folder}_PLINK_original_bim
@@ -170,28 +75,18 @@ cp ${plinkfile}.bim  ${folder}_PLINK/${folder}_PLINK_original_bim/
 
 
 Rscript update_TOPMED_SNPs.R  ${plinkfile}.bim  SNP_lists/dbsnp_146_hg38_${chr}.txt  /QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info
-
 cp ${plinkfile}.bim_updated  ${plinkfile}.bim
 
 ```
 
  
-## Update SNP ID in TopMed imputed
+## Update SNP ID 
 
-The whole dbSNP data was downloaded from the broad FTP.  
+The purpose of this step is to rename the duplicated SNP IDs, and fill in an ID for the SNPs without an ID. 
 
-The optimized SNP list is for our SBayesRC predictors. The SNP list is in the snp.info file of the LD matrix data. https://sbayes.pctgplots.cloud.edu.au/data/SBayesRC/resources/v2.0/LD/Imputed/
+Duplicate SNP IDs are distinguished by adding dup and a number, while keeping the SNP that have the same pair of alleles vs. the predictors intact. 
 
-
-```{bash, eval = F}
-#https://www.biostars.org/p/9554277/
-wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz
-wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz.tbi
-zless  Pipelines/hg38/dbsnp_146.hg38.vcf.gz  > dbsnp_146.hg38.txt
-
-```
-
-
+This R script was used for TopMed imputed data
 ```{r, eval = F}
 
 library(dplyr)
@@ -202,14 +97,6 @@ args=commandArgs(trailingOnly = TRUE)
 
 bimfile=args[1]
 pred.file=args[2]
-
-## test in computer
-bimfile="Dummy/GSA_TOPMedr3_chr22.bim"
-pred.file="Dummy/chr22_snp.info"
-
-## test in cluster
-# bimfile="GSA_TOPMedr3_PLINK/GSA_TOPMedr3_chr22.bim"
-# pred.file= "/QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info"
 
 # Read the files
 predictor <- read.table(pred.file, header = TRUE, stringsAsFactors = FALSE,
@@ -249,8 +136,6 @@ dup.bim <- dup.bim %>%
 
 dup.bim = data.frame(dup.bim)
 
-head(dup.bim[dup.bim$SNP %in% dup.bim[dup.bim$exact_match == "TRUE","SNP"],])
-
 # If there are duplicated SNPs for any reason then label them as _2, _3 etc
 temp <- rle(dup.bim$SNP)
 temp2 <- paste0(dup.bim$SNP, "_", unlist(lapply(temp$lengths, seq_len)))
@@ -268,181 +153,58 @@ fixed.bim = fixed.bim[order(fixed.bim$index),]
 # Save the modified bim file
 write.table(x = fixed.bim[,1:6], file = paste0(bimfile,"_updated" ), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
 
-
-
-#write.table(x = bim, file = "test.bim", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
-
-
-```
-
-**problem found:** some SNPs are exactly the same but two alleles swapped.This should not happen but happened in TOPMed panel. I chose not to update missing SNP ID with dbSNP IDs. 
-
-```{r, eval = F}
-head(bim[ bim$chrbpAB %in%  bim[duplicated(bim$chrbpAB)  , "chrbpAB" ],])
-#      chr          SNP cm      pos A1 A2 index A  B             chrbpAB chr.dbsnp pos.dbsnp SNP.dbsnp A1.dbsnp A2.dbsnp       newSNP
-# 3237  22 rs1289487765  0 10963123 GA  G  3237 G GA chr22:10963123:G:GA      <NA>        NA      <NA>     <NA>     <NA> rs1289487765
-# 3238  22 rs1289487765  0 10963123  G GA  3238 G GA chr22:10963123:G:GA      <NA>        NA      <NA>     <NA>     <NA> rs1289487765
-# 4437  22 rs1301426802  0 11219734 GT  G  4437 G GT chr22:11219734:G:GT      <NA>        NA      <NA>     <NA>     <NA> rs1301426802
-# 4438  22 rs1301426802  0 11219734  G GT  4438 G GT chr22:11219734:G:GT      <NA>        NA      <NA>     <NA>     <NA> rs1301426802
-# 5622  22 rs1173708481  0 11273386 CA  C  5622 C CA chr22:11273386:C:CA      <NA>        NA      <NA>     <NA>     <NA> rs1173708481
-# 5624  22 rs1173708481  0 11273386  C CA  5624 C CA chr22:11273386:C:CA      <NA>        NA      <NA>     <NA>     <NA> rs1173708481
-
-head(dbsnp[ dbsnp$chrbpAB %in%  dbsnp[duplicated(dbsnp$chrbpAB)  , "chrbpAB" ],])
-#         chr      pos         SNP A1 A2 A  B             chrbpAB
-# 32567 chr22 16390649 rs782160370  A AC A AC chr22:16390649:A:AC
-# 32568 chr22 16390649 rs146663571 AC  A A AC chr22:16390649:A:AC
-# 33133 chr22 16396429 rs781924961 GA  G G GA chr22:16396429:G:GA
-# 33135 chr22 16396429 rs549386097 GA  G G GA chr22:16396429:G:GA
-# 33955 chr22 16406244  rs35545610 TA  T T TA chr22:16406244:T:TA
-# 33956 chr22 16406244 rs796130684 TA  T T TA chr22:16406244:T:TA
 ```
 
 
+HRC imputed data were processed in the same way as HSU data.
 
-## update bim in HRC imputed
+```{bash, eval = F, echo = F}
+# The whole dbSNP data was downloaded from the broad FTP.  
 
-
-
-```{r, eval = F}
-
-library(dplyr)
-library(tidyr)
-library(data.table)
-
-args=commandArgs(trailingOnly = TRUE)
-
-bimfile=args[1]
-dbfile = args[2]
-
-### test in computer
-#bimfile="Dummy/Hap_HRCr1.1_chr22.bim"
-#dbfile="Dummy/dbsnp_146_hg38_chr22.txt"
-
-### test in cluster
-#bimfile="Hap_HRCr1.1_PLINK/Hap_HRCr1.1_chr22.bim"
-#dbfile="HRC.r1-1.GRCh37.wgs.mac5.sites.tab_SNP_chr_pos.txt"
-
-# Read the files
-bim <- read.table(bimfile, header = FALSE, stringsAsFactors = FALSE,
-                  col.names = c("chr", "SNP", "cm", "pos", "A1", "A2"))
-dbsnp <- read.table(dbfile, header = FALSE, stringsAsFactors = FALSE)[, 1:5]
-colnames(dbsnp) = c("chr", "pos", "SNP",  "A1", "A2")
-
-
-# add an index column
-
-bim$index = c(1:nrow(bim))
-
-# Create chrbpAB for bim
-bim <- bim %>%
-  mutate(A = pmin(toupper(A1), toupper(A2)),
-         B = pmax(toupper(A1), toupper(A2)),
-         chrbpAB = paste0(chr, ":", pos, ":", A, ":", B))
-
-# Create chrbpAB for dbsnp
-dbsnp <- dbsnp %>%
-  mutate(A = pmin(toupper(A1), toupper(A2)),
-         B = pmax(toupper(A1), toupper(A2)),
-         chrbpAB = paste0(chr, ":", pos, ":", A, ":", B))
-
-dbsnp = dbsnp[dbsnp$chrbpAB %in% bim$chrbpAB,]
-
-# Update SNP IDs for both types of bim files
-bim <- bim %>%
-  left_join(dbsnp, by = "chrbpAB", suffix = c("", ".dbsnp")) %>%
-  mutate(SNP = ifelse(SNP.dbsnp != "." & !is.na(SNP.dbsnp), SNP.dbsnp, SNP)) 
-
-# Handle duplicates in bim
-dup.bim = bim[bim$SNP %in% bim[duplicated(bim$SNP) , "SNP"],]
-
-# If there are duplicated SNPs for any reason then label them as _2, _3 etc
-temp <- rle(dup.bim$SNP)
-temp2 <- paste0(dup.bim$SNP, "_", unlist(lapply(temp$lengths, seq_len)))
-temp2 <- gsub("_1$", "", temp2)
-dup.bim$SNP <- temp2
-
-## get the key columns
-uniq.bim =  bim[!bim$SNP %in% bim[duplicated(bim$SNP) , "SNP"],]
-
-fixed.bim = rbind(uniq.bim %>%  select(chr, SNP, cm, pos, A1, A2, index),
-                  dup.bim %>%  select(chr, SNP, cm, pos, A1, A2, index))
-
-fixed.bim = fixed.bim[order(fixed.bim$index),]
-
-# Save the modified bim file
-write.table(x = fixed.bim[,1:6], file = paste0(bimfile,"_updated" ), sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
-
-
-
-#write.table(x = bim, file = "test.bim", sep = "\t", quote = FALSE, row.names = FALSE, col.names = FALSE)
-
+#https://www.biostars.org/p/9554277/
+wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz
+wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz.tbi
+zless  Pipelines/hg38/dbsnp_146.hg38.vcf.gz  > dbsnp_146.hg38.txt
 
 ```
-
 
 
 
 
 ## merge the chromosomes
 
-### merge HRC imputed
+HRC imputed data were merged into one file from all the chromosomes. 
 
 ```{bash, eval = F}
-
-
 i=$SLURM_ARRAY_TASK_ID
-
 cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR
-
 dir=Cleaned_Plink/
 
 ## define data
-studies=("GSA_HRCr1.1" "Hap_HRCr1.1" "Omni_HRCr1.1")
+studies=("GSA" "Hap_HRCr1.1" "Omni_HRCr1.1")
+panel="HRCr1.1"
 
 for cohort in "${studies[@]}"; do
-cohort=${studies[i-1]}
-
-## generate the merge list
-prefix=${dir}/${cohort}_PLINK/${cohort}"_chr"    
-for chr in $(seq 2 22); do
-    echo "${prefix}${chr}.bed ${prefix}${chr}.bim ${prefix}${chr}.fam"  >>  ${cohort}_bmerge_files.txt
-done    
-
-## merge the data
-mkdir -p Merged_plink
-plink --bfile ${prefix}1  --merge-list ${cohort}_bmerge_files.txt  --allow-no-sex  --make-bed  --out  Merged_plink/${cohort}_autosomes
-
+    cohort=${studies[i-1]}
+    ## generate the merge list
+    prefix=${dir}/${cohort}_${panel}_PLINK/${cohort}_${panel}"_chr"    
+    for chr in $(seq 2 22); do
+        echo "${prefix}${chr}.bed ${prefix}${chr}.bim ${prefix}${chr}.fam"  >>  ${cohort}_${panel}_bmerge_files.txt
+    done    
+    ## merge the data
+    mkdir -p Merged_plink
+    plink --bfile ${prefix}1  --merge-list ${cohort}_${panel}_bmerge_files.txt  --allow-no-sex  --make-bed  --out  Merged_plink/${cohort}_${panel}_autosomes
 done
-
-
 
 
 ```
 
 
-### merge TopMed imputed
 
+TopMed imputed data were filtered with the 7.3M SNP in the SBayesRC predictors, and then merged onto one file. 
 
 ```{bash, eval = F}
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=180G
-#SBATCH --time=36:00:00
-#SBATCH --job-name=merge
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-3
-
-
 i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR
-
 dir=Cleaned_Plink/
 
 ## define data
@@ -454,96 +216,44 @@ plink --bfile $bfile --extract  SNP_lists/SNPs_in_7.3M.txt   --make-bed --out Cl
 
 for cohort in "${studies[@]}"; do
 cohort=${studies[i-1]}
-
 ## generate the merge list
 prefix=${dir}/${cohort}_PLINK/${cohort}"_subset_chr"    
 for chr in $(seq 2 22); do
     echo "${prefix}${chr}.bed ${prefix}${chr}.bim ${prefix}${chr}.fam"  >>  ${cohort}_bmerge_files.txt
 done    
-
 ## merge the data
 mkdir -p Merged_plink
 plink --bfile ${prefix}1  --merge-list ${cohort}_bmerge_files.txt  --allow-no-sex  --make-bed  --out  Merged_plink/${cohort}_autosomes
-
 done
 
-
-
-
 ```
 
 
 
-
-# check data in AF
-
-To makes sure this is not general error in data, i checked the allele frequency of chr22 and compared to reference data.
-
-```{r, eval = F}
-
-#plink \
-#  --bfile Hap_TOPMedr3_PLINK/Hap_TOPMedr3_chr22  \
-#  --freq  \
-#  --out Hap_TOPMedr3_chr22_freq
+# PGS profiling
 
 
-#plink \
-#  --bfile Hap_HRCr1.1_PLINK/Hap_HRCr1.1_chr22  \
-#  --freq  \
-#  --out Hap_HRCr1.1_chr22_freq
+
+The same plink command line was used to profile PGS from the 6 QIMR data sets. 
 
 
-info.file="/QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info"
-frq.file = "Hap_HRCr1.1_chr22_freq.frq"
-library(dplyr)
-library(data.table)
-library(ggplot2)
-
-info = data.frame(fread(info.file))
-frq = read.table(frq.file, header = T)
-
-info = info[info$ID %in% frq$SNP, ]
-info$hapfrq = frq[match(info$ID, frq$SNP),"MAF"]
-info$hapA1 = frq[match(info$ID, frq$SNP),"A1"]
-info$hapfreq= abs(as.numeric(info$hapA1  != info$A1) - info$hapfrq)
-
-freq.plot = ggplot(data = info, aes(x = A1Freq, y =hapfreq )) + geom_point(size = 0.2) + xlab("AF in reference data chr22") + ylab("AF in Hap_HRCr1.1_chr22")
-ggsave("Hap_HRCr1.1_chr22_AF_plot.png", freq.plot, height = 8, width = 8)
-
-
-  
+```{bash, eval = F}
+plink  \
+--bfile  $bfile \
+--score  ${predictor}  2 5 8  header sum    \
+--out  $output
 ```
 
 
-![    ](Figures/Hap_HRCr1.1_chr22_AF_plot.png)
+The parameters after your predictor file means
 
-![    ](Figures/Hap_TOPMedr3_chr22_AF_plot.png)
-
-Data looks fine. 
-
-# Profile PGS
+ + 2 5 8: the three useful columns in the predictor file.   
+ + header: The predictor file has a header row.  
+ + sum: Plink prefers to divide the score by the number of SNPs in predictor. Using "sum" will prevent the division step.   
 
 
-```{bash, eval = F, echo = F}
-## The script from zhili does the same thing as my pipeline, but easy to use when there are separate chromosomes. 
-# Polygenic risk score using SBayesRC tool
 
-## Just a toy demo to calculate the polygenic risk score
-genoPrefix=/QRISdata/Q5740/QIMR_Berghofer/${cohort}_PLINK/${cohort}"_chr"{CHR} # {CHR} means multiple genotype file.
-## If just one genotype, input the full prefix genoPrefix="test"
-
-genoCHR="1-22" ## means {CHR} expands to 1-22 and X,
-## if just one genotype file, input genoCHR=""
-
-output=${cohort}_${trait}
-Rscript -e "SBayesRC::prs(weight='${predictor}', genoPrefix='$genoPrefix', \
-                   out='$output', genoCHR='$genoCHR', scoreFlag='2 5 8 header')"
-
-```
-
-We merged all the traits to one file.
-
-```{r, eval = F}
+```{r, eval = F,echo = F}
 
 group="PRS_all_GCTB_with_merged"
 
@@ -580,311 +290,5 @@ write.csv(target.data, file= paste0( group, "_",cohort, "_all_", n.trait , "_tra
 }
 
 ```
-
-
-
-
-# compare two imputation panels
-
-```{r}
-hap.hrc = read.csv("Data/QIMR/PRS_all_GCTB_Hap_HRCr1.1_all_140_traits_GCTB_PRS.csv", row.names = 1 )
-hap.tpm = read.csv("Data/QIMR/PRS_all_GCTB_Hap_TOPMedr3_all_140_traits_GCTB_PRS.csv", row.names = 1)
-```
-
-This is a test using only the samples in the HapMap-based (‘Hap’). 
-
-    581 ALCO CIDR     
-    401 ANXASTHMA DIAM     
-    129 GL CIDR     
-    256 OPIOID CIDR     
-
-
-There are `r nrow(hap.tpm[grep("NA", row.names(hap.tpm), invert = T),])` experimental samples, and `r nrow(hap.tpm[grep("NA", row.names(hap.tpm)),])` control samples in the data. 
-
-Following plots included all of them (N = `r nrow(hap.hrc)`). 
-
-```{r}
-## standardize
-standardization.data = read.csv("Data/Lifelines_MEAN_and_SD_of_traits_for_standardization.csv")
-
-
-hap.hrc = hap.hrc[,colnames(hap.hrc) %in%standardization.data$trait ]
-standardization.data= standardization.data[  match( colnames(hap.hrc) , standardization.data$trait),]
-
-hap.hrc.norm = sweep(
-  sweep (  hap.hrc,  
-          2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = '/')
-
-
-
-hap.tpm = hap.tpm[,colnames(hap.tpm) %in%standardization.data$trait ]
-standardization.data= standardization.data[  match( colnames(hap.tpm) , standardization.data$trait),]
-
-hap.tpm.norm = sweep(
-  sweep (  hap.tpm,  
-          2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = '/')
-
-
-
-```
-
-```{r}
-hap.hrc.norm$IID = row.names(hap.hrc.norm)
-hap.tpm.norm$IID = row.names(hap.tpm.norm)
-
-hap.hrc.melt = melt(hap.hrc.norm, id.vars = "IID")
-hap.tpm.melt = melt(hap.tpm.norm, id.vars = "IID")
-
-
-colnames(hap.hrc.melt)[3] = "HRC"
-colnames(hap.tpm.melt)[3] = "TopMed"
-
-melted.both =  merge(hap.hrc.melt, 
-                     hap.tpm.melt[, c("IID", "variable", "TopMed")], 
-                by = c("IID", "variable"), 
-                all.x = TRUE)
-
-
-predictor.list = read.csv("Tables/SupTable2_Predictors.csv")
-included_traits = predictor.list$Predictor
-melted.both = melted.both[melted.both$variable %in% included_traits,]
-
-
-## grouping traits
-traits_binary = predictor.list[which(predictor.list$Group == "Binary" ),"Predictor"]
-traits_quanti = predictor.list[which(predictor.list$Group == "Quantitative"),"Predictor"]
-traits_35bm   = predictor.list[which(predictor.list$Group == "Biomarker"),"Predictor"]
-traits_pfa   = predictor.list[which(predictor.list$Group == "Protein and Fatty Acid"),"Predictor"]
-
-```
-
-## Binary traits
-
-```{r, fig.width= 8, fig.height=12}
-
-ggplot(data = melted.both[melted.both$variable %in%traits_binary,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)
-
-```
-
-## Quantitative traits
-
-```{r, fig.width= 8, fig.height=10}
-
-ggplot(data = melted.both[melted.both$variable %in%traits_quanti,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)
-
-```
-
-
-```{r, fig.width= 12, fig.height=5}
-
-selected.traits = c(   "Height_03", "BMI_02" ,    "Migraine_01", "Stroke_01",   "Glaucoma_01", "HairColor_01" ,   "LungCancer_01", "CeliacDisease_01")
-
-
-ggplot(data = melted.both[melted.both$variable %in% selected.traits,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 4) + 
-  xlim(-5,5) + ylim(-5,5)
-
-```
-
-## Biomarker traits
-
-```{r, fig.width= 8, fig.height=12}
-
-ggplot(data = melted.both[ melted.both$variable %in% traits_35bm,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)
-
-```
-
-## Proteomics and Fatty Acid traits
-
-```{r, fig.width= 8, fig.height=12}
-
-ggplot(data = melted.both[ melted.both$variable %in% traits_pfa,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)
-
-```
-
-
-## summary and outliers
-
-```{r}
-result <- melted.both %>%
-  group_by(variable) %>%
-  summarise(correlation = cor(HRC, TopMed, use = "complete.obs"), .groups = "drop")
-
-
-result %>% filter(correlation < 0.95) %>% arrange((correlation))
-
-```
-
-
-```{r}
-
-hist(result$correlation)
-
-summary(result$correlation)
-
-sd(result$correlation)
-
-```
-
-
-```{r, fig.width= 12, fig.height=8}
-result = data.frame(result)
-
-var.trait.list = result[which(result$correlation < 0.95), "variable"]
-
-ggplot(data = melted.both[melted.both$variable %in% result[which(result$correlation < 0.95), "variable"],], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 4) + 
-  xlim(-3,3) + ylim(-3,3)
-
-```
-
-
-# per chr PGS comparison
-
-
-```{r, eval = F, echo = F}
-
-group="PRS_all_GCTB_with_chr"
-
-studies=c("GSA_HRCr1.1", "GSA_TOPMedr3", 
-          "Hap_HRCr1.1", "Hap_TOPMedr3", 
-          "Omni_HRCr1.1", "Omni_TOPMedr3")
-
-trait.list = read.table("GCTB_SBayesRC_predictors_with_large_dif.txt")
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-
-for(chr in 1:22){
-for (i in 1:6) {
-cohort=studies[i]
-fam=paste0("/QRISdata/Q5740/QIMR_Berghofer/", cohort, "_PLINK/", cohort ,"_chr1")
-
-target.data =read.table(paste0(fam, ".fam")) 
-target.data = target.data[,c(1,2)]
-colnames(target.data) = c("FID", "IID")
-  
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, "/",cohort, "_", trait, "_SBayesRC_chr", chr,".profile")
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),"SCORESUM"]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-target.data = target.data[,3:ncol(target.data)]
-write.csv(target.data, file= paste0( group, "_",cohort, "_chr", chr ,"_", n.trait , "_traits_GCTB_PRS.csv"))
-
-}
-  
-}
-
-
-```
-
-
-
-```{r, fig.width=12, fig.height=18}
-
-QIMR.per.chr = data.frame()
-
-for (chr in 1:22) {
-hap.hrc = read.csv(paste0("Data/QIMR/PRS_all_GCTB_with_chr_Hap_HRCr1.1_chr",chr , "_10_traits_GCTB_PRS.csv"), row.names = 1)
-hap.tpm = read.csv(paste0("Data/QIMR/PRS_all_GCTB_with_chr_Hap_TOPMedr3_chr",chr , "_10_traits_GCTB_PRS.csv"), row.names = 1)
-
-gsa.hrc = read.csv(paste0("Data/QIMR/PRS_all_GCTB_with_chr_GSA_HRCr1.1_chr",chr , "_10_traits_GCTB_PRS.csv"), row.names = 1)
-gsa.tpm = read.csv(paste0("Data/QIMR/PRS_all_GCTB_with_chr_GSA_TOPMedr3_chr",chr , "_10_traits_GCTB_PRS.csv"), row.names = 1)
-
-omni.hrc = read.csv(paste0("Data/QIMR/PRS_all_GCTB_with_chr_Omni_HRCr1.1_chr",chr , "_10_traits_GCTB_PRS.csv"), row.names = 1)
-omni.tpm = read.csv(paste0("Data/QIMR/PRS_all_GCTB_with_chr_Omni_TOPMedr3_chr",chr , "_10_traits_GCTB_PRS.csv"), row.names = 1)
-
-hap.hrc$Batch = sub("^(([^_]*_){1}[^_]*).*", "\\1", row.names(hap.hrc))
-hap.tpm$Batch = sub("^(([^_]*_){1}[^_]*).*", "\\1", row.names(hap.tpm))
-
-gsa.hrc$Batch  = sub("^(([^_]*_){2}[^_]*).*", "\\1", row.names(gsa.hrc))
-gsa.tpm$Batch  = sub("^(([^_]*_){2}[^_]*).*", "\\1", row.names(gsa.tpm))
-
-omni.hrc$Batch =  sub("^(([^_]*_){1}[^_]*).*", "\\1", row.names(omni.hrc))
-omni.tpm$Batch =  sub("^(([^_]*_){1}[^_]*).*", "\\1", row.names(omni.tpm))
-
-
-hap.hrc$Study_ID = sub("^([^_]*_){2}", "", row.names(hap.hrc))
-hap.tpm$Study_ID = sub("^([^_]*_){2}", "", row.names(hap.tpm))
-
-gsa.hrc$Study_ID  = sub("^([^_]*_){3}", "", row.names(gsa.hrc))
-gsa.tpm$Study_ID  = sub("^([^_]*_){3}", "", row.names(gsa.tpm))
-
-omni.hrc$Study_ID =  sub("^([^_]*_){2}", "", row.names(omni.hrc))
-omni.tpm$Study_ID =  sub("^([^_]*_){2}", "", row.names(omni.tpm))
-
-hap.hrc$imputation_panel = gsa.hrc$imputation_panel = omni.hrc$imputation_panel  = "HRCr1.1"
-hap.tpm$imputation_panel = gsa.tpm$imputation_panel = omni.tpm$imputation_panel  = "TopMedr3"
-
-
-QIMR = rbind(hap.hrc ,
-hap.tpm ,
-gsa.hrc ,
-gsa.tpm ,
-omni.hrc,
-omni.tpm
-)
-
-melted.QIMR = melt(QIMR, id.vars = c("Study_ID", "Batch", "imputation_panel"))
-
-melted.QIMR$chromosome = chr
-
-QIMR.per.chr = rbind(QIMR.per.chr, melted.QIMR)
-
-}
-
-TopMed = QIMR.per.chr[which(QIMR.per.chr$imputation_panel =="TopMedr3"),]
-HRCr1.1 = QIMR.per.chr[which(QIMR.per.chr$imputation_panel =="HRCr1.1"),]
-
-colnames(TopMed)[5] = "TopMed"
-colnames(HRCr1.1)[5] = "HRC"
-
-merged.QIMR = merge(TopMed[,c(1,2,4,5,6)], HRCr1.1[,c(1,2,4,5,6)], by = c("Study_ID", "Batch", "variable", "chromosome"))
-
-variants.per.chr.plot = ggplot(data = merged.QIMR, aes(x = HRC, y = TopMed)) + geom_point(size = 0.1)+ facet_grid(rows = vars(chromosome), cols = vars(variable), scales = "free")
-
-variants.per.chr.plot
-```
-
-
-An example:
-
-
-
-```{r, fig.width=12, fig.height=12}
-
-
-i = 2
-trait = as.character( var.trait.list[i])
-per.chr.plot = ggplot(data = merged.QIMR[which(merged.QIMR$variable == trait),], aes(x = HRC, y = TopMed)) + geom_point(size = 0.1)+ facet_wrap(~chromosome, ncol = 5, scales = "free")
-
-trait
-per.chr.plot
-```
-
-
-
-
 
 

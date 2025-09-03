@@ -11,7 +11,7 @@
 
 
 
-<title>Profile PGS from External imputed Chip Data</title>
+<title>Chip data from QIMR</title>
 
 <script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -328,25 +328,22 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="index.html">Intro</a>
+  <a href="index.html">Introduction</a>
 </li>
 <li>
   <a href="0_PredictorPrep.html">Predictors</a>
 </li>
 <li>
-  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+  <a href="1_GRP_ChipData.html">HSU Data</a>
 </li>
 <li>
-  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+  <a href="2_QIMR_ChipData.html">QIMR Data</a>
 </li>
 <li>
-  <a href="3_WGS.html">WGS</a>
+  <a href="3_WGS.html">WGS data</a>
 </li>
 <li>
-  <a href="4_LowPassSeq.html">LowPass</a>
-</li>
-<li>
-  <a href="8_PGS_Merge.html">PGS_Merge</a>
+  <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
 <li>
   <a href="5_Consistency.html">Consistency</a>
@@ -355,10 +352,7 @@ div.tocify {
   <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
 </li>
 <li>
-  <a href="6_MissingSNP.html">MissingSNP</a>
-</li>
-<li>
-  <a href="11_convert_function.html">Convert_function</a>
+  <a href="6_MissingSNP.html">Missingness</a>
 </li>
 <li>
   <a href="7_Benchmarking.html">Benchmarking</a>
@@ -380,19 +374,26 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Profile PGS from External imputed Chip
-Data</h1>
+<h1 class="title toc-ignore">Chip data from QIMR</h1>
 
 </div>
 
 
-<div id="intro" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Intro</h1>
+<p><br></p>
+<p>CEPH samples were used as technical control in QIMR projects too.
+Scott helped to extract all the CEPH samples with around 200 samples,
+and imputed them with two imputation servers, Michigan and TopMed. The
+data is both useful to compare across other studies, and compare two
+different imputation panels.</p>
+<p><br></p>
+<div id="data-qc-and-imputation" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Data QC and
+Imputation</h1>
 <p>QIMR have many batches of data and they were processed with standard
 QC with MAF &gt;=1%, and flip to hg19 ‘+’ strand (which I know, based on
-Will Rayner’s BLAST search results)..</p>
-<p>Process is this (for each chip family (GSA, Omni, HapMap-based; Omni
-is just one batch) :</p>
+Will Rayner’s BLAST search results).</p>
+<p>For each chip family (GSA, Omni, HapMap-based), Scott processed the
+data in steps of:</p>
 <ol style="list-style-type: decimal">
 <li><p>Identify all of the NA/GM control samples which passed QC, and
 the sample IDs which they were read as after extracting from
@@ -418,134 +419,30 @@ reference</p></li>
 <li><p>Download and extract the files and transfer to Tian through
 RDM.</p></li>
 </ol>
-<p>There are 6 folders named after the reference panel and also the
-family of Illumina chips which it covers (ie. GSA, Omni/1000G-based
-(‘Omni’) and HapMap-based (‘Hap’)). Within each is a set of imputation
-runs. There are a set of 2 VCF files + a .info file and log file for
-each chromosome.</p>
-<p>Chromosomes will be 1 through 22 + chr X (the non-PAR region) with an
-extra ‘X PAR region’ (XY) for the two newer chip families which have
-markers in PAR1 and PAR2.</p>
-<p>Within each VCF you will find the QC controls (IDs beginning with NA
-or in one case GM) plus a set of other samples from the same batch
-(usually 200). The FID is the batch name in each case but as usual the
-FID and IID have been joined together. You may need to do some minor
-parsing of the IDs.</p>
-<p>We hypothesize that having fewer SNPs for imputation will may the PGS
-more variable. Actually quantifying this would be useful.</p>
-<p>Using the background distribution from QIMR may be complex for the
-reason Scott says, and is not a priority. We should just be able to
-scale the PGS with our scaling factor.</p>
-<p>From QIMR we only use data from the NA07029 who we have genotyped and
-then for the 4 individuals that were genotyped many times. (NB I have
-updated GM06997 to NA06997 because they are the same).</p>
-<p>For those 4 QIMR individuals you should be able to download the WGS
-data from the Corriell website as you did for the two that we have
-<strong>download and process!</strong></p>
 </div>
-<div id="qimr-samples-summary" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> QIMR Samples
-summary</h1>
-<p>Here N=A(B) where &gt; A = non-control individuals which you have
-ethics approval to receive genotypes for (assuming I added up the
-studies correctly);<br />
-&gt; B = total number of QIMR GenEpi non-controls in the batch, if I can
-provide summary scores for only.(before QC and dropping ancestry
-outliers etc.)</p>
-<p>ALCO_CIDR : N=4340 (4340)<br />
-GL_CIDR : N=0 (674)<br />
-OPIOID_CIDR : N=177 (202)<br />
-ANXASTHMA_DIAM : N=927 (1493)<br />
-ALCO_Broad : N=182 (316)<br />
-MelanomaMDD_NCI_GSA : N=4882 (4882)<br />
-MDDBP_ATGC_GSA : N=214 (806)</p>
-<p>MelanomaMDD_NCI_GSA genotyped about 4,460 melanoma cases and 4,880
-from our depression study (AGDS) which various people at UQ are involved
-in.</p>
-<p>If you want close to the full set of observed markers then the only
-ones which you could really combine are (a) the two GSA batches (would
-reduce from 470046 and 515479 markers down to 455736); (b) GL_CIDR and
-ANXASTHMA_DIAM which are both Illumina 610K-quad (would reduce from
-537190 and 536343 markers down to 527925).</p>
-<p>Here are the CEPH control samples we could do comparison with:</p>
-<pre class="r"><code>samplesheet= data.frame(read_xlsx(&quot;Data/QIMR/QIMRGenotyping_NA_GM_controlsample_stats.xlsx&quot;, sheet=&quot;NA, GM control samples&quot;, range = &quot;A2:H83&quot;))
-wgs.availability = read.table(&quot;Data/QIMR/available_samples_in_1000G.txt&quot;)</code></pre>
-<pre class="r"><code>samplesheet[grep(&quot;06997|07029&quot;, samplesheet$ID),]</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["ALCO_CIDR"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["GL_CIDR"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["OPIOID_CIDR"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["ANXASTHMA_DIAM"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["ALCO_Broad"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["MelanomaMDD_NCI_GSA"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["MDDBP_ATGC_GSA"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"GM07029","2":"NA","3":"NA","4":"NA","5":"1","6":"NA","7":"NA","8":"NA","_rn_":"1"},{"1":"NA07029","2":"NA","3":"2","4":"1","5":"NA","6":"NA","7":"NA","8":"NA","_rn_":"9"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>samplesheet[grep(&quot;06990|07023|07057|10861&quot;, samplesheet$ID),]</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["ALCO_CIDR"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["GL_CIDR"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["OPIOID_CIDR"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["ANXASTHMA_DIAM"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["ALCO_Broad"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["MelanomaMDD_NCI_GSA"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["MDDBP_ATGC_GSA"],"name":[8],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06990","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"35","8":"NA","_rn_":"3"},{"1":"NA07023","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"37","8":"NA","_rn_":"8"},{"1":"NA07057","2":"NA","3":"NA","4":"NA","5":"NA","6":"NA","7":"34","8":"NA","_rn_":"13"},{"1":"NA10861","2":"4","3":"2","4":"2","5":"NA","6":"NA","7":"106","8":"NA","_rn_":"20"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>batch.and.chip= data.frame(read_xlsx(&quot;Data/QIMR/QIMRGenotyping_NA_GM_controlsample_stats.xlsx&quot;, sheet=&quot;Batches description&quot;, range = &quot;A1:D8&quot;))
-batch.and.chip</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Batch"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Chip.type"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Genotyping.lab"],"name":[3],"type":["chr"],"align":["left"]},{"label":["Comments"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"ALCO_CIDR","2":"Illumina Human370v1_C (370K duo)","3":"CIDR","4":"Nicotine/IRPG study genotyping (CIDR portion)"},{"1":"GL_CIDR","2":"Illumina Human610-Quadv1_B (610K quad)","3":"CIDR","4":"Glaucoma study genotyping (CIDR portion)"},{"1":"OPIOID_CIDR","2":"Illumina Human660W-Quad_v1_C (660K quad)","3":"CIDR","4":"Opioid project genotyping"},{"1":"ANXASTHMA_DIAM","2":"Illumina Human610-Quadv1_B (610K quad)","3":"Diamantina Institute","4":"Anxiety/Asthma/AAGC genotyping"},{"1":"ALCO_Broad","2":"Illumina HumanOmniExpress-12v1-1_A (OmniExpress)","3":"Broad Institute","4":"Only one relevant QC sample"},{"1":"MelanomaMDD_NCI_GSA","2":"Illumina GSAMD-24v1-0_20011747 (GSA v1)","3":"NCI","4":"Melanoma cases and AGDS participants; large numbers of copies of a small number of samples"},{"1":"MDDBP_ATGC_GSA","2":"Illumina GSAMD-24v3-0-EA_20034606 (GSA v3)","3":"ATGC","4":"AGDS and Bipolar studies"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-</div>
-<div id="post-imputation-processing" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Post-imputation
+<div id="post-imputation-processing" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Post-imputation
 processing</h1>
-<div id="convert-to-plink" class="section level2" number="3.1">
-<h2><span class="header-section-number">3.1</span> convert to plink</h2>
-<pre class="bash"><code>#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=convert
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-71
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR
-
-listfile=&quot;HRC_list_of_dose_vcf.txt&quot;
-
-folder=$(sed &quot;${i}q;d&quot; $listfile | awk &#39;{print $1}&#39; )
-chr=$(sed &quot;${i}q;d&quot; $listfile | awk &#39;{print $2}&#39; )
-vcffile=${folder}/${chr}.dose.vcf.gz
-plinkfile=${folder}_PLINK/${folder}_${chr}
-
-mkdir -p ${folder}_PLINK
-
-plink --vcf  $vcffile   --const-fid  --keep-allele-order --make-bed --out $plinkfile  
+<div id="convert-to-plink" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> convert to plink</h2>
+<pre class="bash"><code>plink --vcf  $vcffile   --const-fid  --keep-allele-order --make-bed --out $plinkfile  
 
 mkdir -p ${folder}_PLINK/${folder}_PLINK_original_bim
 cp ${plinkfile}.bim  ${folder}_PLINK/${folder}_PLINK_original_bim/
 
 
 Rscript update_TOPMED_SNPs.R  ${plinkfile}.bim  SNP_lists/dbsnp_146_hg38_${chr}.txt  /QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info
-
 cp ${plinkfile}.bim_updated  ${plinkfile}.bim
 </code></pre>
 </div>
-<div id="update-snp-id-in-topmed-imputed" class="section level2"
-number="3.2">
-<h2><span class="header-section-number">3.2</span> Update SNP ID in
-TopMed imputed</h2>
-<p>The whole dbSNP data was downloaded from the broad FTP.</p>
-<p>The optimized SNP list is for our SBayesRC predictors. The SNP list
-is in the snp.info file of the LD matrix data. <a
-href="https://sbayes.pctgplots.cloud.edu.au/data/SBayesRC/resources/v2.0/LD/Imputed/"
-class="uri">https://sbayes.pctgplots.cloud.edu.au/data/SBayesRC/resources/v2.0/LD/Imputed/</a></p>
-<pre class="bash"><code>#https://www.biostars.org/p/9554277/
-wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz
-wget -c ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_146.hg38.vcf.gz.tbi
-zless  Pipelines/hg38/dbsnp_146.hg38.vcf.gz  &gt; dbsnp_146.hg38.txt
-</code></pre>
+<div id="update-snp-id" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> Update SNP ID</h2>
+<p>The purpose of this step is to rename the duplicated SNP IDs, and
+fill in an ID for the SNPs without an ID.</p>
+<p>Duplicate SNP IDs are distinguished by adding dup and a number, while
+keeping the SNP that have the same pair of alleles vs. the predictors
+intact.</p>
+<p>This R script was used for TopMed imputed data</p>
 <pre class="r"><code>library(dplyr)
 library(tidyr)
 library(data.table)
@@ -554,14 +451,6 @@ args=commandArgs(trailingOnly = TRUE)
 
 bimfile=args[1]
 pred.file=args[2]
-
-## test in computer
-bimfile=&quot;Dummy/GSA_TOPMedr3_chr22.bim&quot;
-pred.file=&quot;Dummy/chr22_snp.info&quot;
-
-## test in cluster
-# bimfile=&quot;GSA_TOPMedr3_PLINK/GSA_TOPMedr3_chr22.bim&quot;
-# pred.file= &quot;/QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info&quot;
 
 # Read the files
 predictor &lt;- read.table(pred.file, header = TRUE, stringsAsFactors = FALSE,
@@ -601,8 +490,6 @@ dup.bim &lt;- dup.bim %&gt;%
 
 dup.bim = data.frame(dup.bim)
 
-head(dup.bim[dup.bim$SNP %in% dup.bim[dup.bim$exact_match == &quot;TRUE&quot;,&quot;SNP&quot;],])
-
 # If there are duplicated SNPs for any reason then label them as _2, _3 etc
 temp &lt;- rle(dup.bim$SNP)
 temp2 &lt;- paste0(dup.bim$SNP, &quot;_&quot;, unlist(lapply(temp$lengths, seq_len)))
@@ -618,161 +505,37 @@ fixed.bim = rbind(uniq.bim %&gt;%  select(chr, SNP, cm, pos, A1, A2, index),
 fixed.bim = fixed.bim[order(fixed.bim$index),]
 
 # Save the modified bim file
-write.table(x = fixed.bim[,1:6], file = paste0(bimfile,&quot;_updated&quot; ), sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, col.names = FALSE)
-
-
-
-#write.table(x = bim, file = &quot;test.bim&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, col.names = FALSE)</code></pre>
-<p><strong>problem found:</strong> some SNPs are exactly the same but
-two alleles swapped.This should not happen but happened in TOPMed panel.
-I chose not to update missing SNP ID with dbSNP IDs.</p>
-<pre class="r"><code>head(bim[ bim$chrbpAB %in%  bim[duplicated(bim$chrbpAB)  , &quot;chrbpAB&quot; ],])
-#      chr          SNP cm      pos A1 A2 index A  B             chrbpAB chr.dbsnp pos.dbsnp SNP.dbsnp A1.dbsnp A2.dbsnp       newSNP
-# 3237  22 rs1289487765  0 10963123 GA  G  3237 G GA chr22:10963123:G:GA      &lt;NA&gt;        NA      &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt; rs1289487765
-# 3238  22 rs1289487765  0 10963123  G GA  3238 G GA chr22:10963123:G:GA      &lt;NA&gt;        NA      &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt; rs1289487765
-# 4437  22 rs1301426802  0 11219734 GT  G  4437 G GT chr22:11219734:G:GT      &lt;NA&gt;        NA      &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt; rs1301426802
-# 4438  22 rs1301426802  0 11219734  G GT  4438 G GT chr22:11219734:G:GT      &lt;NA&gt;        NA      &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt; rs1301426802
-# 5622  22 rs1173708481  0 11273386 CA  C  5622 C CA chr22:11273386:C:CA      &lt;NA&gt;        NA      &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt; rs1173708481
-# 5624  22 rs1173708481  0 11273386  C CA  5624 C CA chr22:11273386:C:CA      &lt;NA&gt;        NA      &lt;NA&gt;     &lt;NA&gt;     &lt;NA&gt; rs1173708481
-
-head(dbsnp[ dbsnp$chrbpAB %in%  dbsnp[duplicated(dbsnp$chrbpAB)  , &quot;chrbpAB&quot; ],])
-#         chr      pos         SNP A1 A2 A  B             chrbpAB
-# 32567 chr22 16390649 rs782160370  A AC A AC chr22:16390649:A:AC
-# 32568 chr22 16390649 rs146663571 AC  A A AC chr22:16390649:A:AC
-# 33133 chr22 16396429 rs781924961 GA  G G GA chr22:16396429:G:GA
-# 33135 chr22 16396429 rs549386097 GA  G G GA chr22:16396429:G:GA
-# 33955 chr22 16406244  rs35545610 TA  T T TA chr22:16406244:T:TA
-# 33956 chr22 16406244 rs796130684 TA  T T TA chr22:16406244:T:TA</code></pre>
+write.table(x = fixed.bim[,1:6], file = paste0(bimfile,&quot;_updated&quot; ), sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, col.names = FALSE)</code></pre>
+<p>HRC imputed data were processed in the same way as HSU data.</p>
 </div>
-<div id="update-bim-in-hrc-imputed" class="section level2" number="3.3">
-<h2><span class="header-section-number">3.3</span> update bim in HRC
-imputed</h2>
-<pre class="r"><code>library(dplyr)
-library(tidyr)
-library(data.table)
-
-args=commandArgs(trailingOnly = TRUE)
-
-bimfile=args[1]
-dbfile = args[2]
-
-### test in computer
-#bimfile=&quot;Dummy/Hap_HRCr1.1_chr22.bim&quot;
-#dbfile=&quot;Dummy/dbsnp_146_hg38_chr22.txt&quot;
-
-### test in cluster
-#bimfile=&quot;Hap_HRCr1.1_PLINK/Hap_HRCr1.1_chr22.bim&quot;
-#dbfile=&quot;HRC.r1-1.GRCh37.wgs.mac5.sites.tab_SNP_chr_pos.txt&quot;
-
-# Read the files
-bim &lt;- read.table(bimfile, header = FALSE, stringsAsFactors = FALSE,
-                  col.names = c(&quot;chr&quot;, &quot;SNP&quot;, &quot;cm&quot;, &quot;pos&quot;, &quot;A1&quot;, &quot;A2&quot;))
-dbsnp &lt;- read.table(dbfile, header = FALSE, stringsAsFactors = FALSE)[, 1:5]
-colnames(dbsnp) = c(&quot;chr&quot;, &quot;pos&quot;, &quot;SNP&quot;,  &quot;A1&quot;, &quot;A2&quot;)
-
-
-# add an index column
-
-bim$index = c(1:nrow(bim))
-
-# Create chrbpAB for bim
-bim &lt;- bim %&gt;%
-  mutate(A = pmin(toupper(A1), toupper(A2)),
-         B = pmax(toupper(A1), toupper(A2)),
-         chrbpAB = paste0(chr, &quot;:&quot;, pos, &quot;:&quot;, A, &quot;:&quot;, B))
-
-# Create chrbpAB for dbsnp
-dbsnp &lt;- dbsnp %&gt;%
-  mutate(A = pmin(toupper(A1), toupper(A2)),
-         B = pmax(toupper(A1), toupper(A2)),
-         chrbpAB = paste0(chr, &quot;:&quot;, pos, &quot;:&quot;, A, &quot;:&quot;, B))
-
-dbsnp = dbsnp[dbsnp$chrbpAB %in% bim$chrbpAB,]
-
-# Update SNP IDs for both types of bim files
-bim &lt;- bim %&gt;%
-  left_join(dbsnp, by = &quot;chrbpAB&quot;, suffix = c(&quot;&quot;, &quot;.dbsnp&quot;)) %&gt;%
-  mutate(SNP = ifelse(SNP.dbsnp != &quot;.&quot; &amp; !is.na(SNP.dbsnp), SNP.dbsnp, SNP)) 
-
-# Handle duplicates in bim
-dup.bim = bim[bim$SNP %in% bim[duplicated(bim$SNP) , &quot;SNP&quot;],]
-
-# If there are duplicated SNPs for any reason then label them as _2, _3 etc
-temp &lt;- rle(dup.bim$SNP)
-temp2 &lt;- paste0(dup.bim$SNP, &quot;_&quot;, unlist(lapply(temp$lengths, seq_len)))
-temp2 &lt;- gsub(&quot;_1$&quot;, &quot;&quot;, temp2)
-dup.bim$SNP &lt;- temp2
-
-## get the key columns
-uniq.bim =  bim[!bim$SNP %in% bim[duplicated(bim$SNP) , &quot;SNP&quot;],]
-
-fixed.bim = rbind(uniq.bim %&gt;%  select(chr, SNP, cm, pos, A1, A2, index),
-                  dup.bim %&gt;%  select(chr, SNP, cm, pos, A1, A2, index))
-
-fixed.bim = fixed.bim[order(fixed.bim$index),]
-
-# Save the modified bim file
-write.table(x = fixed.bim[,1:6], file = paste0(bimfile,&quot;_updated&quot; ), sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, col.names = FALSE)
-
-
-
-#write.table(x = bim, file = &quot;test.bim&quot;, sep = &quot;\t&quot;, quote = FALSE, row.names = FALSE, col.names = FALSE)</code></pre>
-</div>
-<div id="merge-the-chromosomes" class="section level2" number="3.4">
-<h2><span class="header-section-number">3.4</span> merge the
+<div id="merge-the-chromosomes" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> merge the
 chromosomes</h2>
-<div id="merge-hrc-imputed" class="section level3" number="3.4.1">
-<h3><span class="header-section-number">3.4.1</span> merge HRC
-imputed</h3>
-<pre class="bash"><code>
-
-i=$SLURM_ARRAY_TASK_ID
-
+<p>HRC imputed data were merged into one file from all the
+chromosomes.</p>
+<pre class="bash"><code>i=$SLURM_ARRAY_TASK_ID
 cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR
-
 dir=Cleaned_Plink/
 
 ## define data
-studies=(&quot;GSA_HRCr1.1&quot; &quot;Hap_HRCr1.1&quot; &quot;Omni_HRCr1.1&quot;)
+studies=(&quot;GSA&quot; &quot;Hap_HRCr1.1&quot; &quot;Omni_HRCr1.1&quot;)
+panel=&quot;HRCr1.1&quot;
 
 for cohort in &quot;${studies[@]}&quot;; do
-cohort=${studies[i-1]}
-
-## generate the merge list
-prefix=${dir}/${cohort}_PLINK/${cohort}&quot;_chr&quot;    
-for chr in $(seq 2 22); do
-    echo &quot;${prefix}${chr}.bed ${prefix}${chr}.bim ${prefix}${chr}.fam&quot;  &gt;&gt;  ${cohort}_bmerge_files.txt
-done    
-
-## merge the data
-mkdir -p Merged_plink
-plink --bfile ${prefix}1  --merge-list ${cohort}_bmerge_files.txt  --allow-no-sex  --make-bed  --out  Merged_plink/${cohort}_autosomes
-
+    cohort=${studies[i-1]}
+    ## generate the merge list
+    prefix=${dir}/${cohort}_${panel}_PLINK/${cohort}_${panel}&quot;_chr&quot;    
+    for chr in $(seq 2 22); do
+        echo &quot;${prefix}${chr}.bed ${prefix}${chr}.bim ${prefix}${chr}.fam&quot;  &gt;&gt;  ${cohort}_${panel}_bmerge_files.txt
+    done    
+    ## merge the data
+    mkdir -p Merged_plink
+    plink --bfile ${prefix}1  --merge-list ${cohort}_${panel}_bmerge_files.txt  --allow-no-sex  --make-bed  --out  Merged_plink/${cohort}_${panel}_autosomes
 done
 </code></pre>
-</div>
-<div id="merge-topmed-imputed" class="section level3" number="3.4.2">
-<h3><span class="header-section-number">3.4.2</span> merge TopMed
-imputed</h3>
-<pre class="bash"><code>
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=180G
-#SBATCH --time=36:00:00
-#SBATCH --job-name=merge
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-3
-
-
-i=$SLURM_ARRAY_TASK_ID
-
-cd /scratch/project/genetic_data_analysis/uqtlin5/CEPH_samples/QIMR
-
+<p>TopMed imputed data were filtered with the 7.3M SNP in the SBayesRC
+predictors, and then merged onto one file.</p>
+<pre class="bash"><code>i=$SLURM_ARRAY_TASK_ID
 dir=Cleaned_Plink/
 
 ## define data
@@ -784,319 +547,35 @@ plink --bfile $bfile --extract  SNP_lists/SNPs_in_7.3M.txt   --make-bed --out Cl
 
 for cohort in &quot;${studies[@]}&quot;; do
 cohort=${studies[i-1]}
-
 ## generate the merge list
 prefix=${dir}/${cohort}_PLINK/${cohort}&quot;_subset_chr&quot;    
 for chr in $(seq 2 22); do
     echo &quot;${prefix}${chr}.bed ${prefix}${chr}.bim ${prefix}${chr}.fam&quot;  &gt;&gt;  ${cohort}_bmerge_files.txt
 done    
-
 ## merge the data
 mkdir -p Merged_plink
 plink --bfile ${prefix}1  --merge-list ${cohort}_bmerge_files.txt  --allow-no-sex  --make-bed  --out  Merged_plink/${cohort}_autosomes
-
 done
 </code></pre>
 </div>
 </div>
-</div>
-<div id="check-data-in-af" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> check data in AF</h1>
-<p>To makes sure this is not general error in data, i checked the allele
-frequency of chr22 and compared to reference data.</p>
-<pre class="r"><code>#plink \
-#  --bfile Hap_TOPMedr3_PLINK/Hap_TOPMedr3_chr22  \
-#  --freq  \
-#  --out Hap_TOPMedr3_chr22_freq
-
-
-#plink \
-#  --bfile Hap_HRCr1.1_PLINK/Hap_HRCr1.1_chr22  \
-#  --freq  \
-#  --out Hap_HRCr1.1_chr22_freq
-
-
-info.file=&quot;/QRISdata/Q6913/Pipeline/ukb20k_7M_4cM/snp.info&quot;
-frq.file = &quot;Hap_HRCr1.1_chr22_freq.frq&quot;
-library(dplyr)
-library(data.table)
-library(ggplot2)
-
-info = data.frame(fread(info.file))
-frq = read.table(frq.file, header = T)
-
-info = info[info$ID %in% frq$SNP, ]
-info$hapfrq = frq[match(info$ID, frq$SNP),&quot;MAF&quot;]
-info$hapA1 = frq[match(info$ID, frq$SNP),&quot;A1&quot;]
-info$hapfreq= abs(as.numeric(info$hapA1  != info$A1) - info$hapfrq)
-
-freq.plot = ggplot(data = info, aes(x = A1Freq, y =hapfreq )) + geom_point(size = 0.2) + xlab(&quot;AF in reference data chr22&quot;) + ylab(&quot;AF in Hap_HRCr1.1_chr22&quot;)
-ggsave(&quot;Hap_HRCr1.1_chr22_AF_plot.png&quot;, freq.plot, height = 8, width = 8)</code></pre>
-<p><img src="Figures/Hap_HRCr1.1_chr22_AF_plot.png" /></p>
-<p><img src="Figures/Hap_TOPMedr3_chr22_AF_plot.png" /></p>
-<p>Data looks fine.</p>
-</div>
-<div id="profile-pgs" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> Profile PGS</h1>
-<p>We merged all the traits to one file.</p>
-<pre class="r"><code>group=&quot;PRS_all_GCTB_with_merged&quot;
-
-studies=c(&quot;GSA_HRCr1.1&quot;, &quot;GSA_TOPMedr3&quot;, 
-          &quot;Hap_HRCr1.1&quot;, &quot;Hap_TOPMedr3&quot;, 
-          &quot;Omni_HRCr1.1&quot;, &quot;Omni_TOPMedr3&quot;)
-
-trait.list = read.table(&quot;/QRISdata/Q6913/GCTB_predictor_list_for_batch_profiling.txt&quot;)
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-
-
-for (i in 1:6) {
-cohort=studies[i]
-fam=paste0(&quot;/QRISdata/Q5740/QIMR_Berghofer/&quot;, cohort, &quot;_PLINK/&quot;, cohort ,&quot;_chr1&quot;)
-
-target.data =read.table(paste0(fam, &quot;.fam&quot;)) 
-target.data = target.data[,c(1,2)]
-colnames(target.data) = c(&quot;FID&quot;, &quot;IID&quot;)
-  
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-target.data = target.data[,3:ncol(target.data)]
-write.csv(target.data, file= paste0( group, &quot;_&quot;,cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))
-
-}</code></pre>
-</div>
-<div id="compare-two-imputation-panels" class="section level1"
-number="6">
-<h1><span class="header-section-number">6</span> compare two imputation
-panels</h1>
-<pre class="r"><code>hap.hrc = read.csv(&quot;Data/QIMR/PRS_all_GCTB_Hap_HRCr1.1_all_140_traits_GCTB_PRS.csv&quot;, row.names = 1 )
-hap.tpm = read.csv(&quot;Data/QIMR/PRS_all_GCTB_Hap_TOPMedr3_all_140_traits_GCTB_PRS.csv&quot;, row.names = 1)</code></pre>
-<p>This is a test using only the samples in the HapMap-based
-(‘Hap’).</p>
-<pre><code>581 ALCO CIDR     
-401 ANXASTHMA DIAM     
-129 GL CIDR     
-256 OPIOID CIDR     </code></pre>
-<p>There are 976 experimental samples, and 391 control samples in the
-data.</p>
-<p>Following plots included all of them (N = 1367).</p>
-<pre class="r"><code>## standardize
-standardization.data = read.csv(&quot;Data/Lifelines_MEAN_and_SD_of_traits_for_standardization.csv&quot;)
-
-
-hap.hrc = hap.hrc[,colnames(hap.hrc) %in%standardization.data$trait ]
-standardization.data= standardization.data[  match( colnames(hap.hrc) , standardization.data$trait),]
-
-hap.hrc.norm = sweep(
-  sweep (  hap.hrc,  
-          2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = &#39;/&#39;)
-
-
-
-hap.tpm = hap.tpm[,colnames(hap.tpm) %in%standardization.data$trait ]
-standardization.data= standardization.data[  match( colnames(hap.tpm) , standardization.data$trait),]
-
-hap.tpm.norm = sweep(
-  sweep (  hap.tpm,  
-          2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = &#39;/&#39;)</code></pre>
-<pre class="r"><code>hap.hrc.norm$IID = row.names(hap.hrc.norm)
-hap.tpm.norm$IID = row.names(hap.tpm.norm)
-
-hap.hrc.melt = melt(hap.hrc.norm, id.vars = &quot;IID&quot;)
-hap.tpm.melt = melt(hap.tpm.norm, id.vars = &quot;IID&quot;)
-
-
-colnames(hap.hrc.melt)[3] = &quot;HRC&quot;
-colnames(hap.tpm.melt)[3] = &quot;TopMed&quot;
-
-melted.both =  merge(hap.hrc.melt, 
-                     hap.tpm.melt[, c(&quot;IID&quot;, &quot;variable&quot;, &quot;TopMed&quot;)], 
-                by = c(&quot;IID&quot;, &quot;variable&quot;), 
-                all.x = TRUE)
-
-
-predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
-included_traits = predictor.list$Predictor
-melted.both = melted.both[melted.both$variable %in% included_traits,]
-
-
-## grouping traits
-traits_binary = predictor.list[which(predictor.list$Group == &quot;Binary&quot; ),&quot;Predictor&quot;]
-traits_quanti = predictor.list[which(predictor.list$Group == &quot;Quantitative&quot;),&quot;Predictor&quot;]
-traits_35bm   = predictor.list[which(predictor.list$Group == &quot;Biomarker&quot;),&quot;Predictor&quot;]
-traits_pfa   = predictor.list[which(predictor.list$Group == &quot;Protein and Fatty Acid&quot;),&quot;Predictor&quot;]</code></pre>
-<div id="binary-traits" class="section level2" number="6.1">
-<h2><span class="header-section-number">6.1</span> Binary traits</h2>
-<pre class="r"><code>ggplot(data = melted.both[melted.both$variable %in%traits_binary,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)</code></pre>
-<pre><code>## Warning: Removed 2692 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-18-1.png" width="768" /></p>
-</div>
-<div id="quantitative-traits" class="section level2" number="6.2">
-<h2><span class="header-section-number">6.2</span> Quantitative
-traits</h2>
-<pre class="r"><code>ggplot(data = melted.both[melted.both$variable %in%traits_quanti,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)</code></pre>
-<pre><code>## Warning: Removed 725 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-19-1.png" width="768" /></p>
-<pre class="r"><code>selected.traits = c(   &quot;Height_03&quot;, &quot;BMI_02&quot; ,    &quot;Migraine_01&quot;, &quot;Stroke_01&quot;,   &quot;Glaucoma_01&quot;, &quot;HairColor_01&quot; ,   &quot;LungCancer_01&quot;, &quot;CeliacDisease_01&quot;)
-
-
-ggplot(data = melted.both[melted.both$variable %in% selected.traits,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 4) + 
-  xlim(-5,5) + ylim(-5,5)</code></pre>
-<pre><code>## Warning: Removed 335 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-20-1.png" width="1152" /></p>
-</div>
-<div id="biomarker-traits" class="section level2" number="6.3">
-<h2><span class="header-section-number">6.3</span> Biomarker traits</h2>
-<pre class="r"><code>ggplot(data = melted.both[ melted.both$variable %in% traits_35bm,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)</code></pre>
-<pre><code>## Warning: Removed 211 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-21-1.png" width="768" /></p>
-</div>
-<div id="proteomics-and-fatty-acid-traits" class="section level2"
-number="6.4">
-<h2><span class="header-section-number">6.4</span> Proteomics and Fatty
-Acid traits</h2>
-<pre class="r"><code>ggplot(data = melted.both[ melted.both$variable %in% traits_pfa,], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 5) + 
-  xlim(-3,3) + ylim(-3,3)</code></pre>
-<pre><code>## Warning: Removed 845 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-22-1.png" width="768" /></p>
-</div>
-<div id="summary-and-outliers" class="section level2" number="6.5">
-<h2><span class="header-section-number">6.5</span> summary and
-outliers</h2>
-<pre class="r"><code>result &lt;- melted.both %&gt;%
-  group_by(variable) %&gt;%
-  summarise(correlation = cor(HRC, TopMed, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;)
-
-
-result %&gt;% filter(correlation &lt; 0.95) %&gt;% arrange((correlation))</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["variable"],"name":[1],"type":["fct"],"align":["left"]},{"label":["correlation"],"name":[2],"type":["dbl"],"align":["right"]}],"data":[{"1":"IPF_01","2":"0.8501401"},{"1":"UKB_PPP_2022_IL1B","2":"0.8576893"},{"1":"LungCancer_01","2":"0.9186478"},{"1":"HairColor_01","2":"0.9220708"},{"1":"C3_01","2":"0.9241451"},{"1":"C4_01","2":"0.9261382"},{"1":"UKB_PPP_2022_IL10","2":"0.9271495"},{"1":"UKB_PPP_2022_TNF","2":"0.9381376"},{"1":"UKB_35BM_2021_Direct_bilirubin","2":"0.9387212"},{"1":"FastingGlucose_01","2":"0.9456471"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>hist(result$correlation)</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
-<pre class="r"><code>summary(result$correlation)</code></pre>
-<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  0.8501  0.9681  0.9788  0.9740  0.9879  0.9987</code></pre>
-<pre class="r"><code>sd(result$correlation)</code></pre>
-<pre><code>## [1] 0.02363853</code></pre>
-<pre class="r"><code>result = data.frame(result)
-
-var.trait.list = result[which(result$correlation &lt; 0.95), &quot;variable&quot;]
-
-ggplot(data = melted.both[melted.both$variable %in% result[which(result$correlation &lt; 0.95), &quot;variable&quot;],], aes(x = HRC, y = TopMed)) + 
-  geom_point(size = 0.1) + 
-  facet_wrap(~variable, ncol = 4) + 
-  xlim(-3,3) + ylim(-3,3)</code></pre>
-<pre><code>## Warning: Removed 731 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-25-1.png" width="1152" /></p>
-</div>
-</div>
-<div id="per-chr-pgs-comparison" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> per chr PGS
-comparison</h1>
-<pre class="r"><code>QIMR.per.chr = data.frame()
-
-for (chr in 1:22) {
-hap.hrc = read.csv(paste0(&quot;Data/QIMR/PRS_all_GCTB_with_chr_Hap_HRCr1.1_chr&quot;,chr , &quot;_10_traits_GCTB_PRS.csv&quot;), row.names = 1)
-hap.tpm = read.csv(paste0(&quot;Data/QIMR/PRS_all_GCTB_with_chr_Hap_TOPMedr3_chr&quot;,chr , &quot;_10_traits_GCTB_PRS.csv&quot;), row.names = 1)
-
-gsa.hrc = read.csv(paste0(&quot;Data/QIMR/PRS_all_GCTB_with_chr_GSA_HRCr1.1_chr&quot;,chr , &quot;_10_traits_GCTB_PRS.csv&quot;), row.names = 1)
-gsa.tpm = read.csv(paste0(&quot;Data/QIMR/PRS_all_GCTB_with_chr_GSA_TOPMedr3_chr&quot;,chr , &quot;_10_traits_GCTB_PRS.csv&quot;), row.names = 1)
-
-omni.hrc = read.csv(paste0(&quot;Data/QIMR/PRS_all_GCTB_with_chr_Omni_HRCr1.1_chr&quot;,chr , &quot;_10_traits_GCTB_PRS.csv&quot;), row.names = 1)
-omni.tpm = read.csv(paste0(&quot;Data/QIMR/PRS_all_GCTB_with_chr_Omni_TOPMedr3_chr&quot;,chr , &quot;_10_traits_GCTB_PRS.csv&quot;), row.names = 1)
-
-hap.hrc$Batch = sub(&quot;^(([^_]*_){1}[^_]*).*&quot;, &quot;\\1&quot;, row.names(hap.hrc))
-hap.tpm$Batch = sub(&quot;^(([^_]*_){1}[^_]*).*&quot;, &quot;\\1&quot;, row.names(hap.tpm))
-
-gsa.hrc$Batch  = sub(&quot;^(([^_]*_){2}[^_]*).*&quot;, &quot;\\1&quot;, row.names(gsa.hrc))
-gsa.tpm$Batch  = sub(&quot;^(([^_]*_){2}[^_]*).*&quot;, &quot;\\1&quot;, row.names(gsa.tpm))
-
-omni.hrc$Batch =  sub(&quot;^(([^_]*_){1}[^_]*).*&quot;, &quot;\\1&quot;, row.names(omni.hrc))
-omni.tpm$Batch =  sub(&quot;^(([^_]*_){1}[^_]*).*&quot;, &quot;\\1&quot;, row.names(omni.tpm))
-
-
-hap.hrc$Study_ID = sub(&quot;^([^_]*_){2}&quot;, &quot;&quot;, row.names(hap.hrc))
-hap.tpm$Study_ID = sub(&quot;^([^_]*_){2}&quot;, &quot;&quot;, row.names(hap.tpm))
-
-gsa.hrc$Study_ID  = sub(&quot;^([^_]*_){3}&quot;, &quot;&quot;, row.names(gsa.hrc))
-gsa.tpm$Study_ID  = sub(&quot;^([^_]*_){3}&quot;, &quot;&quot;, row.names(gsa.tpm))
-
-omni.hrc$Study_ID =  sub(&quot;^([^_]*_){2}&quot;, &quot;&quot;, row.names(omni.hrc))
-omni.tpm$Study_ID =  sub(&quot;^([^_]*_){2}&quot;, &quot;&quot;, row.names(omni.tpm))
-
-hap.hrc$imputation_panel = gsa.hrc$imputation_panel = omni.hrc$imputation_panel  = &quot;HRCr1.1&quot;
-hap.tpm$imputation_panel = gsa.tpm$imputation_panel = omni.tpm$imputation_panel  = &quot;TopMedr3&quot;
-
-
-QIMR = rbind(hap.hrc ,
-hap.tpm ,
-gsa.hrc ,
-gsa.tpm ,
-omni.hrc,
-omni.tpm
-)
-
-melted.QIMR = melt(QIMR, id.vars = c(&quot;Study_ID&quot;, &quot;Batch&quot;, &quot;imputation_panel&quot;))
-
-melted.QIMR$chromosome = chr
-
-QIMR.per.chr = rbind(QIMR.per.chr, melted.QIMR)
-
-}
-
-TopMed = QIMR.per.chr[which(QIMR.per.chr$imputation_panel ==&quot;TopMedr3&quot;),]
-HRCr1.1 = QIMR.per.chr[which(QIMR.per.chr$imputation_panel ==&quot;HRCr1.1&quot;),]
-
-colnames(TopMed)[5] = &quot;TopMed&quot;
-colnames(HRCr1.1)[5] = &quot;HRC&quot;
-
-merged.QIMR = merge(TopMed[,c(1,2,4,5,6)], HRCr1.1[,c(1,2,4,5,6)], by = c(&quot;Study_ID&quot;, &quot;Batch&quot;, &quot;variable&quot;, &quot;chromosome&quot;))
-
-variants.per.chr.plot = ggplot(data = merged.QIMR, aes(x = HRC, y = TopMed)) + geom_point(size = 0.1)+ facet_grid(rows = vars(chromosome), cols = vars(variable), scales = &quot;free&quot;)
-
-variants.per.chr.plot</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-27-1.png" width="1152" /></p>
-<p>An example:</p>
-<pre class="r"><code>i = 2
-trait = as.character( var.trait.list[i])
-per.chr.plot = ggplot(data = merged.QIMR[which(merged.QIMR$variable == trait),], aes(x = HRC, y = TopMed)) + geom_point(size = 0.1)+ facet_wrap(~chromosome, ncol = 5, scales = &quot;free&quot;)
-
-trait</code></pre>
-<pre><code>## [1] &quot;HairColor_01&quot;</code></pre>
-<pre class="r"><code>per.chr.plot</code></pre>
-<p><img src="2_QIMR_ChipData_files/figure-html/unnamed-chunk-28-1.png" width="1152" /></p>
+<div id="pgs-profiling" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> PGS profiling</h1>
+<p>The same plink command line was used to profile PGS from the 6 QIMR
+data sets.</p>
+<pre class="bash"><code>plink  \
+--bfile  $bfile \
+--score  ${predictor}  2 5 8  header sum    \
+--out  $output</code></pre>
+<p>The parameters after your predictor file means</p>
+<ul>
+<li>2 5 8: the three useful columns in the predictor file.<br />
+</li>
+<li>header: The predictor file has a header row.<br />
+</li>
+<li>sum: Plink prefers to divide the score by the number of SNPs in
+predictor. Using “sum” will prevent the division step.</li>
+</ul>
 </div>
 
 

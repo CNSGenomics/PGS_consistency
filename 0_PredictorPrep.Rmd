@@ -1,6 +1,5 @@
 ---
 title: "Prepare Predictors using SBayesRC"
-author: "Tian Lin"
 output:
   html_document:
     toc: TRUE
