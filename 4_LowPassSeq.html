@@ -9,10 +9,9 @@
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
 
-<meta name="author" content="Tian Lin" />
 
 
-<title>Low Pass Sequencing data</title>
+<title>Low Coverage Whole Genome Sequencing data</title>
 
 <script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -329,37 +328,22 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="index.html">Intro</a>
+  <a href="index.html">Introduction</a>
 </li>
 <li>
   <a href="0_PredictorPrep.html">Predictors</a>
 </li>
 <li>
-  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+  <a href="1_GRP_ChipData.html">HSU Data</a>
 </li>
 <li>
-  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+  <a href="2_QIMR_ChipData.html">QIMR Data</a>
 </li>
 <li>
-  <a href="3_WGS.html">WGS</a>
+  <a href="3_WGS.html">WGS data</a>
 </li>
 <li>
-  <a href="4_LowPassSeq.html">LowPass</a>
-</li>
-<li>
-  <a href="5_Consistency.html">Consistency</a>
-</li>
-<li>
-  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
-</li>
-<li>
-  <a href="6_MissingSNP.html">MissingSNP</a>
-</li>
-<li>
-  <a href="11_convert_function.html">Convert_function</a>
-</li>
-<li>
-  <a href="7_Benchmarking.html">Benchmarking</a>
+  <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
       </ul>
     </div><!--/.nav-collapse -->
@@ -378,151 +362,207 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Low Pass Sequencing data</h1>
-<h4 class="author">Tian Lin</h4>
+<h1 class="title toc-ignore">Low Coverage Whole Genome Sequencing
+data</h1>
 
 </div>
 
 
-<div id="intro" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> Intro</h1>
+<div id="introduction" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Introduction</h1>
+<p>As a trial for the validity of lcWGS, 48 samples previously genotyped
+with Illumina GSAv2+MD were submitted for lcWGS including NA06997.
+Library preparation was conducted in house at the UQ Human Studies Unit
+and submitted for sequencing in UQ sequencing facility. The 48 samples
+were pooled with multiplexing, and sequenced in one lane, setting paired
+end 150bp reads on a SP flowcell using NovaSeq Illumina. Raw data were
+transferred to us in FastQ format. All samples passed FastQC quality
+threshold, and the reads were mapped to human genome assembly build 37
+using the bwa in GATK. The GATK best practice pipeline was applied,
+(sort using sambamba, mark-dup using GATK, Base Quality Score
+Recalibration using GATK). Missing SNPs in data were imputed using
+GLIMPSE25 against the downloaded HRCr1.1 imputation panel. GLIPMSE2 uses
+the reference data to decide the chunks required to speed up imputation
+in parallel jobs. It connects the imputed chunks into one data per
+sample in VCF format. The SNP list in imputed data is the same as in the
+HRC imputation panel.</p>
+<p>Related reading:</p>
 <p><a
 href="https://www.genewiz.com/Public/Services/Next-Generation-Sequencing/Low-Pass-WholeGenomeSequencing/"
 class="uri">https://www.genewiz.com/Public/Services/Next-Generation-Sequencing/Low-Pass-WholeGenomeSequencing/</a></p>
 <p><a href="https://pubmed.ncbi.nlm.nih.gov/33770507/"
 class="uri">https://pubmed.ncbi.nlm.nih.gov/33770507/</a></p>
-<p>The sequencing data has been deposited into our raw data RDM, I
-believe you may already have access to this? The address is pasted
-below, if you do not have access to this Leanne could grant you access.
-<a
-href="smb://uq-adstl02.uq.edu.au/UQ-Inst-Gateway2/HSURAW2017-Q2045/220518_A00401_0424_AH7FNFDRX2"
-class="uri">smb://uq-adstl02.uq.edu.au/UQ-Inst-Gateway2/HSURAW2017-Q2045/220518_A00401_0424_AH7FNFDRX2</a>.
-I have attached a copy of the sample sheet that has the IDs of all the
-samples sequenced in this batch. The ID is a concatenated ID that
-consist of each participants Study ID followed by the collection ID used
-for that participant e.g 3728601_1001867102. I have also attached a copy
-of the quote from the UQ Seq facility that shows library prep and
-sequencing specifications, we went with option 2 which was sequencing at
-2 x 150 base pairs( i.e PE sequencing ) on an SP flow cell. I used
-Illuminas online coverage calculator to determine how many libraries to
-pool to achieve 1 x coverage on the SP flow cell, I have attached a copy
-of that output as well. I have also been given access to the run QC data
-on Basespace, I have not had a chance to look at it in depth but a quick
-glance shows that the sample libraries have performed well in sequencing
-and that we should have even representation of each sample. On average
-we have yielded 7.39Gbp per sample, which is just over one human genome
-(which is 6.41Gbps!) I hope I have covered all bases, do let me know if
-you need any more information. Next week is a bit busy in the lab for me
-but I might have some time on Thursday to catch up if you like.</p>
-<p>Cheers Shiv</p>
-<p><strong>Data processing file is X1WGS_report.Rmd</strong></p>
 </div>
-<div id="use-glympse2-to-impute-data" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> use GLYMPSE2 to impute
+<div id="alignment" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Alignment</h1>
+<p>The first step to process low pass sequencing data is the same as
+whole genome sequencing data. We used FastQC to check the quality and
+they all passed. Then we aligned them to the human genome build 19 using
+the best practice in GATK pipeline.</p>
+<div id="tools-and-references" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> tools and
+references</h2>
+<pre class="sh"><code>## BWA
+## http://bio-bwa.sourceforge.net
+## Li H. and Durbin R. (2010) Fast and accurate long-read alignment with Burrows-Wheeler Transform. Bioinformatics, Epub. [PMID: 20080505]
+
+# bwa-0.7.17.tar.bz2 is downloaded from 
+#https://sourceforge.net/projects/bio-bwa/
+tar -xf   bwa-0.7.17.tar.bz2 
+cd bwa-0.7.17
+make
+cp bwa ~/bin/
+##Version: 0.7.17-r1188
+
+## sambamba
+
+https://github.com/biod/sambamba/releases
+wget https://github.com/biod/sambamba/releases/download/v0.8.2/sambamba-0.8.2-linux-amd64-static.gz
+gunzip sambamba-0.8.2-linux-amd64-static.gz 
+chmod u+x sambamba-0.8.2-linux-amd64-static 
+
+## Picard
+https://github.com/broadinstitute/picard/releases/tag/2.27.4
+# click on picard.jar
+
+##GATK
+wget https://github.com/broadinstitute/gatk/releases/download/4.2.6.1/gatk-4.2.6.1.zip
+unzip gatk-4.2.6.1.zip 
+
+## bundle_source
+## use Finder --&gt; go to server
+ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/
+## hg19
+</code></pre>
+</div>
+<div id="align-the-reads" class="section level2" number="2.2">
+<h2><span class="header-section-number">2.2</span> align the reads</h2>
+<pre class="sh"><code>
+i=$TASK_ID
+WD=/scratch/60days/uqtlin5/X1WGS
+ref=${WD}/Pipeline/ucsc.hg19.fasta
+samplesheet=${WD}/samplesheet.txt
+ncpus=10
+cd $WD
+sID=$( awk &#39;{print $1}&#39;   $samplesheet | head -n  $i   | tail -n 1 ) 
+filename1=$( awk &#39;{print $2}&#39;   $samplesheet | head -n  $i   | tail -n 1 ) 
+filename2=$( awk &#39;{print $3}&#39;   $samplesheet | head -n  $i   | tail -n 1 ) 
+
+module load samtools
+## index the reference 
+## bwa index   Pipeline/ucsc.hg19.fasta
+
+## run alignment
+bwa mem -M -t $ncpus $ref  Raw_Data/$filename1  Raw_Data/$filename2 -R &quot;@RG\tID:${sID}\tPL:ILLUMINA\tSM:${sID}&quot; | samtools view -bS  &gt;  TMPDIR/${bamPrefix}.tmp.bam 
+## run sort bam
+sambamba sort -t $ncpus  -m 200G  -o  TMPDIR/${sID}.sort.bam   TMPDIR/${sID}.tmp.bam  
+rm TMPDIR/${sID}.tmp.bam
+## mark duplicates
+java -jar picard.jar  MarkDuplicates   I=TMPDIR/${sID}.sort.bam    O=TMPDIR/${sID}.markdup.bam   M=TMPDIR/${sID}.dupStat  </code></pre>
+</div>
+<div id="recalibration" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> recalibration</h2>
+<pre class="sh"><code>
+i=$TASK_ID
+WD=/scratch/60days/uqtlin5/X1WGS
+cd $WD
+samplesheet=${WD}/samplesheet.txt
+sID=$( awk &#39;{print $1}&#39;   $samplesheet | head -n  $i   | tail -n 1 ) 
+sortedNoDup=${WD}/TMPDIR/${sID}.markdup.bam
+outDir=${WD}/TMPDIR/
+ref=${WD}/Pipeline/hg19/ucsc.hg19.fasta
+
+knownsite1=dbsnp_138.hg19
+knownsite2=1000G_omni2.5.hg19.sites
+knownsite3=1000G_phase1.indels.hg19.sites
+knownsite4=1000G_phase1.snps.high_confidence.hg19.sites
+knownsite5=CEUTrio.HiSeq.WGS.b37.bestPractices.hg19
+knownsite6=dbsnp_138.hg19.excluding_sites_after_129
+knownsite7=hapmap_3.3_hg19_pop_stratified_af
+knownsite8=hapmap_3.3.hg19.sites
+knownsite9=Mills_and_1000G_gold_standard.indels.hg19.sites
+knownsite10=NA12878.HiSeq.WGS.bwa.cleaned.raw.subset.hg19.sites
+knownsite11=NA12878.HiSeq.WGS.bwa.cleaned.raw.subset.hg19
+knownsite12=NA12878.knowledgebase.snapshot.20131119.hg19
+
+## get the recal table
+
+${WD}/Pipeline/gatk-4.1.9.0/gatk BaseRecalibrator \
+   -I  $sortedNoDup  \
+   -R $ref \
+   --known-sites hg19/${knownsite1}.vcf.gz \
+   --known-sites hg19/${knownsite2}.vcf.gz \
+   --known-sites hg19/${knownsite3}.vcf.gz \
+   --known-sites hg19/${knownsite4}.vcf.gz \
+   --known-sites hg19/${knownsite5}.vcf.gz \
+   --known-sites hg19/${knownsite6}.vcf.gz \
+   --known-sites hg19/${knownsite7}.vcf.gz \
+   --known-sites hg19/${knownsite8}.vcf.gz \
+   --known-sites hg19/${knownsite9}.vcf.gz \
+   --known-sites hg19/${knownsite1}.vcf.gz \
+   --known-sites hg19/${knownsite11}.vcf.gz \
+   --known-sites hg19/${knownsite12}.vcf.gz \
+   --showHidden   \
+   -O  ${outDir}/${sID}_recal_data.table_1_12
+ 
+## run recal 
+gatk-4.1.9.0/gatk  ApplyBQSR \
+   -R $ref  \
+   -I $sortedNoDup \
+   --bqsr-recal-file  ${outDir}/${sID}_recal_data.table_1_12   \
+   -O  ${outDir}/${sID}_recal_1_12.bam
+ 
+## plot recal
+gatk-4.1.9.0/gatk   AnalyzeCovariates \
+     -bqsr    ${outDir}/${sID}_recal_data.table_1_12    \
+     -plots   ${outDir}/${sID}_recal_AnalyzeCovariates_1_12.pdf</code></pre>
+</div>
+</div>
+<div id="use-glympse2-to-impute-data" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> use GLYMPSE2 to impute
 data</h1>
+<p>GLYMPSE2 is a new tool that takes the alignment files as input and
+impute against a reference genome. GLYMPSE2 could take in haplotype
+information. It’s much better than loimpute, which impute using the
+called variants from alignment.</p>
 <div id="use-reference-data-to-make-chunk-files" class="section level2"
-number="2.1">
-<h2><span class="header-section-number">2.1</span> use reference data to
+number="3.1">
+<h2><span class="header-section-number">3.1</span> use reference data to
 make chunk files</h2>
 <pre class="bash"><code>
-# generate chunk file
-# this job will be paralleled by chromosomes
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=profiling
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
 chr=$SLURM_ARRAY_TASK_ID
-
 cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
-
 module load bcftools
-
 mapfile=1000GP_Phase3/genetic_map_chr${chr}_combined_b37.txt
-
-
-
-## 1000G version
-#reffile=ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
-#bcftools annotate --rename-chrs chr_name_conv.txt  1000G_haplotype_vcf/$reffile     | bgzip &gt; chr_renamed_1000G_haplotype_vcf/${reffile}
-#tabix -p vcf chr_renamed_1000G_haplotype_vcf/${reffile} 
-#
-#./GLIMPSE2/GLIMPSE2_chunk_static  --input  chr_renamed_1000G_haplotype_vcf/$reffile \
-#--sequential  \
-#--region chr${chr}  \
-#--output chunks_1000G.chr${chr}.txt \
-#--map $mapfile
-
-
 ## HRC version
 reffile=HRC.r1-1.EGA.GRCh37.chr${chr}.haplotypes.vcf.gz 
 
-
 bcftools annotate --rename-chrs chr_name_conv.txt  /QRISdata/Q3046/Reference/HRC//$reffile     | bgzip &gt; chr_renamed_HRC_haplotype_vcf/${reffile}
 tabix -p vcf chr_renamed_HRC_haplotype_vcf/${reffile}
-
 
 ./GLIMPSE2/GLIMPSE2_chunk_static  --input  chr_renamed_HRC_haplotype_vcf/$reffile \
 --sequential  \
 --region chr${chr}  \
 --output chunks_HRC.chr${chr}.txt \
 --map $mapfile
-
-
-
-########
-
-for i in {1..22}; do
-    cat &quot;chunk_files/chunks_HRC.chr${i}.txt&quot; &gt;&gt; chunks_HRC.txt
-done
 </code></pre>
 </div>
-<div id="chunk-the-reference-data" class="section level2" number="2.2">
-<h2><span class="header-section-number">2.2</span> chunk the reference
+<div id="chunk-the-reference-data" class="section level2" number="3.2">
+<h2><span class="header-section-number">3.2</span> chunk the reference
 data</h2>
-<pre class="bash"><code>
-# this job will be paralleled by chunks. 
-
-
-## generate merged file
-for ((i = 1; i &lt;= 22; i++)); do
+<p>First we generate a chunk file merging from 22 chromosomes.</p>
+<pre class="bash"><code>for ((i = 1; i &lt;= 22; i++)); do
   cat chunks_HRC.chr${i}.txt &gt;&gt; chunks_HRC.txt
-done
-
-
-
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=phase
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-64
-
-
+done</code></pre>
+<p>Then we will generate a chunked reference data based on each row of
+this chunk file.</p>
+<pre class="bash"><code>## for each chromosome we will run 
 
 LINE=$SLURM_ARRAY_TASK_ID
 
 cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
 sample=NA06997_COR_S29
 refdata=HRC
-
-
 BAM=${sample}_recal_1_12.bam
 chunkfile=chunks_${refdata}_chr1.txt
 OUTDIR=GLIMPSE2_imputed_with_${refdata}
@@ -534,18 +574,9 @@ ORG=$(sed &quot;${LINE}q;d&quot; $chunkfile | awk &#39;{print $4}&#39; )
 REGS=$(echo ${IRG} | cut -d&quot;:&quot; -f 2 | cut -d&quot;-&quot; -f1)
 REGE=$(echo ${IRG} | cut -d&quot;:&quot; -f 2 | cut -d&quot;-&quot; -f2)
 
-
-echo &quot;Job starts for &quot;
-echo $LINE
-echo $CHR
-echo $IRG
-echo $REGS
-echo $REGE
-
-
 mapfile=1000GP_Phase3/genetic_map_${CHR}_combined_b37.txt
 
-  ./GLIMPSE2/GLIMPSE2_split_reference_static \
+./GLIMPSE2/GLIMPSE2_split_reference_static \
   --reference  chr_renamed_${refdata}_haplotype_vcf/HRC.r1-1.EGA.GRCh37.${CHR}.haplotypes.vcf.gz \
   --map ${mapfile} \
   --input-region ${IRG} \
@@ -553,34 +584,13 @@ mapfile=1000GP_Phase3/genetic_map_${CHR}_combined_b37.txt
   --output  Splitted_${refdata}_panel/${refdata}
 </code></pre>
 </div>
-<div id="impute-the-data" class="section level2" number="2.3">
-<h2><span class="header-section-number">2.3</span> impute the data</h2>
-<pre class="bash"><code>
-./GLIMPSE2/GLIMPSE2_phase_static \
---bam-file ${BAM} \
---reference Splitted_${refdata}_panel/${refdata}_${CHR}_${REGS}_${REGE}.bin \
---output ${OUT}_${CHR}_${REGS}_${REGE}.bcf</code></pre>
-</div>
 <div id="pipeline-the-imputation-for-all-samples" class="section level2"
-number="2.4">
-<h2><span class="header-section-number">2.4</span> pipeline the
+number="3.3">
+<h2><span class="header-section-number">3.3</span> pipeline the
 imputation for all samples</h2>
-<pre class="bash"><code>
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=75:00:00
-#SBATCH --job-name=phase
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-771
-
-
-## chr1 has 64 chunks. we&#39;ll test it first. 
+<p>The data will be imputed into chunks using each chunked reference
+data.</p>
+<pre class="bash"><code>## the whole genome has 771 chunks. 
 
 LINE=$SLURM_ARRAY_TASK_ID
 
@@ -605,13 +615,12 @@ while IFS= read -r BAM; do
 
 done &lt; bam_file_list.txt
 </code></pre>
-<p>latest build: <a
-href="https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_009914755.1/"
-class="uri">https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_009914755.1/</a></p>
 </div>
-<div id="ligate-the-imputed-chunks" class="section level2" number="2.5">
-<h2><span class="header-section-number">2.5</span> ligate the imputed
+<div id="ligate-the-imputed-chunks" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> ligate the imputed
 chunks</h2>
+<p>The imputed chunks are then concatenated together into a bcf file for
+each sample.</p>
 <pre class="bash"><code>
 # ligate
 
@@ -627,33 +636,30 @@ ligatesub=`qsubshcom &quot;  ./GLIMPSE2/GLIMPSE2_ligate_static --input ${LST} --
 done &lt; bam_file_list.txt
 </code></pre>
 </div>
-<div id="format-the-data" class="section level2" number="2.6">
-<h2><span class="header-section-number">2.6</span> format the data</h2>
-<pre class="bash"><code>
-
-## convert bcf to vcf
+<div id="reformat-the-data" class="section level2" number="3.5">
+<h2><span class="header-section-number">3.5</span> reformat the
+data</h2>
+<p>For the next step, files are converted from bcf format to vcf
+format</p>
+<pre class="bash"><code>## convert bcf to vcf
 while IFS= read -r BAM; do
  bcftools convert -O v -o GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf   GLIMPSE2_HRC_ligate/${BAM}_ligated.bcf
-done &lt; bam_file_list.txt
-</code></pre>
+done &lt; bam_file_list.txt</code></pre>
 </div>
-<div id="connect-all-the-chromosomes-and-extract" class="section level2"
-number="2.7">
-<h2><span class="header-section-number">2.7</span> connect all the
-chromosomes and extract</h2>
+<div id="extract-snps" class="section level2" number="3.6">
+<h2><span class="header-section-number">3.6</span> extract SNPs</h2>
+<p>To reduce the computation burdon, I extracted the 7.3M SNPs from the
+data.</p>
 <pre class="bash"><code>
-
-
 ## convert bcf to vcf
 while IFS= read -r BAM; do
 
 grep &quot;^#&quot; GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf &gt; ${BAM}_ligated_dbSNP.vcf 
 grep -v &quot;^#&quot;  GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf | grep -w -f SNPs_in_7.4M.txt &gt;&gt; ${BAM}_ligated_dbSNP.vcf 
 
-done &lt; bam_file_list.txt
-
-
-## merge all samples
+done &lt; bam_file_list.txt</code></pre>
+<p>Data of all the samples are merged into one file.</p>
+<pre class="bash"><code>## merge all samples
 ## did in both folder GLIMPSE2_HRC_ligate_vcf and dbSNP_of_GLIMPSE2_imputed_with_HRC
 
 for file in *.vcf; do
@@ -663,45 +669,20 @@ for file in *.vcf; do
 done
 
 qsubshcom &quot; bcftools merge -o LPS_all48samples.vcf.gz -O v -@ 4  *.vcf.gz &quot;  4 150G &quot;merge&quot; 56:00:00 &quot; &quot;   
-
-
 bcftools merge -o LPS_all48samples.vcf.gz -O v   *.vcf.gz
 </code></pre>
 </div>
 </div>
-<div id="profile-prs" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> Profile PRS</h1>
-<pre class="bash"><code>
-##############################################
-
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=profiling
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-141
-
-
-i=$SLURM_ARRAY_TASK_ID
-
+<div id="profile-prs" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Profile PRS</h1>
+<p>PRS are profiled from the merged vcf file directly.</p>
+<pre class="bash"><code>i=$SLURM_ARRAY_TASK_ID
 cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
 
 traitfile=&quot;GCTB_SBayesRC_predictors.txt&quot;
 trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
 predictor=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $2}&#39; )
-
-echo $trait
-echo $predictor
 outdir=PRS_all_GCTB
-
-
 input=dbSNP_of_GLIMPSE2_imputed_with_HRC/LPS_dbSNP_set.vcf.gz
 cohort=&quot;LPS&quot;
 
@@ -713,117 +694,53 @@ plink \
    --score  $predictor    2 5 8 header sum   \
    --out ${outdir}/${cohort}_${trait}_SBayesRC
 </code></pre>
-<pre class="r"><code>#group=&quot;PRS_all_GCTB&quot;
-group=&quot;PRS_all_GCTB_Sanger&quot;
-
-
-trait.list = read.table(&quot;GCTB_SBayesRC_predictors.txt&quot;)
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-cohort=&quot;LPS&quot;
-
-target.data =read.table(&quot;bam_file_list.txt&quot;) 
-colnames(target.data)[1] = &quot;IID&quot;
-
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-write.csv(target.data, file= paste0( cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))</code></pre>
-<p>–score: 7356466 valid predictors loaded. –score: 1154511 valid
-predictors loaded.</p>
-<p>–score: 7356466 valid predictors loaded.</p>
 </div>
 <div id="get-corresponding-samples-from-chip-data"
-class="section level1" number="4">
-<h1><span class="header-section-number">4</span> get corresponding
+class="section level1" number="5">
+<h1><span class="header-section-number">5</span> get corresponding
 samples from chip data</h1>
-<pre class="bash"><code>
-
-
-traitfile=&quot;../GCTB_SBayesRC_predictors.txt&quot;
+<p>46 out of the 47 samples in this pilot study were genotyped using GSA
+chip in HSU lab. Here we profiled PGS from the imputed chip data.</p>
+<p>The data were processed in the same way as other HSU data.</p>
+<pre class="bash"><code>traitfile=&quot;../GCTB_SBayesRC_predictors.txt&quot;
 trait=$(sed &quot;${i}q;d&quot; $traitfile | awk &#39;{print $1}&#39; )
 predictor=$(sed  &quot;${i}q;d&quot;  $traitfile  | awk &#39;{print $2}&#39; )
-echo $trait
-
-
 outdir=PRS_all_GCTB
 mkdir -p $outdir
-
-
 cohort=MND_B3
-input=MND_B3_GSA_imputed_updated
+input=MND_B3_GSA_imputed_fixed
 
 plink \
    --bfile  $input \
    --score  $predictor  2 5 8  header sum    \
    --out ${outdir}/${cohort}_${trait}_SBayesRC
 </code></pre>
-<p>PRS_all_GCTB/ALS_AUS_ADHD_01_SBayesRC.log:–score: 5335624 valid
-predictors loaded. PRS_all_GCTB/ALS_AUS_BMI_01_SBayesRC.log:–score:
-938670 valid predictors loaded.</p>
-<p>PRS_all_GCTB/MND_B3_ADHD_01_SBayesRC.log:–score: 7099162 valid
-predictors loaded. PRS_all_GCTB/MND_B3_BMI_01_SBayesRC.log:–score:
-1115829 valid predictors loaded.</p>
-<pre class="r"><code>group=&quot;PRS_all_GCTB_Sanger&quot;
-cohort=&quot;MND_B3_GSA_Sanger&quot;
-
-
-trait.list = read.table(&quot;../GCTB_SBayesRC_predictors.txt&quot;)
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-target.data =read.table(&quot;MND_B3_GSA_Sanger_imputed_autosomes.fam&quot;) 
-colnames(target.data)[2] = &quot;IID&quot;
-
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-write.csv(target.data, file= paste0( cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))</code></pre>
-<pre class="r"><code>group=&quot;PRS_all_GCTB_fixed&quot;
-cohort=&quot;MND_B3_BCC_GSA&quot;
-
-
-trait.list = read.table(&quot;../GCTB_SBayesRC_predictors.txt&quot;)
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-target.data =read.table(paste0(cohort,&quot;_imputed_autosomes_fixed.fam&quot;)) 
-colnames(target.data)[2] = &quot;IID&quot;
-
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, &quot;/&quot;,cohort, &quot;_&quot;, trait, &quot;_SBayesRC.profile&quot;)
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),&quot;SCORESUM&quot;]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-write.csv(target.data, file= paste0( cohort, &quot;_all_&quot;, n.trait , &quot;_traits_GCTB_PRS.csv&quot;))</code></pre>
 </div>
-<div id="number-of-snps" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> Number of SNPs</h1>
-<p>Low_pass_sequencing/PRS_all_GCTB/LPS_ADHD_01_SBayesRC.log:–score:
-7356466 valid predictors loaded.<br />
-Low_pass_sequencing/Chip_data_for_LPS_samples/PRS_all_GCTB/MND_B3_BCC_GSA_ADHD_01_SBayesRC.log:–score:
-7356466 valid predictors loaded.</p>
+<div id="compare-pgs-between-lcwgs-vs.-gsa-chip" class="section level1"
+number="6">
+<h1><span class="header-section-number">6</span> Compare PGS between
+lcWGS vs. GSA chip</h1>
+<p>There are 48 samples in the LPS pilot set.</p>
+<p>1 of them is a ceph control</p>
+<p>46 of them are also available in the MND B3 GSA data set</p>
+<p>The other 1 is available in ALS_AUS old data. (3728601, or
+MND_CON_252)</p>
+<div id="ancestry-of-als-samples" class="section level2" number="6.1">
+<h2><span class="header-section-number">6.1</span> ancestry of ALS
+samples</h2>
+<p>Here is the 46 overlap samples with PC projected to 1000g. They are
+all from Europeans.</p>
+<p><img src="Figures/Ancestry_of_samples_in_LPS&amp;GSAv2.png" /></p>
 </div>
-<div id="starndardization" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> Starndardization</h1>
-<pre class="r"><code>standardization.data = read.csv(&quot;Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv&quot;)
+<div id="correlation" class="section level2" number="6.2">
+<h2><span class="header-section-number">6.2</span> correlation</h2>
+<div id="standardize-the-two-data" class="section level3"
+number="6.2.1">
+<h3><span class="header-section-number">6.2.1</span> standardize the two
+data</h3>
+<pre class="r"><code>library(reshape2)
 
+standardization.data = read.csv(&quot;Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv&quot;)
 
 ## input PRS from low pass
 lps.prs = read.csv(&quot;Data/LowPass/LPS_all_141_traits_GCTB_PRS.csv&quot;)
@@ -838,7 +755,11 @@ standardization.data= standardization.data[  match( colnames(lps.prs) , standard
 lps.prs.norm = sweep(
   sweep (  lps.prs,  
           2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = &#39;/&#39;)</code></pre>
+  2, standardization.data$sd, FUN = &#39;/&#39;)
+
+lps.prs.norm$IID &lt;- row.names(lps.prs.norm)
+melted.lps.prs.norm = reshape2::melt(lps.prs.norm, id.vars = &quot;IID&quot; ) 
+melted.lps.prs.norm$value = as.numeric(melted.lps.prs.norm$value)</code></pre>
 <pre class="r"><code>## input inhouse imputed GSA data
 mnd.b3.bcc = read.csv(&quot;Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS.csv&quot;, row.names = 1)
 
@@ -851,10 +772,7 @@ mnd.b3.bcc &lt;- mnd.b3.bcc %&gt;%
   select(V1,IID, everything(),-part1, -part2, -part3, -part4, -V3, -V4, -V5, -V6)
 
 row.names(mnd.b3.bcc) = mnd.b3.bcc$IID
-
 mnd.b3.bcc = mnd.b3.bcc[,-c(1:2)]
-
-
 mnd.b3.bcc = mnd.b3.bcc[,colnames(mnd.b3.bcc) %in%standardization.data$trait ]
 standardization.data= standardization.data[  match( colnames(mnd.b3.bcc) , standardization.data$trait),]
 
@@ -863,24 +781,14 @@ mnd.b3.bcc.norm = sweep(
           2, standardization.data$mean),  
   2, standardization.data$sd, FUN = &#39;/&#39;)
 
-write.csv(mnd.b3.bcc.norm, &quot;Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS_standardized_with_GRP_benching.csv&quot;)</code></pre>
-<pre class="r"><code>lps.prs.norm$IID &lt;- row.names(lps.prs.norm)
-library(reshape2)
-melted.lps.prs.norm = reshape2::melt(lps.prs.norm, id.vars = &quot;IID&quot; ) 
-melted.lps.prs.norm$value = as.numeric(melted.lps.prs.norm$value)
-
 mnd.b3.bcc.norm$IID &lt;- row.names(mnd.b3.bcc.norm)
 melted.mnd.b3.bcc.norm = reshape2::melt(mnd.b3.bcc.norm, id.vars = &quot;IID&quot; )
 melted.mnd.b3.bcc.norm$value = as.numeric(melted.mnd.b3.bcc.norm$value)</code></pre>
 </div>
-<div id="trait-selection" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> Trait selection</h1>
-<pre class="r"><code>## select traits
-predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
-
+<div id="select-traits" class="section level3" number="6.2.2">
+<h3><span class="header-section-number">6.2.2</span> select traits</h3>
+<pre class="r"><code>predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
 included_traits = predictor.list$Predictor
-
-
 ## grouping traits
 traits_binary = predictor.list[which(predictor.list$QorB == &quot;Binary&quot; ),&quot;Predictor&quot;]
 traits_quanti = predictor.list[which(predictor.list$Location == &quot;Uno_Traits/Quantitative_Traits/&quot;),&quot;Predictor&quot;]
@@ -888,26 +796,13 @@ traits_35bm   = predictor.list[which(predictor.list$Location == &quot;Lot_Traits
 traits_ppp   = predictor.list[which(predictor.list$Location == &quot;Lot_Traits/UKB_PPP_2022/&quot;),&quot;Predictor&quot;]
 traits_fa   = predictor.list[which(predictor.list$Location == &quot;Lot_Traits/UKB_Fatty_Acids/&quot;),&quot;Predictor&quot;]
 
-
-
+## select data
 melted.mnd.b3.bcc.norm = melted.mnd.b3.bcc.norm[melted.mnd.b3.bcc.norm$variable %in% included_traits,]
 melted.lps.prs.norm = melted.lps.prs.norm[melted.lps.prs.norm$variable %in% included_traits,]</code></pre>
 </div>
-<div id="compare-pgs" class="section level1" number="8">
-<h1><span class="header-section-number">8</span> Compare PGS</h1>
-<p>There are 48 samples in the LPS pilot set.</p>
-<p>1 of them is a ceph control</p>
-<p>46 of them are also available in the MND B3 GSA data set</p>
-<p>The other 1 is available in ALS_AUS old data. (3728601, or
-MND_CON_252)</p>
-<div id="ancestry-of-als-samples" class="section level2" number="8.1">
-<h2><span class="header-section-number">8.1</span> ancestry of ALS
-samples</h2>
-<p>Here is the 46 overlap samples with PC projected to 1000g.</p>
-<p><img src="Figures/Ancestry_of_samples_in_LPS&amp;GSAv2.png" /></p>
-</div>
-<div id="merge-data" class="section level2" number="8.2">
-<h2><span class="header-section-number">8.2</span> merge data</h2>
+<div id="merge-the-two-data" class="section level3" number="6.2.3">
+<h3><span class="header-section-number">6.2.3</span> merge the two
+data</h3>
 <pre class="r"><code>colnames(melted.mnd.b3.bcc.norm)[3] = &quot;GSAv2&quot;
 colnames(melted.lps.prs.norm)[3] = &quot;LPS&quot;
 
@@ -918,24 +813,18 @@ melted.both =  merge(melted.lps.prs.norm,
 
 melted.both$LPS = as.numeric(melted.both$LPS)
 melted.both$GSAv2 = as.numeric(melted.both$GSAv2)
-
-
-melted.both$Trait = predictor.list[match(melted.both$variable, predictor.list$Predictor),&quot;Label&quot;]</code></pre>
+melted.both$Trait = predictor.list[match(melted.both$variable, predictor.list$Predictor),&quot;Label&quot;]
+melted.SALSA = na.omit(melted.both)</code></pre>
 </div>
-<div id="correlation" class="section level2" number="8.3">
-<h2><span class="header-section-number">8.3</span> correlation</h2>
-<pre class="r"><code>melted.SALSA = na.omit(melted.both)</code></pre>
-<div id="across-traits" class="section level3" number="8.3.1">
-<h3><span class="header-section-number">8.3.1</span> across traits</h3>
+<div id="compare-across-traits" class="section level3" number="6.2.4">
+<h3><span class="header-section-number">6.2.4</span> compare across
+traits</h3>
 <pre class="r"><code>result &lt;- melted.SALSA %&gt;%
   group_by(variable) %&gt;%
   summarise(correlation = cor(LPS, GSAv2, use = &quot;complete.obs&quot;), .groups = &quot;drop&quot;)
-
 result = data.frame(result)
 result$Trait = predictor.list[match(result$variable, predictor.list$Predictor),&quot;Label&quot;]
-
 result$cor = paste0(&quot;cor=&quot;, round(result$correlation, 2) )
-
 result %&gt;% filter(correlation &lt; 0.95) %&gt;% arrange((correlation))</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
@@ -943,27 +832,26 @@ result %&gt;% filter(correlation &lt; 0.95) %&gt;% arrange((correlation))</code>
   </script>
 </div>
 <pre class="r"><code>hist(result$correlation)</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-23-1.png" width="672" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
 <p>mean is 0.9709689</p>
 <p>SD is 0.062162</p>
 </div>
-<div id="across-samples" class="section level3" number="8.3.2">
-<h3><span class="header-section-number">8.3.2</span> across samples</h3>
+<div id="across-samples" class="section level3" number="6.2.5">
+<h3><span class="header-section-number">6.2.5</span> across samples</h3>
 <pre class="r"><code>result.c.samples &lt;- melted.SALSA %&gt;%
   group_by(IID) %&gt;%
   summarise(correlation = cor(LPS, GSAv2))
-
 summary(result.c.samples$correlation)</code></pre>
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  0.9362  0.9658  0.9740  0.9703  0.9787  0.9885</code></pre>
+##  0.9350  0.9648  0.9733  0.9697  0.9782  0.9879</code></pre>
 <pre class="r"><code>hist(result.c.samples$correlation)</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-24-1.png" width="672" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
 </div>
 </div>
-<div id="plot" class="section level2" number="8.4">
-<h2><span class="header-section-number">8.4</span> plot</h2>
-<div id="binary" class="section level3" number="8.4.1">
-<h3><span class="header-section-number">8.4.1</span> binary</h3>
+<div id="plot" class="section level2" number="6.3">
+<h2><span class="header-section-number">6.3</span> plot</h2>
+<div id="binary" class="section level3" number="6.3.1">
+<h3><span class="header-section-number">6.3.1</span> binary</h3>
 <pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_binary,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
   geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
@@ -980,13 +868,13 @@ theme(
   ) +
   geom_text(data = result[result$variable %in% traits_binary,],aes(x = -1.5, y = 2, label = cor) )
 nbm.plot</code></pre>
-<pre><code>## Warning: Removed 85 rows containing missing values or values outside the scale range
+<pre><code>## Warning: Removed 81 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-25-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-20-1.png" width="1152" /></p>
 <pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_binary_traits.jpeg&quot; , width = 12, height = 13)</code></pre>
 </div>
-<div id="quantitative" class="section level3" number="8.4.2">
-<h3><span class="header-section-number">8.4.2</span> quantitative</h3>
+<div id="quantitative" class="section level3" number="6.3.2">
+<h3><span class="header-section-number">6.3.2</span> quantitative</h3>
 <pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_quanti,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
   geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
@@ -1005,11 +893,11 @@ theme(
 nbm.plot</code></pre>
 <pre><code>## Warning: Removed 52 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
 <pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_quantitative_traits.jpeg&quot; , width = 12, height = 9)</code></pre>
 </div>
-<div id="biomarker" class="section level3" number="8.4.3">
-<h3><span class="header-section-number">8.4.3</span> Biomarker</h3>
+<div id="biomarker" class="section level3" number="6.3.3">
+<h3><span class="header-section-number">6.3.3</span> Biomarker</h3>
 <pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_35bm,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
   geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
@@ -1026,13 +914,13 @@ theme(
   ) +
   geom_text(data = result[result$variable %in% traits_35bm,],aes(x = -1.5, y = 2, label = cor) )
 nbm.plot</code></pre>
-<pre><code>## Warning: Removed 73 rows containing missing values or values outside the scale range
+<pre><code>## Warning: Removed 72 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-27-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-22-1.png" width="1152" /></p>
 <pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_35BM.jpeg&quot; , width = 12, height = 13)</code></pre>
 </div>
-<div id="fatty-acid" class="section level3" number="8.4.4">
-<h3><span class="header-section-number">8.4.4</span> fatty acid</h3>
+<div id="fatty-acid" class="section level3" number="6.3.4">
+<h3><span class="header-section-number">6.3.4</span> fatty acid</h3>
 <pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_fa,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
   geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
@@ -1049,13 +937,13 @@ theme(
   ) +
   geom_text(data = result[result$variable %in% traits_fa,],aes(x = -1.5, y = 2, label = cor) )
 nbm.plot</code></pre>
-<pre><code>## Warning: Removed 38 rows containing missing values or values outside the scale range
+<pre><code>## Warning: Removed 37 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-28-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-23-1.png" width="1152" /></p>
 <pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_FattyAcid_traits.jpeg&quot; , width = 12, height = 6.5)</code></pre>
 </div>
-<div id="ppp" class="section level3" number="8.4.5">
-<h3><span class="header-section-number">8.4.5</span> PPP</h3>
+<div id="ppp" class="section level3" number="6.3.5">
+<h3><span class="header-section-number">6.3.5</span> PPP</h3>
 <pre class="r"><code>nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_ppp,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
   geom_abline(intercept = 0, slope = 1, color = &quot;lightblue&quot;) +
@@ -1074,11 +962,11 @@ theme(
 nbm.plot</code></pre>
 <pre><code>## Warning: Removed 21 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-29-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
 <pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_PPP.jpeg&quot; , width = 12, height = 4.5)</code></pre>
 </div>
-<div id="per-person-plot" class="section level3" number="8.4.6">
-<h3><span class="header-section-number">8.4.6</span> per person
+<div id="per-person-plot" class="section level3" number="6.3.6">
+<h3><span class="header-section-number">6.3.6</span> per person
 plot</h3>
 <pre class="r"><code>person.plot = ggplot(data = melted.both[!melted.both$IID %in% c(&quot;NA06997&quot;,&quot;3728601&quot; ) ,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~IID,  ncol= 6) + 
@@ -1096,15 +984,16 @@ theme(
   ) 
 
 person.plot</code></pre>
-<pre><code>## Warning: Removed 39 rows containing missing values or values outside the scale range
+<pre><code>## Warning: Removed 33 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-30-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-25-1.png" width="1152" /></p>
 <pre class="r"><code>#ggsave(plot = person.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_per_person.jpeg&quot; , width = 12, height = 16)</code></pre>
 </div>
 </div>
 </div>
-<div id="plot-outliers" class="section level1" number="9">
-<h1><span class="header-section-number">9</span> plot outliers</h1>
+<div id="find-correlation-outliers" class="section level1" number="7">
+<h1><span class="header-section-number">7</span> Find correlation
+outliers</h1>
 <pre class="r"><code>result = data.frame(result)
 
 ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correlation &lt; 0.95), &quot;variable&quot;],], aes(x = GSAv2, y = LPS)) + 
@@ -1113,52 +1002,99 @@ ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correl
   xlim(-3,3) + ylim(-3,3)</code></pre>
 <pre><code>## Warning: Removed 2 rows containing missing values or values outside the scale range
 ## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-31-1.png" width="1152" /></p>
+<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
 </div>
-<div id="pgs-of-ceph-samples" class="section level1" number="10">
-<h1><span class="header-section-number">10</span> PGS of CEPH
-samples</h1>
-<pre class="r"><code>ceph.lps = melted.lps.prs.norm[grep(&quot;NA&quot;, melted.lps.prs.norm$IID ),]
-ceph.gsa = melted.mnd.b3.bcc.norm[grep(&quot;NA&quot;, melted.mnd.b3.bcc.norm$IID ),]
+<div id="pgs-correlation-without-mhc-region" class="section level1"
+number="8">
+<h1><span class="header-section-number">8</span> PGS correlation without
+MHC region</h1>
+<p>We excluded the MHC region when profile PGS of C4, Celiac Disease and
+Primary biliary cirrhosis, respectively.</p>
+<pre class="r"><code>library(data.table)
+a = data.frame(fread(&quot;../CeliacDisease_01_SBayesRC.snpRes&quot;))
+mhc.snp = (a[which(a$Chrom ==6  &amp; a$Position &gt;28477797   &amp; a$Position&lt;33448354),])
+write.table(mhc.snp$Name, file=&quot;MHC.SNPs.txt&quot;, quote = F, sep =&quot;\t&quot;, row.names = F, col.names = F)</code></pre>
+<pre class="bash"><code>
+outdir=PRS_withoutMHC
+ mkdir -p $outdir
+exlist=PRS_withoutMHC/MHC.SNPs.txt
 
-colnames(ceph.lps)[3] = &quot;PRS&quot; 
-colnames(ceph.gsa)[3] = &quot;PRS&quot;
+for trait in PBC_01 CeliacDisease_01 C4_01
+do
+  echo &quot;Processing trait: $sample&quot;
+  predictor=${trait}_SBayesRC.snpRes
+  
+  ## chip data
+  cohort=MND_B3
+  input=MND_B3_BCC_GSA_imputed_autosomes_fixed
+  plink \
+     --bfile  $input \
+     --score  $predictor  2 5 8  header sum    \
+     --exclude $exlist  \
+     --out ${outdir}/${cohort}_${trait}_SBayesRC_noMHC
+  
+  ## LPS data
+  input=LPS_dbSNP_set.vcf.gz
+  cohort=&quot;LPS&quot;
+  plink \
+     --vcf  $input \
+     --const-fid  \
+     --score  $predictor    2 5 8 header sum   \
+     --exclude $exlist  \
+     --out ${outdir}/${cohort}_${trait}_SBayesRC_noMHC
+done
+</code></pre>
+<pre class="r"><code>library(tidyr)
+library(stringr)
+library(dplyr)
 
-ceph.lps$Platform = &quot;LPS&quot;
-ceph.gsa$Platform = &quot;GSAv2&quot;
+outputtable = data.frame(
+traits=c(&quot;C4_01&quot;, &quot;CeliacDisease_01&quot;, &quot;PBC_01&quot; ),
+cor = NA)
 
-ceph.norm = rbind(ceph.lps, ceph.gsa)
-ceph.norm$Study_ID = NA
-ceph.norm$Study_ID = sub(&quot;_.*&quot;, &quot;&quot;,ceph.norm$IID)
-
-# Display the updated data frame
-
-ggplot(data = ceph.norm[grep(&quot;_202&quot;, ceph.norm$variable, invert = T),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-32-1.png" width="864" /></p>
-<pre class="r"><code># Display the updated data frame
-
-ggplot(data = ceph.norm[grep(&quot;UKB_FA_2022&quot;, ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-33-1.png" width="864" /></p>
-<pre class="r"><code># Display the updated data frame
-
-ggplot(data = ceph.norm[grep(&quot;UKB_PPP_2022&quot;, ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-34-1.png" width="864" /></p>
-<pre class="r"><code># Display the updated data frame
-
-ggplot(data = ceph.norm[grep(&quot;UKB_35BM_2021&quot;, ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-35-1.png" width="864" /></p>
+for(i in 1:3){ 
+  trait=outputtable[i,1]
+  cohort1=&quot;LPS&quot;
+  cohort2=&quot;MND_B3&quot;
+lps=read.table(paste0(&quot;PRS_withoutMHC/&quot;, cohort1,&quot;_&quot;, trait, &quot;_SBayesRC_noMHC.profile&quot;), header = T )
+chip=read.table(paste0(&quot;PRS_withoutMHC/&quot;,cohort2,&quot;_&quot;, trait, &quot;_SBayesRC_noMHC.profile&quot;), header = T )
+lps = lps %&gt;%
+  separate(IID, into = c(&quot;part1&quot;, &quot;part2&quot;, &quot;part3&quot;, &quot;part4&quot;), sep = &quot;_&quot;, fill = &quot;right&quot;) %&gt;%
+  mutate( ID = part1) 
+chip = chip %&gt;%
+  separate(IID, into = c(&quot;part1&quot;, &quot;part2&quot;, &quot;part3&quot;), sep = &quot;_&quot;, fill = &quot;right&quot;) %&gt;%
+  mutate( ID = part3) 
+lps$ChipPRS = chip[match(lps$ID, chip$ID),&quot;SCORESUM&quot;]
+outputtable[i,2]  =cor(lps$SCORESUM, lps$ChipPRS, use = &quot;complete.obs&quot;)
+}</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">–</th>
+<th align="center">full PRS</th>
+<th align="center">PRS without MHC SNPs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">C4</td>
+<td align="center">0.367</td>
+<td align="center">0.997</td>
+</tr>
+<tr class="even">
+<td align="right">Celiac Disease</td>
+<td align="center">0.793</td>
+<td align="center">0.997</td>
+</tr>
+<tr class="odd">
+<td align="right">Primary biliary cirrhosis</td>
+<td align="center">0.898</td>
+<td align="center">0.994</td>
+</tr>
+</tbody>
+</table>
+<p>This observation suggest that the main difference came from the low
+quality imputation in MHC region.</p>
 </div>
 
 

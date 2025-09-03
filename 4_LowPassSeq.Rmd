@@ -23,129 +23,171 @@ library(cowplot)
 library(ggpubr)
 library(kableExtra)
 library(openxlsx)
-
 library(plotROC)
 library(pROC)
-
 library(dplyr)
 library(tidyr)
 library(stringr)
-
 ```
 
-# Intro
+# Introduction
+
+As a trial for the validity of lcWGS, 48 samples previously genotyped with Illumina GSAv2+MD were submitted for lcWGS including NA06997. Library preparation was conducted in house at the UQ Human Studies Unit and submitted for sequencing in UQ sequencing facility. The 48 samples were pooled with multiplexing, and sequenced in one lane, setting paired end 150bp reads on a SP flowcell using NovaSeq Illumina. Raw data were transferred to us in FastQ format.
+All samples passed FastQC quality threshold, and the reads were mapped to human genome assembly build 37 using the bwa in GATK. The GATK best practice pipeline was applied, (sort using sambamba, mark-dup using GATK, Base Quality Score Recalibration using GATK).  Missing SNPs in data were imputed using GLIMPSE25 against the downloaded HRCr1.1 imputation panel. 
+GLIPMSE2 uses the reference data to decide the chunks required to speed up imputation in parallel jobs. It connects the imputed chunks into one data per sample in VCF format. The SNP list in imputed data is the same as in the HRC imputation panel.
+
+Related reading:
 
 https://www.genewiz.com/Public/Services/Next-Generation-Sequencing/Low-Pass-WholeGenomeSequencing/
 
 https://pubmed.ncbi.nlm.nih.gov/33770507/
 
 
-The sequencing data has been deposited into our raw data RDM, I believe you may already have access to this? The address is pasted below, if you do not have access to this Leanne could grant you access.
-smb://uq-adstl02.uq.edu.au/UQ-Inst-Gateway2/HSURAW2017-Q2045/220518_A00401_0424_AH7FNFDRX2.
-I have attached a copy of the sample sheet that has the IDs of all the samples sequenced in this batch. The ID is a concatenated ID that consist of  each participants Study ID followed by the collection ID used for that participant e.g 3728601_1001867102.
-I have also attached a copy of the quote from the UQ Seq facility that shows library prep and sequencing specifications, we went with option 2 which was sequencing at 2 x 150 base pairs( i.e PE sequencing ) on an SP flow cell. I used Illuminas online coverage calculator to determine how many libraries to pool to achieve 1 x coverage on the SP flow cell, I have attached a copy of that output as well.
-I have also been given access to the run QC data on Basespace, I have not had a chance to look at it in depth but a quick glance shows that the sample libraries have performed well in sequencing and that we should have even representation of each sample. On average we have yielded 7.39Gbp per sample, which is just over one human genome (which is 6.41Gbps!)
-I hope I have covered all bases, do let me know if you need any more information. Next week is a bit busy in the lab for me but I might have some time on Thursday to catch up if you like.
- 
-Cheers
-Shiv 
+# Alignment
 
-**Data processing file is X1WGS_report.Rmd**
+The first step to process low pass sequencing data is the same as whole genome sequencing data. We used FastQC to check the quality and they all passed. Then we aligned them to the human genome build 19 using the best practice in GATK pipeline. 
 
+## tools and references
 
+```{r, engine='sh', eval = F}
+## BWA
+## http://bio-bwa.sourceforge.net
+## Li H. and Durbin R. (2010) Fast and accurate long-read alignment with Burrows-Wheeler Transform. Bioinformatics, Epub. [PMID: 20080505]
 
-```{r, engine='sh', eval = F, echo = F}
+# bwa-0.7.17.tar.bz2 is downloaded from 
+#https://sourceforge.net/projects/bio-bwa/
+tar -xf   bwa-0.7.17.tar.bz2 
+cd bwa-0.7.17
+make
+cp bwa ~/bin/
+##Version: 0.7.17-r1188
 
-#####
-## an old version with loimpute
-#####
+## sambamba
 
-# rehead the sample ID for each chromosome to be the same
-for chr in $(seq 1 22);
-do
-echo "loimpute_imputed_rerun//NA06997_COR_S29_chr${i}_imputed_with_loimpute_HRC NA06997_COR_S29"  > rename.control.chr${i}.txt
-bcftools reheader -s rename.control.chr${chr}.txt  loimpute_imputed_rerun/NA06997_COR_S29_chr${chr}_imputed_with_loimpute_HRC.vcf.gz > loimpute_imputed_rerun/renamed_NA06997_COR_S29_chr${chr}_imputed_with_loimpute_HRC.vcf.gz
-done
+https://github.com/biod/sambamba/releases
+wget https://github.com/biod/sambamba/releases/download/v0.8.2/sambamba-0.8.2-linux-amd64-static.gz
+gunzip sambamba-0.8.2-linux-amd64-static.gz 
+chmod u+x sambamba-0.8.2-linux-amd64-static 
 
-# merge into one file
-inputfiles=$(for i in $(seq 1 22); do echo "loimpute_imputed_rerun/renamed_NA06997_COR_S29_chr"${i}"_imputed_with_loimpute_HRC.vcf.gz  " ; done  | tr '\n' ' ' )
-bcftools concat  -o  NA06997_COR_S29_imputed_with_loimpute_HRC.vcf  $inputfiles 
+## Picard
+https://github.com/broadinstitute/picard/releases/tag/2.27.4
+# click on picard.jar
 
-# convert to plink
-plink --vcf  NA06997_COR_S29_imputed_with_loimpute_HRC.vcf  --const-fid  --keep-allele-order --make-bed --out    NA06997_COR_S29_imputed_with_loimpute_HRC
+##GATK
+wget https://github.com/broadinstitute/gatk/releases/download/4.2.6.1/gatk-4.2.6.1.zip
+unzip gatk-4.2.6.1.zip 
 
+## bundle_source
+## use Finder --> go to server
+ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/
+## hg19
 
-# profile PRS
-lwgsfile=NA06997_COR_S29_imputed_with_loimpute_HRC
-newTraits=("SCZ"  "MDD" "BIP" "Height" "BMI" "T2D" "CARD"  "CNT"  "GORD" "PUD" "IBS")
-echo ${newTraits[@]}
-for trait in  ${newTraits[@]};
-do 
-    echo $trait
-    plink \
-    --bfile $lwgsfile  \
-    --score  $refdir/PRS_predictors/${trait}_SBayesR_predictor.txt  \
-    --out ${lwgsfile}_${trait}_SBayesR_PRS 
-done
 ```
 
+## align the reads
 
 
+```{r align, engine='sh', eval = F}
 
+i=$TASK_ID
+WD=/scratch/60days/uqtlin5/X1WGS
+ref=${WD}/Pipeline/ucsc.hg19.fasta
+samplesheet=${WD}/samplesheet.txt
+ncpus=10
+cd $WD
+sID=$( awk '{print $1}'   $samplesheet | head -n  $i   | tail -n 1 ) 
+filename1=$( awk '{print $2}'   $samplesheet | head -n  $i   | tail -n 1 ) 
+filename2=$( awk '{print $3}'   $samplesheet | head -n  $i   | tail -n 1 ) 
+
+module load samtools
+## index the reference 
+## bwa index   Pipeline/ucsc.hg19.fasta
+
+## run alignment
+bwa mem -M -t $ncpus $ref  Raw_Data/$filename1  Raw_Data/$filename2 -R "@RG\tID:${sID}\tPL:ILLUMINA\tSM:${sID}" | samtools view -bS  >  TMPDIR/${bamPrefix}.tmp.bam 
+## run sort bam
+sambamba sort -t $ncpus  -m 200G  -o  TMPDIR/${sID}.sort.bam   TMPDIR/${sID}.tmp.bam  
+rm TMPDIR/${sID}.tmp.bam
+## mark duplicates
+java -jar picard.jar  MarkDuplicates   I=TMPDIR/${sID}.sort.bam    O=TMPDIR/${sID}.markdup.bam   M=TMPDIR/${sID}.dupStat  
+```
+
+## recalibration
+
+```{r recalibrate base score, engine='sh', eval = F}
+
+i=$TASK_ID
+WD=/scratch/60days/uqtlin5/X1WGS
+cd $WD
+samplesheet=${WD}/samplesheet.txt
+sID=$( awk '{print $1}'   $samplesheet | head -n  $i   | tail -n 1 ) 
+sortedNoDup=${WD}/TMPDIR/${sID}.markdup.bam
+outDir=${WD}/TMPDIR/
+ref=${WD}/Pipeline/hg19/ucsc.hg19.fasta
+
+knownsite1=dbsnp_138.hg19
+knownsite2=1000G_omni2.5.hg19.sites
+knownsite3=1000G_phase1.indels.hg19.sites
+knownsite4=1000G_phase1.snps.high_confidence.hg19.sites
+knownsite5=CEUTrio.HiSeq.WGS.b37.bestPractices.hg19
+knownsite6=dbsnp_138.hg19.excluding_sites_after_129
+knownsite7=hapmap_3.3_hg19_pop_stratified_af
+knownsite8=hapmap_3.3.hg19.sites
+knownsite9=Mills_and_1000G_gold_standard.indels.hg19.sites
+knownsite10=NA12878.HiSeq.WGS.bwa.cleaned.raw.subset.hg19.sites
+knownsite11=NA12878.HiSeq.WGS.bwa.cleaned.raw.subset.hg19
+knownsite12=NA12878.knowledgebase.snapshot.20131119.hg19
+
+## get the recal table
+
+${WD}/Pipeline/gatk-4.1.9.0/gatk BaseRecalibrator \
+   -I  $sortedNoDup  \
+   -R $ref \
+   --known-sites hg19/${knownsite1}.vcf.gz \
+   --known-sites hg19/${knownsite2}.vcf.gz \
+   --known-sites hg19/${knownsite3}.vcf.gz \
+   --known-sites hg19/${knownsite4}.vcf.gz \
+   --known-sites hg19/${knownsite5}.vcf.gz \
+   --known-sites hg19/${knownsite6}.vcf.gz \
+   --known-sites hg19/${knownsite7}.vcf.gz \
+   --known-sites hg19/${knownsite8}.vcf.gz \
+   --known-sites hg19/${knownsite9}.vcf.gz \
+   --known-sites hg19/${knownsite1}.vcf.gz \
+   --known-sites hg19/${knownsite11}.vcf.gz \
+   --known-sites hg19/${knownsite12}.vcf.gz \
+   --showHidden   \
+   -O  ${outDir}/${sID}_recal_data.table_1_12
+ 
+## run recal 
+gatk-4.1.9.0/gatk  ApplyBQSR \
+   -R $ref  \
+   -I $sortedNoDup \
+   --bqsr-recal-file  ${outDir}/${sID}_recal_data.table_1_12   \
+   -O  ${outDir}/${sID}_recal_1_12.bam
+ 
+## plot recal
+gatk-4.1.9.0/gatk   AnalyzeCovariates \
+     -bqsr    ${outDir}/${sID}_recal_data.table_1_12    \
+     -plots   ${outDir}/${sID}_recal_AnalyzeCovariates_1_12.pdf
+```
 
 # use GLYMPSE2 to impute data
 
-
+GLYMPSE2 is a new tool that takes the alignment files as input and impute against a reference genome. GLYMPSE2 could take in haplotype information. It's much better than loimpute, which impute using the called variants from alignment. 
 
 ## use reference data to make chunk files
 
 ```{bash, eval = F}
 
-# generate chunk file
-# this job will be paralleled by chromosomes
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=profiling
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-22
-
 chr=$SLURM_ARRAY_TASK_ID
-
 cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
-
 module load bcftools
-
 mapfile=1000GP_Phase3/genetic_map_chr${chr}_combined_b37.txt
-
-
-
-## 1000G version
-#reffile=ALL.chr${chr}.phase3_shapeit2_mvncall_integrated_v5a.20130502.genotypes.vcf.gz
-#bcftools annotate --rename-chrs chr_name_conv.txt  1000G_haplotype_vcf/$reffile     | bgzip > chr_renamed_1000G_haplotype_vcf/${reffile}
-#tabix -p vcf chr_renamed_1000G_haplotype_vcf/${reffile} 
-#
-#./GLIMPSE2/GLIMPSE2_chunk_static  --input  chr_renamed_1000G_haplotype_vcf/$reffile \
-#--sequential  \
-#--region chr${chr}  \
-#--output chunks_1000G.chr${chr}.txt \
-#--map $mapfile
-
-
 ## HRC version
 reffile=HRC.r1-1.EGA.GRCh37.chr${chr}.haplotypes.vcf.gz 
 
-
 bcftools annotate --rename-chrs chr_name_conv.txt  /QRISdata/Q3046/Reference/HRC//$reffile     | bgzip > chr_renamed_HRC_haplotype_vcf/${reffile}
 tabix -p vcf chr_renamed_HRC_haplotype_vcf/${reffile}
-
 
 ./GLIMPSE2/GLIMPSE2_chunk_static  --input  chr_renamed_HRC_haplotype_vcf/$reffile \
 --sequential  \
@@ -154,54 +196,29 @@ tabix -p vcf chr_renamed_HRC_haplotype_vcf/${reffile}
 --map $mapfile
 
 
-
-########
-
-for i in {1..22}; do
-    cat "chunk_files/chunks_HRC.chr${i}.txt" >> chunks_HRC.txt
-done
-
-
 ```
 
 
 ## chunk the reference data
 
+First we generate a chunk file merging from 22 chromosomes.
+
 ```{bash, eval = F}
-
-# this job will be paralleled by chunks. 
-
-
-## generate merged file
 for ((i = 1; i <= 22; i++)); do
   cat chunks_HRC.chr${i}.txt >> chunks_HRC.txt
 done
+```
 
+Then we will generate a chunked reference data based on each row of this chunk file. 
 
-
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=50G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=phase
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-64
-
-
+```{bash, eval = F}
+## for each chromosome we will run 
 
 LINE=$SLURM_ARRAY_TASK_ID
 
 cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
 sample=NA06997_COR_S29
 refdata=HRC
-
-
 BAM=${sample}_recal_1_12.bam
 chunkfile=chunks_${refdata}_chr1.txt
 OUTDIR=GLIMPSE2_imputed_with_${refdata}
@@ -213,59 +230,24 @@ ORG=$(sed "${LINE}q;d" $chunkfile | awk '{print $4}' )
 REGS=$(echo ${IRG} | cut -d":" -f 2 | cut -d"-" -f1)
 REGE=$(echo ${IRG} | cut -d":" -f 2 | cut -d"-" -f2)
 
-
-echo "Job starts for "
-echo $LINE
-echo $CHR
-echo $IRG
-echo $REGS
-echo $REGE
-
-
 mapfile=1000GP_Phase3/genetic_map_${CHR}_combined_b37.txt
 
-  ./GLIMPSE2/GLIMPSE2_split_reference_static \
+./GLIMPSE2/GLIMPSE2_split_reference_static \
   --reference  chr_renamed_${refdata}_haplotype_vcf/HRC.r1-1.EGA.GRCh37.${CHR}.haplotypes.vcf.gz \
   --map ${mapfile} \
   --input-region ${IRG} \
   --output-region ${ORG}  \
   --output  Splitted_${refdata}_panel/${refdata}
 
-
-
-
-
 ```
 
-## impute the data
-
-```{bash, eval = F}
-
-./GLIMPSE2/GLIMPSE2_phase_static \
---bam-file ${BAM} \
---reference Splitted_${refdata}_panel/${refdata}_${CHR}_${REGS}_${REGE}.bin \
---output ${OUT}_${CHR}_${REGS}_${REGE}.bcf
-```
 
 ## pipeline the imputation for all samples
 
+The data will be imputed into chunks using each chunked reference data.
+
 ```{bash, eval = F}
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=75:00:00
-#SBATCH --job-name=phase
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_phase_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-771
-
-
-## chr1 has 64 chunks. we'll test it first. 
+## the whole genome has 771 chunks. 
 
 LINE=$SLURM_ARRAY_TASK_ID
 
@@ -290,13 +272,13 @@ while IFS= read -r BAM; do
 
 done < bam_file_list.txt
 
-
 ```
 
 
-latest build: https://www.ncbi.nlm.nih.gov/datasets/genome/GCF_009914755.1/
 
 ## ligate the imputed chunks
+
+The imputed chunks are then concatenated together into a bcf file for each sample. 
 
 ```{bash, eval = F}
 
@@ -313,72 +295,27 @@ ligatesub=`qsubshcom "  ./GLIMPSE2/GLIMPSE2_ligate_static --input ${LST} --outpu
 
 done < bam_file_list.txt
 
-
 ```
 
-## format the data
+## reformat the data
+
+For the next step, files are converted from bcf format to vcf format
 
 ```{bash, eval = F}
-
-
 ## convert bcf to vcf
 while IFS= read -r BAM; do
  bcftools convert -O v -o GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf   GLIMPSE2_HRC_ligate/${BAM}_ligated.bcf
 done < bam_file_list.txt
-
-
-```
-
-
-```{bash, eval = F, echo = F}
-
-## a few extra tests
-
-
-## update build
-## https://gatk.broadinstitute.org/hc/en-us/articles/360037060932-LiftoverVcf-Picard-
-
-java -jar Pipelines/picard.jar  LiftoverVcf -I NA06997_COR_S29_ligated.vcf -O NA06997_COR_S29_ligated_in_hg38.vcf -CHAIN Pipelines/hg19ToHg38.over.chain -REJECT rejected.vcf -R Pipelines/hg38/Homo_sapiens_assembly38.fasta
-
-
-
-
-# change to raw format
-## https://samtools.github.io/bcftools/howtos/filtering.html
-sample="NA06997_COR_S29"
-bcftools query -i'GT!="."' -f'%CHROM %POS %ID %REF %ALT [ %GT]\n'  ${sample}_ligated_in_hg38.vcf     > ${sample}_ligated_in_hg38.raw
-
-
-bcftools query -i'GT!="."' -f'%CHROM %POS %ID %REF %ALT [ %GT]\n'  ${sample}_ligated.vcf     > ${sample}_ligated.raw
-
-## get genotype from Low pass data
- sed 's/|/\t/'  NA06997_COR_S29_ligated.raw | sed 's/\//\t/'  > NA06997_COR_S29_ligated_splitted.raw
- 
- 
-# concordance function
-# to test
-
-./GLIMPSE2/GLIMPSE2_concordance_static \
---input concordance.lst \
---min-val-dp 8 \
---output GLIMPSE_concordance/output \
---min-val-gl 0.9999 \
---bins 0.00000 0.00100 0.00200 0.00500 0.01000 0.05000 0.10000 0.20000 0.50000 \
---af-tag AF_nfe \
---thread 4
-
-
-
 ```
 
 
 
+## extract SNPs 
 
-## connect all the chromosomes and extract 
+To reduce the computation burdon, I extracted the 7.3M SNPs from the data. 
+
 
 ```{bash, eval = F}
-
-
 
 ## convert bcf to vcf
 while IFS= read -r BAM; do
@@ -387,8 +324,11 @@ grep "^#" GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf > ${BAM}_ligated_dbSNP.vcf
 grep -v "^#"  GLIMPSE2_HRC_ligate/${BAM}_ligated.vcf | grep -w -f SNPs_in_7.4M.txt >> ${BAM}_ligated_dbSNP.vcf 
 
 done < bam_file_list.txt
+```
 
+Data of all the samples are merged into one file. 
 
+```{bash, eval = F}
 ## merge all samples
 ## did in both folder GLIMPSE2_HRC_ligate_vcf and dbSNP_of_GLIMPSE2_imputed_with_HRC
 
@@ -399,10 +339,7 @@ for file in *.vcf; do
 done
 
 qsubshcom " bcftools merge -o LPS_all48samples.vcf.gz -O v -@ 4  *.vcf.gz "  4 150G "merge" 56:00:00 " "   
-
-
 bcftools merge -o LPS_all48samples.vcf.gz -O v   *.vcf.gz
-
 
 ```
 
@@ -410,38 +347,16 @@ bcftools merge -o LPS_all48samples.vcf.gz -O v   *.vcf.gz
 
 # Profile PRS
 
+PRS are profiled from the merged vcf file directly. 
+
 ```{bash, eval = F}
-
-##############################################
-
-
-#!/bin/bash
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --mem=150G
-#SBATCH --time=25:00:00
-#SBATCH --job-name=profiling
-#SBATCH --error=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.error
-#SBATCH --output=/scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing/slurm_%A_%a.out
-#SBATCH --partition=general
-#SBATCH --account=a_mcrae
-#SBATCH --array=1-141
-
-
 i=$SLURM_ARRAY_TASK_ID
-
 cd /scratch/project/genetic_data_analysis/uqtlin5/Low_pass_sequencing
 
 traitfile="GCTB_SBayesRC_predictors.txt"
 trait=$(sed "${i}q;d" $traitfile | awk '{print $1}' )
 predictor=$(sed "${i}q;d" $traitfile | awk '{print $2}' )
-
-echo $trait
-echo $predictor
 outdir=PRS_all_GCTB
-
-
 input=dbSNP_of_GLIMPSE2_imputed_with_HRC/LPS_dbSNP_set.vcf.gz
 cohort="LPS"
 
@@ -458,253 +373,32 @@ plink \
 ```
 
 
-```{r, eval = F}
-
-#group="PRS_all_GCTB"
-group="PRS_all_GCTB_Sanger"
-
-
-trait.list = read.table("GCTB_SBayesRC_predictors.txt")
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-cohort="LPS"
-
-target.data =read.table("bam_file_list.txt") 
-colnames(target.data)[1] = "IID"
-
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, "/",cohort, "_", trait, "_SBayesRC.profile")
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),"SCORESUM"]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-write.csv(target.data, file= paste0( cohort, "_all_", n.trait , "_traits_GCTB_PRS.csv"))
-
-
-
-```
- 
- 
- --score: 7356466 valid predictors loaded.
- --score: 1154511 valid predictors loaded.
-
---score: 7356466 valid predictors loaded.
-
-
-
 # get corresponding samples from chip data
 
+46 out of the 47 samples in this pilot study were genotyped using GSA chip in HSU lab. Here we profiled PGS from the imputed chip data. 
+
+The data were processed in the same way as other HSU data.
+
 ```{bash, eval = F}
-
-
-
 traitfile="../GCTB_SBayesRC_predictors.txt"
 trait=$(sed "${i}q;d" $traitfile | awk '{print $1}' )
 predictor=$(sed  "${i}q;d"  $traitfile  | awk '{print $2}' )
-echo $trait
-
-
 outdir=PRS_all_GCTB
 mkdir -p $outdir
-
-
 cohort=MND_B3
-input=MND_B3_GSA_imputed_updated
+input=MND_B3_GSA_imputed_fixed
 
 plink \
    --bfile  $input \
    --score  $predictor  2 5 8  header sum    \
    --out ${outdir}/${cohort}_${trait}_SBayesRC
 
-
-
-
-
 ```
 
 
 
-PRS_all_GCTB/ALS_AUS_ADHD_01_SBayesRC.log:--score: 5335624 valid predictors loaded.
-PRS_all_GCTB/ALS_AUS_BMI_01_SBayesRC.log:--score: 938670 valid predictors loaded.
 
-
-PRS_all_GCTB/MND_B3_ADHD_01_SBayesRC.log:--score: 7099162 valid predictors loaded.
-PRS_all_GCTB/MND_B3_BMI_01_SBayesRC.log:--score: 1115829 valid predictors loaded.
-
-
-
-```{r, eval = F}
-
-group="PRS_all_GCTB_Sanger"
-cohort="MND_B3_GSA_Sanger"
-
-
-trait.list = read.table("../GCTB_SBayesRC_predictors.txt")
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-target.data =read.table("MND_B3_GSA_Sanger_imputed_autosomes.fam") 
-colnames(target.data)[2] = "IID"
-
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, "/",cohort, "_", trait, "_SBayesRC.profile")
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),"SCORESUM"]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-write.csv(target.data, file= paste0( cohort, "_all_", n.trait , "_traits_GCTB_PRS.csv"))
-
-
-
-```
- 
-```{r, eval = F}
-
-group="PRS_all_GCTB_fixed"
-cohort="MND_B3_BCC_GSA"
-
-
-trait.list = read.table("../GCTB_SBayesRC_predictors.txt")
-n.trait = nrow(trait.list)
-traitArray=trait.list$V1
-
-target.data =read.table(paste0(cohort,"_imputed_autosomes_fixed.fam")) 
-colnames(target.data)[2] = "IID"
-
-for (j in 1:length(traitArray)){
-  trait = traitArray[j]
-  file.name =  paste0( group, "/",cohort, "_", trait, "_SBayesRC.profile")
-  profile = read.table(file.name, header = T)
-  target.data$new.column = profile[match(target.data$IID, profile$IID),"SCORESUM"]
-  colnames(target.data)[ncol(target.data)] = trait
-  }
-  
-row.names(target.data) = target.data$IID
-write.csv(target.data, file= paste0( cohort, "_all_", n.trait , "_traits_GCTB_PRS.csv"))
-
-
-
-```
- 
- 
-# Number of SNPs
-
-
-Low_pass_sequencing/PRS_all_GCTB/LPS_ADHD_01_SBayesRC.log:--score: 7356466 valid predictors loaded.      
-Low_pass_sequencing/Chip_data_for_LPS_samples/PRS_all_GCTB/MND_B3_BCC_GSA_ADHD_01_SBayesRC.log:--score: 7356466 valid predictors loaded.
-    
-    
-# Starndardization
-
-
-
-```{r}
-
-
-standardization.data = read.csv("Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv")
-
-
-## input PRS from low pass
-lps.prs = read.csv("Data/LowPass/LPS_all_141_traits_GCTB_PRS.csv")
-colnames(lps.prs)[1] = "FID"
-lps.prs$IID <- sub("_.*", "", lps.prs$FID)
-row.names(lps.prs) = lps.prs$IID
-lps.prs = lps.prs[,-c(1:2)]
-
-lps.prs = lps.prs[,colnames(lps.prs) %in%standardization.data$trait ]
-standardization.data= standardization.data[  match( colnames(lps.prs) , standardization.data$trait),]
-
-lps.prs.norm = sweep(
-  sweep (  lps.prs,  
-          2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = '/')
-
-```
-
-
-```{r}
-
-
-## input inhouse imputed GSA data
-mnd.b3.bcc = read.csv("Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS.csv", row.names = 1)
-
-mnd.b3.bcc <- mnd.b3.bcc %>%
-  separate(IID, into = c("part1", "part2", "part3", "part4"), sep = "_", fill = "right") %>%
-  mutate(
-    V1 = part2,                 # Combine part1 and part2 for V1
-    IID = if_else(is.na(part4), part3, paste(part3, part4, sep = "_")) # Combine remaining parts for Study_ID
-  ) %>%
-  select(V1,IID, everything(),-part1, -part2, -part3, -part4, -V3, -V4, -V5, -V6)
-
-row.names(mnd.b3.bcc) = mnd.b3.bcc$IID
-
-mnd.b3.bcc = mnd.b3.bcc[,-c(1:2)]
-
-
-mnd.b3.bcc = mnd.b3.bcc[,colnames(mnd.b3.bcc) %in%standardization.data$trait ]
-standardization.data= standardization.data[  match( colnames(mnd.b3.bcc) , standardization.data$trait),]
-
-mnd.b3.bcc.norm = sweep(
-  sweep (  mnd.b3.bcc,  
-          2, standardization.data$mean),  
-  2, standardization.data$sd, FUN = '/')
-
-write.csv(mnd.b3.bcc.norm, "Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS_standardized_with_GRP_benching.csv")
-
-```
-
-
-
-```{r}
-
-lps.prs.norm$IID <- row.names(lps.prs.norm)
-library(reshape2)
-melted.lps.prs.norm = reshape2::melt(lps.prs.norm, id.vars = "IID" ) 
-melted.lps.prs.norm$value = as.numeric(melted.lps.prs.norm$value)
-
-mnd.b3.bcc.norm$IID <- row.names(mnd.b3.bcc.norm)
-melted.mnd.b3.bcc.norm = reshape2::melt(mnd.b3.bcc.norm, id.vars = "IID" )
-melted.mnd.b3.bcc.norm$value = as.numeric(melted.mnd.b3.bcc.norm$value)
-
-```
-
-# Trait selection
-
-
-```{r}
-
-
-
-## select traits
-predictor.list = read.csv("Tables/SupTable2_Predictors.csv")
-
-included_traits = predictor.list$Predictor
-
-
-## grouping traits
-traits_binary = predictor.list[which(predictor.list$QorB == "Binary" ),"Predictor"]
-traits_quanti = predictor.list[which(predictor.list$Location == "Uno_Traits/Quantitative_Traits/"),"Predictor"]
-traits_35bm   = predictor.list[which(predictor.list$Location == "Lot_Traits/UKB_35BM_2021/"),"Predictor"]
-traits_ppp   = predictor.list[which(predictor.list$Location == "Lot_Traits/UKB_PPP_2022/"),"Predictor"]
-traits_fa   = predictor.list[which(predictor.list$Location == "Lot_Traits/UKB_Fatty_Acids/"),"Predictor"]
-
-
-
-melted.mnd.b3.bcc.norm = melted.mnd.b3.bcc.norm[melted.mnd.b3.bcc.norm$variable %in% included_traits,]
-melted.lps.prs.norm = melted.lps.prs.norm[melted.lps.prs.norm$variable %in% included_traits,]
-
-
-```
-
-
-
-# Compare PGS
+# Compare PGS between lcWGS vs. GSA chip
 
 There are 48 samples in the LPS pilot set. 
 
@@ -717,7 +411,7 @@ The other 1 is available in ALS_AUS old data. (3728601, or MND_CON_252)
 
 ## ancestry of ALS samples 
 
-Here is the 46 overlap samples with PC projected to 1000g.
+Here is the 46 overlap samples with PC projected to 1000g. They are all from Europeans.
 
 ```{r, eval = F, echo = F}
 eur = read.table("Data/LowPass/MND_EUR_samples_IID.txt")
@@ -783,8 +477,82 @@ ggsave("Figures/Ancestry_of_samples_in_LPS&GSAv2.png", width = 8, height = 6)
 ![](Figures/Ancestry_of_samples_in_LPS&GSAv2.png)
 
 
-## merge data 
+## correlation
 
+### standardize the two data
+
+```{r}
+
+library(reshape2)
+
+standardization.data = read.csv("Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv")
+
+## input PRS from low pass
+lps.prs = read.csv("Data/LowPass/LPS_all_141_traits_GCTB_PRS.csv")
+colnames(lps.prs)[1] = "FID"
+lps.prs$IID <- sub("_.*", "", lps.prs$FID)
+row.names(lps.prs) = lps.prs$IID
+lps.prs = lps.prs[,-c(1:2)]
+
+lps.prs = lps.prs[,colnames(lps.prs) %in%standardization.data$trait ]
+standardization.data= standardization.data[  match( colnames(lps.prs) , standardization.data$trait),]
+
+lps.prs.norm = sweep(
+  sweep (  lps.prs,  
+          2, standardization.data$mean),  
+  2, standardization.data$sd, FUN = '/')
+
+lps.prs.norm$IID <- row.names(lps.prs.norm)
+melted.lps.prs.norm = reshape2::melt(lps.prs.norm, id.vars = "IID" ) 
+melted.lps.prs.norm$value = as.numeric(melted.lps.prs.norm$value)
+```
+
+```{r}
+## input inhouse imputed GSA data
+mnd.b3.bcc = read.csv("Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS.csv", row.names = 1)
+
+mnd.b3.bcc <- mnd.b3.bcc %>%
+  separate(IID, into = c("part1", "part2", "part3", "part4"), sep = "_", fill = "right") %>%
+  mutate(
+    V1 = part2,                 # Combine part1 and part2 for V1
+    IID = if_else(is.na(part4), part3, paste(part3, part4, sep = "_")) # Combine remaining parts for Study_ID
+  ) %>%
+  select(V1,IID, everything(),-part1, -part2, -part3, -part4, -V3, -V4, -V5, -V6)
+
+row.names(mnd.b3.bcc) = mnd.b3.bcc$IID
+mnd.b3.bcc = mnd.b3.bcc[,-c(1:2)]
+mnd.b3.bcc = mnd.b3.bcc[,colnames(mnd.b3.bcc) %in%standardization.data$trait ]
+standardization.data= standardization.data[  match( colnames(mnd.b3.bcc) , standardization.data$trait),]
+
+mnd.b3.bcc.norm = sweep(
+  sweep (  mnd.b3.bcc,  
+          2, standardization.data$mean),  
+  2, standardization.data$sd, FUN = '/')
+
+mnd.b3.bcc.norm$IID <- row.names(mnd.b3.bcc.norm)
+melted.mnd.b3.bcc.norm = reshape2::melt(mnd.b3.bcc.norm, id.vars = "IID" )
+melted.mnd.b3.bcc.norm$value = as.numeric(melted.mnd.b3.bcc.norm$value)
+
+```
+
+### select traits
+
+```{r}
+predictor.list = read.csv("Tables/SupTable2_Predictors.csv")
+included_traits = predictor.list$Predictor
+## grouping traits
+traits_binary = predictor.list[which(predictor.list$QorB == "Binary" ),"Predictor"]
+traits_quanti = predictor.list[which(predictor.list$Location == "Uno_Traits/Quantitative_Traits/"),"Predictor"]
+traits_35bm   = predictor.list[which(predictor.list$Location == "Lot_Traits/UKB_35BM_2021/"),"Predictor"]
+traits_ppp   = predictor.list[which(predictor.list$Location == "Lot_Traits/UKB_PPP_2022/"),"Predictor"]
+traits_fa   = predictor.list[which(predictor.list$Location == "Lot_Traits/UKB_Fatty_Acids/"),"Predictor"]
+
+## select data
+melted.mnd.b3.bcc.norm = melted.mnd.b3.bcc.norm[melted.mnd.b3.bcc.norm$variable %in% included_traits,]
+melted.lps.prs.norm = melted.lps.prs.norm[melted.lps.prs.norm$variable %in% included_traits,]
+```
+
+### merge the two data
 
 ```{r}
 
@@ -798,39 +566,22 @@ melted.both =  merge(melted.lps.prs.norm,
 
 melted.both$LPS = as.numeric(melted.both$LPS)
 melted.both$GSAv2 = as.numeric(melted.both$GSAv2)
-
-
 melted.both$Trait = predictor.list[match(melted.both$variable, predictor.list$Predictor),"Label"]
-
-
-```
-
-
-
-## correlation
-
-```{r}
 melted.SALSA = na.omit(melted.both)
 ```
 
-### across traits
 
-
+### compare across traits
 
 
 ```{r}
 result <- melted.SALSA %>%
   group_by(variable) %>%
   summarise(correlation = cor(LPS, GSAv2, use = "complete.obs"), .groups = "drop")
-
 result = data.frame(result)
 result$Trait = predictor.list[match(result$variable, predictor.list$Predictor),"Label"]
-
 result$cor = paste0("cor=", round(result$correlation, 2) )
-
 result %>% filter(correlation < 0.95) %>% arrange((correlation))
-
-
 ```
 
 
@@ -850,17 +601,12 @@ SD is `r sd(result$correlation)`
 
 
 ```{r}
-
-
 result.c.samples <- melted.SALSA %>%
   group_by(IID) %>%
   summarise(correlation = cor(LPS, GSAv2))
-
 summary(result.c.samples$correlation)
 
 hist(result.c.samples$correlation)
-
-
 ```
 
 
@@ -1025,7 +771,7 @@ person.plot
 ```
 
 
-# plot outliers
+# Find correlation outliers
 
 ```{r,fig.width= 12, fig.height=8}
 result = data.frame(result)
@@ -1037,203 +783,9 @@ ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correl
 
 ```
 
-# PGS of CEPH samples
+# PGS correlation without MHC region
 
-
-```{r, fig.width= 9, fig.height=6}
-
-
-ceph.lps = melted.lps.prs.norm[grep("NA", melted.lps.prs.norm$IID ),]
-ceph.gsa = melted.mnd.b3.bcc.norm[grep("NA", melted.mnd.b3.bcc.norm$IID ),]
-
-colnames(ceph.lps)[3] = "PRS" 
-colnames(ceph.gsa)[3] = "PRS"
-
-ceph.lps$Platform = "LPS"
-ceph.gsa$Platform = "GSAv2"
-
-ceph.norm = rbind(ceph.lps, ceph.gsa)
-ceph.norm$Study_ID = NA
-ceph.norm$Study_ID = sub("_.*", "",ceph.norm$IID)
-
-# Display the updated data frame
-
-ggplot(data = ceph.norm[grep("_202", ceph.norm$variable, invert = T),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )
-
-
-
-
-```
-
-
-
-```{r, fig.width= 9, fig.height=6}
-
-
-# Display the updated data frame
-
-ggplot(data = ceph.norm[grep("UKB_FA_2022", ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )
-
-```
-
-
-```{r, fig.width= 9, fig.height=6}
-
-
-# Display the updated data frame
-
-ggplot(data = ceph.norm[grep("UKB_PPP_2022", ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )
-
-```
-
-
-
-
-```{r, fig.width= 9, fig.height=6}
-
-
-# Display the updated data frame
-
-ggplot(data = ceph.norm[grep("UKB_35BM_2021", ceph.norm$variable),], aes(x = variable, y = PRS, color = Study_ID, shape = Platform)) + geom_point(size = 1) +
-  theme(
-    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)
-  )
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-```{r, eval = F, echo = F}
-# Check the slight difference of HRC imputed data coverage
-
-library(VennDiagram)
-
-#lps.nopred = read.table("PRS_all_GCTB/LPS_ADHD_01_SBayesRC.nopred")
-#gsav2.nopred = read.table("Chip_data_for_LPS_samples/PRS_all_GCTB/MND_B3_BCC_GSA_ADHD_01_SBayesRC.nopred")
-#sanger.nopred = read.table("Chip_data_for_LPS_samples/PRS_all_GCTB_Sanger/MND_B3_GSA_Sanger_ADHD_01_SBayesRC.nopred")
-
-## "Chip_data_for_LPS_samples/PRS_all_GCTB_with_previous_imputed/ALS_AUS_ADHD_01_SBayesRC.nopred"
-## "Chip_data_for_LPS_samples/PRS_all_GCTB_with_previous_imputed/MND_B3_ADHD_01_SBayesRC.nopred"
-
-
-lps.nopred = read.table("Data/LowPass/LPS_ADHD_01_SBayesRC.nopred")
-gsav2.nopred = data.frame(fread("Data/LowPass/MND_B3_BCC_GSA_ADHD_01_SBayesRC.nopred", select = 1:2, header = FALSE) )
-sanger.nopred = read.table("Data/LowPass/MND_B3_GSA_Sanger_ADHD_01_SBayesRC.nopred")
-
-
-
-
-# Create a Venn diagram
-venn.plot <- venn.diagram(
-  x = list(
-    Vector1 = lps.nopred$V2,
-    Vector2 = gsav2.nopred$V2,
-    Vector3 = sanger.nopred$V2
-  ),
-  category.names = c("LPS", "Inhouse", "Sanger"),
-  filename = NULL,  # Use NULL to display the diagram in RStudio
-  output = TRUE
-)
-
-grid.newpage()
-
-grid.draw(venn.plot)
-
-length(lps.nopred$V2)
-length(gsav2.nopred$V2)
-length(sanger.nopred$V2)
-
-## there are 19 SNPs that can be imputed by the Sanger imputation srver, but not exist in our inhouse HRC panel. 
-## we can skip this problem for now. 
-## i will not include the sanger imputed data in analysis in this paper. 
-
-
-# Low_pass_sequencing/Chip_data_for_LPS_samples/PRS_all_GCTB_Sanger/MND_B3_GSA_Sanger_ADHD_01_SBayesRC.log:--score: 7356485 valid predictors loaded.     
-# 
-# Low_pass_sequencing/Chip_data_for_LPS_samples/PRS_all_GCTB_with_previous_imputed/MND_B3_ADHD_01_SBayesRC.log:--score: 7099162 valid predictors loaded.      
-# Low_pass_sequencing/Chip_data_for_LPS_samples/PRS_all_GCTB_with_previous_imputed/ALS_AUS_ADHD_01_SBayesRC.log:--score: 5335624 valid predictors loaded.      
-#       
-  
-
-```
-
-
-```{bash, eval = F, echo = F}
-
-##finding:
-# Extra SNPs got imputed with same location but different alleles. 
-# Here we will exclude them as a quick fix
-
-plink --bfile MND_B3_BCC_GSA_imputed_autosomes  --exclude extra_SNPs.txt --make-bed --out MND_B3_BCC_GSA_imputed_autosomes_fixed
-sed -i 's/rs12046928_2/rs12046928/'  MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs4844600_2/rs4844600/'    MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs4745036_2/rs4745036/'    MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs7114668_2/rs7114668/'    MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs10845205_2/rs10845205/'  MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs1048943_2/rs1048943/'    MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs61742742_2/rs61742742/'  MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-sed -i 's/rs35989782_2/rs35989782/'  MND_B3_BCC_GSA_imputed_autosomes_fixed.bim
-
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# outlier traits without MHC region
-
-
- report a correlation with MHC excluded? Is a good suggestion
- 
-Could add
-The correlation between PGS across the two platforms with the MHC region excluded were  xx,xx,and xx for  C4, Celiac Disease and Primary biliary cirrhosis, respectively.
+We excluded the MHC region when profile PGS of C4, Celiac Disease and Primary biliary cirrhosis, respectively. 
 
 
 ```{r, eval = F}
@@ -1241,28 +793,22 @@ library(data.table)
 a = data.frame(fread("../CeliacDisease_01_SBayesRC.snpRes"))
 mhc.snp = (a[which(a$Chrom ==6  & a$Position >28477797   & a$Position<33448354),])
 write.table(mhc.snp$Name, file="MHC.SNPs.txt", quote = F, sep ="\t", row.names = F, col.names = F)
-
 ```
 
 ```{bash, eval = F}
 
 outdir=PRS_withoutMHC
  mkdir -p $outdir
-## exlist=../../MHC/MHC_SNPs_in_7.3M.txt
 exlist=PRS_withoutMHC/MHC.SNPs.txt
-
-
 
 for trait in PBC_01 CeliacDisease_01 C4_01
 do
   echo "Processing trait: $sample"
-  
   predictor=${trait}_SBayesRC.snpRes
   
   ## chip data
   cohort=MND_B3
   input=MND_B3_BCC_GSA_imputed_autosomes_fixed
-  
   plink \
      --bfile  $input \
      --score  $predictor  2 5 8  header sum    \
@@ -1272,70 +818,56 @@ do
   ## LPS data
   input=LPS_dbSNP_set.vcf.gz
   cohort="LPS"
-  
-  
   plink \
      --vcf  $input \
      --const-fid  \
      --score  $predictor    2 5 8 header sum   \
      --exclude $exlist  \
      --out ${outdir}/${cohort}_${trait}_SBayesRC_noMHC
-
 done
-
 
 ```
 
 
 ```{r, eval = F}
 
-### They are 
-## C4: 0.367 
-## Celiac Disease: 0.793 
-## Primary biliary cirrhosis: 0.898 
-
 library(tidyr)
 library(stringr)
 library(dplyr)
 
-
 outputtable = data.frame(
 traits=c("C4_01", "CeliacDisease_01", "PBC_01" ),
-cor = NA
-)
+cor = NA)
 
 for(i in 1:3){ 
   trait=outputtable[i,1]
-  
-cohort1="LPS"
-cohort2="MND_B3"
-
+  cohort1="LPS"
+  cohort2="MND_B3"
 lps=read.table(paste0("PRS_withoutMHC/", cohort1,"_", trait, "_SBayesRC_noMHC.profile"), header = T )
 chip=read.table(paste0("PRS_withoutMHC/",cohort2,"_", trait, "_SBayesRC_noMHC.profile"), header = T )
-
-
 lps = lps %>%
   separate(IID, into = c("part1", "part2", "part3", "part4"), sep = "_", fill = "right") %>%
-  mutate(
-    ID = part1) 
-
+  mutate( ID = part1) 
 chip = chip %>%
   separate(IID, into = c("part1", "part2", "part3"), sep = "_", fill = "right") %>%
-  mutate(
-    ID = part3) 
-
+  mutate( ID = part3) 
 lps$ChipPRS = chip[match(lps$ID, chip$ID),"SCORESUM"]
 outputtable[i,2]  =cor(lps$SCORESUM, lps$ChipPRS, use = "complete.obs")
-
 }
 ```
 
 
 
 
+--|full PRS | PRS without MHC SNPs
+---:|:---:|:---:
+C4| 0.367 |0.997
+Celiac Disease | 0.793 |0.997
+Primary biliary cirrhosis | 0.898 |0.994
+ 
 
 
-
+This observation suggest that the main difference came from the low quality imputation in MHC region. 
 
 
 
