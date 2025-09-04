@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Benchmark PGS with representative population</title>
+
+<script src="site_libs/header-attrs-2.29/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/lumen.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
+<script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PGS|Consistency</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="index.html">Introduction</a>
+</li>
+<li>
+  <a href="0_PredictorPrep.html">Predictors</a>
+</li>
+<li>
+  <a href="1_GRP_ChipData.html">HSU Data</a>
+</li>
+<li>
+  <a href="2_QIMR_ChipData.html">QIMR Data</a>
+</li>
+<li>
+  <a href="3_WGS.html">WGS data</a>
+</li>
+<li>
+  <a href="4_LowPassSeq.html">lcWGS data</a>
+</li>
+<li>
+  <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Benchmark PGS with representative
+population</h1>
+
+</div>
+
+
+<p>We used two different population representative data sets to
+benchmark the PGS in this study. We calculated the mean and sd of PGSs
+of each trait, and used them to standardize the benchmarking data
+itself, and the PGS of CEPH control samples. The distribution of
+standardized PGS of benchmarking data are used as background when we
+display the consistency of PGS of CEPH control samples, such in Figure 2
+and 3. We also demonstrated how the benchmarking data affect the
+interpretation of a PGS.</p>
+<div id="data" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Data</h1>
+<p>We used two different data sets as the benchmark in this study.</p>
+<div id="lifelines" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> Lifelines</h2>
+<p>We calculated the mean and sd from the raw PGS, standardized the data
+itself, saved them for standardizing other data.</p>
+<pre class="r"><code>## input bm data
+bm.prs.ugli1 = read.csv(&quot;Data/LL/UGLI1_all_141_traits_GCTB_PRS.csv&quot;,row.names =1)
+
+## select European only
+bm.eur = read.table(&quot;Data/LL/UGLI0-3_Europeans_n111570_ID_JS.txt&quot;, header = T)
+bm.prs = bm.prs.ugli1[(bm.prs.ugli1$V2) %in% bm.eur$IID,] 
+bm.prs = bm.prs[,-c(1:3)]
+
+## calculate standardization factor
+cross.mean = apply(bm.prs, 2,  mean)
+cross.sd =   apply(bm.prs, 2,  sd)
+
+mean.sd.table = data.frame(
+  trait=colnames(bm.prs),
+  mean = cross.mean,
+  sd = cross.sd)
+write.csv(mean.sd.table, &quot;Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv&quot;)
+
+## standardize the data itself
+stdz.bm.prs = data.frame( sweep(  data.frame(sweep (  sapply (bm.prs,  as.numeric  ), 2, cross.mean)),  2, cross.sd, FUN = &#39;/&#39;))
+row.names(stdz.bm.prs) = row.names(bm.prs)
+write.csv(stdz.bm.prs, &quot;Data/LL/LifeLines1_Eur_140_traits_GCTB_PRS_self_standardized.csv&quot;)</code></pre>
+</div>
+<div id="hsu-collected-samples" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> HSU collected
+samples</h2>
+<p>PGS of all batches have been organized in
+Q3046/Results/GRP_master_raw_PRS.csv. Thanks to Laura.</p>
+<pre class="r"><code>prs = read.csv(&quot;Data/GRP/GRP_all_GCTB_PRS.csv&quot;)
+colnames(prs)[1:3] = c(&quot;Study_ID&quot;, &quot;Batch&quot;, &quot;PipelineVersion&quot;)
+
+## we will exclude the control samples when we calculate SD and mean.
+prs.bench = prs[grep(&quot;GM&quot;, prs$Study_ID, invert = T), ] 
+prs.bench = prs.bench[ grep( &quot;NA&quot; ,  prs.bench$Study_ID , invert = T), ]
+
+## we excluded all the technical control samples 
+prs.bench= prs.bench[grep(&quot;[A-Za-z]&quot;, prs.bench$Study_ID, invert = T ) , ]
+
+## if a sample is genotyped multi times, we will keep only one.
+prs.bench &lt;- prs.bench %&gt;%  group_by(Study_ID) %&gt;%  sample_n(1) %&gt;%  ungroup()
+prs.bench = data.frame(prs.bench)
+
+## keep only EUR
+grp.eur = read.table(&quot;Data/GRP/all_grp_EUR.id&quot;)
+prs.bench = prs.bench[prs.bench$Study_ID %in% grp.eur$V2,]
+write.csv(prs.bench, &quot;Data/GRP/Merged_raw_GCTB_PGS_of_benchmarking_samples_in_GRP.csv&quot;, row.names = F)
+prs.bench.numeric = sapply(prs.bench[, 8:ncol(prs.bench)], as.numeric)
+
+
+## calculate standardization factor and save it
+cross.mean = apply(prs.bench.numeric, 2,  mean)
+cross.sd =   apply(prs.bench.numeric, 2,  sd)
+standardization.data = data.frame(
+  trait = colnames(prs.bench.numeric),
+  mean = cross.mean,
+  sd = cross.sd)
+write.csv(standardization.data, &quot;Data/GRP_MEAN_and_SD_of_traits_for_standardization.csv&quot; )
+
+## self standardization
+prs.bench.norm.number = sweep(sweep (  sapply (prs.bench[, 8:ncol(prs.bench)],  as.numeric  ), 2, cross.mean),  2, cross.sd, FUN = &#39;/&#39;)
+prs.bench.norm = cbind(prs.bench[,c(1:7 )], prs.bench.norm.number)
+write.csv(prs.bench.norm, file = &quot;Data/Merged_Standardized_GCTB_PGS_of_benchmarking_samples_in_GRP.csv&quot;, row.names = F)</code></pre>
+</div>
+</div>
+<div id="trait-selection" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Trait selection</h1>
+<p>We will extract the traits selected with heritability and rerun
+correlation thresholds, and group them to organize the figures.</p>
+<pre class="r"><code>predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
+included_traits = predictor.list$Predictor
+
+## grouping traits
+traits_binary = predictor.list[which(predictor.list$Group == &quot;Binary&quot; ),&quot;Predictor&quot;]
+traits_quanti = predictor.list[which(predictor.list$Group == &quot;Quantitative&quot;),&quot;Predictor&quot;]
+traits_35bm   = predictor.list[which(predictor.list$Group == &quot;Biomarker&quot;),&quot;Predictor&quot;]
+traits_pfa   = predictor.list[which(predictor.list$Group == &quot;Protein and Fatty Acid&quot;),&quot;Predictor&quot;]</code></pre>
+</div>
+<div id="compare-the-two-bm-data-in-mean-and-sd" class="section level1"
+number="3">
+<h1><span class="header-section-number">3</span> Compare the two BM data
+in mean and SD</h1>
+<p>A few traits showed very different mean PGS.</p>
+<pre class="r"><code>mean.sd.table.ll = read.csv(&quot;Data/LifeLines_MEAN_and_SD_of_traits_for_standardization.csv&quot;, row.names = 1)
+mean.sd.table.ll = mean.sd.table.ll[mean.sd.table.ll$trait %in% included_traits,]
+colnames(mean.sd.table.ll)[2:3] = paste0(&quot;LL_&quot;, colnames(mean.sd.table.ll)[2:3] )
+mean.sd.table.hsu = read.csv(&quot;Data/GRP_MEAN_and_SD_of_traits_for_standardization.csv&quot;, row.names = 1)
+mean.sd.table.hsu = mean.sd.table.hsu[mean.sd.table.hsu$trait %in% included_traits ,]
+colnames(mean.sd.table.hsu)[2:3] = paste0(&quot;GRP_&quot;, colnames(mean.sd.table.hsu)[2:3] )
+mean.sd.table = merge(mean.sd.table.ll, mean.sd.table.hsu, by = &quot;trait&quot;)
+mean.sd.table$mean.diff = mean.sd.table$LL_mean - mean.sd.table$GRP_mean
+mean.sd.table = mean.sd.table[mean.sd.table$trait %in% included_traits,]
+
+f.mean = ggplot(data = mean.sd.table, aes(x = LL_mean, y = GRP_mean)) + 
+  geom_point(color = &quot;darkgrey&quot;) + 
+  geom_point(data=  subset(mean.sd.table, trait==&quot;Height_03&quot;), aes(x = LL_mean, y = GRP_mean), color = &quot;red&quot;) +
+  geom_text_repel(data = subset(mean.sd.table, trait==&quot;Height_03&quot;), aes(label  = &quot;height&quot;), color = &quot;#2F6EBA&quot;, size = 6, vjust = 2) + 
+  geom_abline(intercept = 0, slope = 1) +
+  theme_bw() + xlab(&quot;Lifelines: Mean PGS (raw)&quot;) + ylab(&quot;HSU: Mean PGS (raw)&quot;)</code></pre>
+<p>Although the sample size of the two BM data are very different, the
+sd of their PGS in same trait are very similar.</p>
+<pre class="r"><code>mean.sd.table$sd.diff = mean.sd.table$LL_sd - mean.sd.table$GRP_sd
+
+f.sd = ggplot(data = mean.sd.table, aes(x = LL_sd, y = GRP_sd)) + 
+  geom_point(color = &quot;darkgrey&quot;) + 
+  geom_point(data= subset(mean.sd.table, trait==&quot;Height_03&quot;) , aes(x = LL_sd, y = GRP_sd), color = &quot;red&quot;) +
+  geom_text(data = subset(mean.sd.table, trait==&quot;Height_03&quot;) , aes(label  = &quot;height&quot;), color = &quot;#2F6EBA&quot;, size = 6, vjust = -1) + 
+  geom_abline(intercept = 0, slope = 1) +
+  theme_bw() + xlab(&quot;Lifelines: SD PGS (raw)&quot;) + ylab(&quot;HSU: DS PGS (raw)&quot;)</code></pre>
+<pre class="r"><code>ggarrange(f.mean, f.sd, ncol=2)</code></pre>
+<p><img src="7_Benchmarking_files/figure-html/unnamed-chunk-6-1.png" width="768" /></p>
+</div>
+<div id="benchmark-ceph-data-with-ll" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> benchmark CEPH data
+with LL</h1>
+<div id="calculate-ranking-of-control-samples" class="section level2"
+number="4.1">
+<h2><span class="header-section-number">4.1</span> calculate ranking of
+control samples</h2>
+<pre class="r"><code>## input standardized LL data
+ll.prs.bench.norm = read.csv(&quot;Data/LL/LifeLines1_Eur_140_traits_GCTB_PRS_self_standardized.csv&quot;, row.names = 1)
+ll.prs.bench.norm = ll.prs.bench.norm[,colnames(ll.prs.bench.norm)%in%included_traits]
+# Convert to data.tables
+ll.prs.bench.norm &lt;- as.data.table(ll.prs.bench.norm)
+# Pre-sort all benchmark traits
+bench_sorted &lt;- ll.prs.bench.norm[, lapply(.SD, sort)]
+
+## inpute standardized control data
+control.prs1 = read.csv(&quot;Data/LL_standardized_PGS_of_CEPH_samples.csv&quot;, row.names = 1)
+melted.control.prs1 = reshape2::melt(control.prs1, 
+                          id.vars =colnames(control.prs1)[1:11], 
+                          measure.vars = colnames(control.prs1)[colnames(control.prs1)%in%included_traits])
+melted.control.prs1 &lt;- as.data.table(melted.control.prs1)</code></pre>
+<p>Here we define the ranking as how many percent of benchmarking sample
+have lower value than the tested control sample.</p>
+<pre class="r"><code># Create a vectorized ranking function
+get_rank &lt;- function(trait, value) {
+  vec &lt;- bench_sorted[[trait]]
+  return(findInterval(value, vec) / length(vec))
+}
+
+# Apply vectorized across rows
+melted.control.prs1[, ranking_in_LL := mapply(get_rank, as.character(variable), as.numeric(value))]
+# melted.control.prs1[, ranking_in_LL := round(ranking_in_LL, 3)]</code></pre>
+</div>
+</div>
+<div id="benchmark-ceph-data-with-hsu-collection" class="section level1"
+number="5">
+<h1><span class="header-section-number">5</span> benchmark CEPH data
+with HSU collection</h1>
+<pre class="r"><code>## input benchmark data
+grp.prs.bench.norm = read.csv(&quot;Data/GRP//Merged_Standardized_GCTB_PGS_of_benchmarking_samples_in_GRP.csv&quot;)
+grp.prs.bench.norm = cbind(grp.prs.bench.norm[,1:8], grp.prs.bench.norm[,colnames(grp.prs.bench.norm)%in%included_traits])
+# Convert to data.tables
+grp.prs.bench.norm &lt;- as.data.table(grp.prs.bench.norm)
+# Pre-sort all benchmark traits
+bench_sorted &lt;- grp.prs.bench.norm[, lapply(.SD, sort)]
+
+## input CEPH control data
+control.prs2 = read.csv(&quot;Data/GRP_standardized_PGS_of_CEPH_samples.csv&quot;,row.names = 1)
+
+melted.control.prs2 = reshape2::melt(control.prs2, 
+                          id.vars =colnames(control.prs2)[1:11], 
+                          measure.vars = colnames(control.prs2)[colnames(control.prs2)%in%included_traits])
+# Convert to data.tables
+melted.control.prs2 &lt;- as.data.table(melted.control.prs2)</code></pre>
+<p>The ranking is calculated as how many percent of benchmarking sample
+have lower value than the tested control sample.</p>
+<pre class="r"><code># Create a vectorized ranking function
+get_rank &lt;- function(trait, value) {
+  vec &lt;- bench_sorted[[trait]]
+  return(findInterval(value, vec) / length(vec))
+}
+
+# Apply vectorized across rows
+melted.control.prs2[, ranking_in_GRP := mapply(get_rank, as.character(variable), as.numeric(value))]
+# melted.control.prs1[, ranking_in_LL := round(ranking_in_LL, 3)]</code></pre>
+</div>
+<div id="benchmark-ceph-data-with-ll-subset" class="section level1"
+number="6">
+<h1><span class="header-section-number">6</span> benchmark CEPH data
+with LL subset</h1>
+<p>The two cohorts used as benchmark samples are very different in
+sample size. Here we randomly took the same number of samples from
+Lifeline cohort as many as in HSU sample collection.</p>
+<div id="subset-raw-ll-data-and-standardize" class="section level2"
+number="6.1">
+<h2><span class="header-section-number">6.1</span> subset raw LL data
+and standardize</h2>
+<pre class="r"><code>## input raw
+ll.raw = read.csv(&quot;Data/LL/UGLI1_all_141_traits_GCTB_PRS.csv&quot;, row.names = 1)
+## select Europeans
+ll.eur = read.table(&quot;Data/LL/UGLI0-3_Europeans_n111570_ID_JS.txt&quot;, header = T)
+ll.raw = ll.raw[(ll.raw$V2) %in% ll.eur$IID,] 
+ll.raw = ll.raw[,-c(1:3)]
+
+## subset
+set.seed(555)
+sampling.list = sample(1:nrow(ll.raw), nrow(grp.prs.bench.norm))
+ll.raw.subset = ll.raw[sampling.list,]
+
+## get mean and sd
+
+cross.mean = apply(ll.raw.subset, 2,  mean)
+cross.sd =   apply(ll.raw.subset, 2,  sd)
+
+mean.sd.table.llsubset = data.frame(
+   trait = colnames(ll.raw.subset),
+   mean = cross.mean,
+   sd = cross.sd)
+
+## self standardize
+ll.subset.norm= sweep(sweep (sapply (ll.raw.subset, as.numeric), 2, cross.mean),  2, cross.sd, FUN = &#39;/&#39;)
+ll.subset.norm = as.data.frame(ll.subset.norm)
+row.names(ll.subset.norm) = row.names(ll.raw.subset)</code></pre>
+</div>
+<div id="input-raw-control-and-standardize" class="section level2"
+number="6.2">
+<h2><span class="header-section-number">6.2</span> input raw control and
+standardize</h2>
+<pre class="r"><code>raw.control.prs = read.csv(&quot;Data/raw_PGS_of_CEPH_samples.csv&quot;)
+raw.control.prs.info = raw.control.prs[,1:11]
+raw.control.prs.number = raw.control.prs[,match(included_traits, colnames(raw.control.prs))]
+mean.sd.table.llsubset = mean.sd.table.llsubset[match(included_traits, mean.sd.table.llsubset$trait),]
+std.control.prs.number =  sweep(sweep (  sapply (raw.control.prs.number,  as.numeric  ), 2, mean.sd.table.llsubset$mean),  2, mean.sd.table.llsubset$sd, FUN = &#39;/&#39;)
+
+control.prs3 = cbind(raw.control.prs.info,std.control.prs.number)
+
+melted.control.prs3 = reshape2::melt(control.prs3, 
+                          id.vars =colnames(control.prs3)[1:11], 
+                          measure.vars = colnames(control.prs3)[colnames(control.prs3)%in%included_traits])</code></pre>
+</div>
+<div id="calculate-ranking-of-control-samples-1" class="section level2"
+number="6.3">
+<h2><span class="header-section-number">6.3</span> calculate ranking of
+control samples</h2>
+<p>Here we define the ranking as how many percent of benchmarking sample
+have lower value than the tested control sample.</p>
+<pre class="r"><code># Convert to data.tables
+ll.subset.norm &lt;- as.data.table(ll.subset.norm)
+melted.control.prs3 &lt;- as.data.table(melted.control.prs3)
+
+# Pre-sort all benchmark traits
+bench_sorted &lt;- ll.subset.norm[, lapply(.SD, sort)]
+
+# Create a vectorized ranking function
+get_rank &lt;- function(trait, value) {
+  vec &lt;- bench_sorted[[trait]]
+  return(findInterval(value, vec) / length(vec))
+}
+
+# Apply vectorized across rows
+melted.control.prs3[, ranking_in_LLsubset := mapply(get_rank, as.character(variable), as.numeric(value))]
+# melted.control.prs1[, ranking_in_LL := round(ranking_in_LL, 3)]</code></pre>
+</div>
+</div>
+<div id="summarize-the-ranking-of-height" class="section level1"
+number="7">
+<h1><span class="header-section-number">7</span> summarize the ranking
+of height</h1>
+<div id="rank-of-height-pgs" class="section level2" number="7.1">
+<h2><span class="header-section-number">7.1</span> rank of height
+PGS</h2>
+<pre class="r"><code>height_ranking =  melted.control.prs1 %&gt;%   
+  filter(variable ==&quot;Height_03&quot;)  %&gt;%
+  filter(Study_ID %in% c(&quot;NA06997&quot;,&quot;NA07029&quot;, &quot;NA10861&quot;))
+height_ranking_wgs = height_ranking %&gt;% filter(imputation_panel == &quot;None&quot;)
+height_ranking$wgs_ranking = height_ranking_wgs[match(height_ranking$Study_ID,height_ranking_wgs$Study_ID ), &quot;ranking_in_LL&quot;]
+height_ranking$error = abs(height_ranking$wgs_ranking - height_ranking$ranking_in_LL)
+
+ranking.summary = height_ranking %&gt;% 
+  filter(imputation_panel !=&quot;TopMedr3&quot;) %&gt;%
+  group_by(Study_ID, Chip) %&gt;% 
+  summarize(
+        count = n(),
+    meanranking_in_LL = round(mean(ranking_in_LL, na.rm = TRUE)*100 ,3),
+    sdranking_in_LL   = round(sd(ranking_in_LL, na.rm = TRUE)*100   ,3),
+    minranking_in_LL  = round(min(ranking_in_LL, na.rm = TRUE)*100  ,3),
+    maxranking_in_LL  = round(max(ranking_in_LL, na.rm = TRUE)*100  ,3),
+    mean_ranking_error = round(mean(error)*100  ,2),
+    range = maxranking_in_LL - minranking_in_LL
+) %&gt;% arrange(Study_ID, -count)
+
+ranking.summary
+#write.csv(ranking.summary, &quot;Tables/SupTable4_summary_ranking_height_updated_with_UGLI1.csv&quot;)</code></pre>
+</div>
+<div id="rank-na06997-height-pgs-with-different-benchmarking-data"
+class="section level2" number="7.2">
+<h2><span class="header-section-number">7.2</span> rank NA06997 height
+PGS with different benchmarking data</h2>
+<pre class="r"><code>ll.prs = ll.raw
+grp.prs = read.csv(&quot;Data/GRP/Merged_raw_GCTB_PGS_of_benchmarking_samples_in_GRP.csv&quot;)
+ll.raw.subset = data.frame(ll.raw.subset)
+
+raw.NA06997.height = round(raw.control.prs[which(raw.control.prs$Study_ID == &quot;NA06997&quot; &amp; raw.control.prs$Chip ==&quot;WGS&quot;) , &quot;Height_03&quot;], 2)
+
+ll.NA06997.height = round(control.prs1[which(control.prs1$Study_ID ==&quot;NA06997&quot; &amp; control.prs1$Chip ==&quot;WGS&quot;),  &quot;Height_03&quot;], 2)
+grp.NA06997.height = round(control.prs2[which(control.prs2$Study_ID ==&quot;NA06997&quot; &amp; control.prs2$Chip ==&quot;WGS&quot;),  &quot;Height_03&quot;], 2)
+llsubset.NA06997.height = round(control.prs3[which(control.prs3$Study_ID ==&quot;NA06997&quot; &amp; control.prs3$Chip ==&quot;WGS&quot;),  &quot;Height_03&quot;], 2)
+
+ll.NA06997.height.rank = round(nrow(ll.prs[which(ll.prs$Height_03 &lt; raw.NA06997.height ),]) / nrow(ll.prs)  *100, 0)
+grp.NA06997.height.rank = round(nrow(grp.prs[which(grp.prs$Height_03 &lt; raw.NA06997.height ),]) / nrow(grp.prs)  *100, 0)
+llsubset.NA06997.height.rank = round(nrow(ll.raw.subset[which(ll.raw.subset$Height_03 &lt; raw.NA06997.height ),]) / nrow(ll.raw.subset)  *100, 0)
+
+itrait=&quot;Height_03&quot;
+  
+xlim.left = min(c(ll.prs[,itrait],  grp.prs[,itrait]))
+xlim.right = max(c(ll.prs[,itrait],  grp.prs[,itrait]))
+trait.name = predictor.list[which(predictor.list$Predictor == itrait) ,&quot;Label&quot;]</code></pre>
+<div id="with-lifelines-data" class="section level3" number="7.2.1">
+<h3><span class="header-section-number">7.2.1</span> with Lifelines
+data</h3>
+<pre class="r"><code>label.in.ll = paste0(&quot;NA06997: &quot;, ll.NA06997.height,&quot; SD unit\n&quot;, &quot;%tile rank: &quot;,ll.NA06997.height.rank )
+
+plot.ll = ggplot(data = ll.prs, aes(!!sym(itrait))) +
+  geom_histogram(bins = 480) + 
+  xlim(xlim.left,xlim.right) +  
+  geom_vline(aes(xintercept = mean(ll.prs[,itrait])), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  geom_vline(aes(xintercept = raw.NA06997.height), color = &quot;#2F6EBA&quot;,  size = 1) +
+  theme_bw() +  ylab(&quot;&quot;) + xlab(&quot;&quot;)+  
+  scale_y_continuous(labels = NULL, breaks = NULL) + 
+  ggtitle(&quot;Lifelines, N = 36237&quot;) +
+  annotate(&quot;text&quot;, x = -1.6, y =230, label = label.in.ll, size =4, hjust = 0, color = &quot;#2F6EBA&quot;)</code></pre>
+</div>
+</div>
+<div id="with-lifelines-subset-data" class="section level2"
+number="7.3">
+<h2><span class="header-section-number">7.3</span> with Lifelines subset
+data</h2>
+<pre class="r"><code>label.in.llsubset = paste0(&quot;NA06997:&quot;, llsubset.NA06997.height,&quot; SD unit\n&quot;, &quot;%tile rank: &quot;, llsubset.NA06997.height.rank )
+
+plot.llsubset = ggplot(data = ll.raw.subset, aes(!!sym(itrait))) +
+  geom_histogram(bins = 80) +  
+  xlim(xlim.left,xlim.right) +  
+  geom_vline(aes(xintercept = mean(ll.raw.subset[,itrait])), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  geom_vline(aes(xintercept = raw.NA06997.height), color = &quot;#2F6EBA&quot;,  size = 1) +
+  theme_bw() +  ylab(&quot;&quot;) + xlab(&quot;&quot;)  +
+  scale_y_continuous(labels = NULL, breaks = NULL) + 
+  ggtitle(&quot;Lifelines subset, N = 6587&quot;)+
+  annotate(&quot;text&quot;, x = -1.6, y =250, label = label.in.llsubset, size =4, hjust = 0, color = &quot;#2F6EBA&quot;)</code></pre>
+</div>
+<div id="with-hsu-collected-data" class="section level2" number="7.4">
+<h2><span class="header-section-number">7.4</span> with HSU collected
+data</h2>
+<pre class="r"><code>label.in.hsu = paste0(&quot;NA06997:&quot;, grp.NA06997.height,&quot; SD unit\n&quot;, &quot;%tile rank: &quot;, grp.NA06997.height.rank )
+
+plot.hsu = ggplot(data = grp.prs, aes(!!sym(itrait))) +
+  geom_histogram(bins = 80) +   
+  xlim(xlim.left,xlim.right) +  
+  geom_vline(aes(xintercept = mean(grp.prs[,itrait])), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  geom_vline(aes(xintercept = raw.NA06997.height), color = &quot;#2F6EBA&quot;,  size = 1) +
+  theme_bw() +  ylab(&quot;&quot;) + xlab(&quot;PGS (raw)&quot;)+
+scale_y_continuous(labels = NULL, breaks = NULL) + 
+  ggtitle((&quot;HSU, N = 6587&quot;)) +
+  annotate(&quot;text&quot;, x = -1.6, y =250, label = label.in.hsu, size =4, hjust = 0, color = &quot;#2F6EBA&quot;)</code></pre>
+</div>
+<div id="combine-the-plots" class="section level2" number="7.5">
+<h2><span class="header-section-number">7.5</span> combine the
+plots</h2>
+<pre class="r"><code>height.hist = ggarrange(plot.ll, plot.llsubset, plot.hsu, nrow = 3)+
+      theme(plot.margin = margin(t = 20, r = 5, b = 0, l = 5)) 
+height.hist</code></pre>
+</div>
+</div>
+<div id="make-figure-4" class="section level1" number="8">
+<h1><span class="header-section-number">8</span> make figure 4</h1>
+<p>The plots are arranged together into Figure 4.</p>
+<pre class="r"><code>library(cowplot)
+# Stack f.mean and f.sd vertically, label them A and B
+left_col &lt;- plot_grid(
+  f.mean, f.sd,
+  ncol = 1,
+  labels = c(&quot;A&quot;, &quot;B&quot;),
+  label_size = 14,
+  label_fontface = &quot;bold&quot;
+)
+
+# Combine left column with height.hist labeled C
+final_plot &lt;- plot_grid(
+  left_col,
+  plot_grid(height.hist, labels = &quot;C&quot;, label_size = 14, label_fontface = &quot;bold&quot;),
+  ncol = 2,
+  rel_widths = c(1, 1.5)
+)
+
+# Show the full plot
+print(final_plot)
+ggsave(final_plot, filename = &quot;Figures/Fig4_scoring_with_Lifelines_vs_HSU_for_height_updated_with_UGLI1.jpeg&quot;, height = 8, width = 10)</code></pre>
+<p><img
+src="Figures/Fig4_scoring_with_Lifelines_vs_HSU_for_height_updated_with_UGLI1.jpeg" /></p>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("show" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

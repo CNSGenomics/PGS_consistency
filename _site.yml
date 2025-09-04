@@ -15,6 +15,8 @@ navbar:
       href: 3_WGS.html
     - text: "lcWGS data"
       href: 4_LowPassSeq.html
+    - text: "Benchmarking"
+      href: 7_Benchmarking.html
 
 
 output:

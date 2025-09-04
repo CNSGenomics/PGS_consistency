@@ -346,15 +346,6 @@ div.tocify {
   <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
 <li>
-  <a href="5_Consistency.html">Consistency</a>
-</li>
-<li>
-  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
-</li>
-<li>
-  <a href="6_MissingSNP.html">Missingness</a>
-</li>
-<li>
   <a href="7_Benchmarking.html">Benchmarking</a>
 </li>
       </ul>
@@ -863,6 +854,39 @@ than 0.05, the rerun correlation will turn out low.</p>
 heritability and rerun correlation.</p>
 <p><img src="Figures/fig_cor_rerun0_rerun1_vs_hsq.jpeg" /></p>
 <pre class="r"><code>predictors_extended$selected = !(predictors_extended$Predictor %in% excluded.traits$variable | predictors_extended$Life_Risk_based_h2_in_liability_scale &lt; 0.05)</code></pre>
+</div>
+<div id="heritability-and-variance-explained" class="section level1"
+number="4">
+<h1><span class="header-section-number">4</span> Heritability and
+Variance explained</h1>
+<p>Both heritability and variance explained by each SNP are estimated in
+SBayesRC. The sum of variance explained by each SNP is equivallent to
+the heritability in observed scale.</p>
+<pre class="r"><code>predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
+
+predictor.list$gap1 = predictor.list$total.variance - predictor.list$Life_Risk_based_h2_in_liability_scale
+
+hsq.vs.var1 = ggplot(data =predictor.list, 
+                    aes(x = Life_Risk_based_h2_in_liability_scale, y = total.variance)) + 
+  geom_point() + 
+  geom_point(data = subset(predictor.list, abs(gap1 ) &gt; 0.1),aes(x = Life_Risk_based_h2_in_liability_scale, y = total.variance), color = &quot;red&quot; ) + 
+  geom_abline(intercept = 0, slope =1) +
+  geom_text_repel(data = subset(predictor.list, abs(gap1 ) &gt; 0.1) , aes(label  = Label), color = &quot;blue&quot;) + 
+  theme_bw() + xlab(&quot;Liability scale heritability&quot;) + ylab(&quot;Variance captured by SNPs&quot;)</code></pre>
+<pre class="r"><code>predictor.list$gap2 = predictor.list$total.variance - predictor.list$SBayesRC_hsq
+
+hsq.vs.var2 = ggplot(data =predictor.list, 
+                    aes(x = SBayesRC_hsq, y = total.variance)) + 
+  geom_point() + 
+  geom_point(data = subset(predictor.list, abs(gap2 ) &gt; 0.05),aes(x = SBayesRC_hsq, y = total.variance), color = &quot;red&quot; ) + 
+  geom_abline(intercept = 0, slope =1) +
+  geom_text_repel(data = subset(predictor.list, abs(gap2 ) &gt; 0.05) , aes(label  = Label), color = &quot;blue&quot;) + 
+  theme_bw() + xlab(&quot;Observed scale heritability&quot;) + ylab(&quot;Variance captured by SNPs&quot;)
+
+hsq.vs.var = ggarrange(hsq.vs.var1, hsq.vs.var2, nrow = 1, labels = c(&quot;A&quot;,&quot;B&quot;))
+ggsave( &quot;Figures/SupFig2_VarianceCaptured_vs_hsq.jpeg&quot;, hsq.vs.var, height = 6, width = 12)
+hsq.vs.var</code></pre>
+<p><img src="Figures/SupFig2_VarianceCaptured_vs_hsq.jpeg" /></p>
 </div>
 
 

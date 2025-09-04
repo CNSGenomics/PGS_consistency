@@ -610,6 +610,49 @@ ugli1.mean$trait = gsub("met.d.", "met-d-", ugli1.mean$trait)
 merged.predictor.info$meanPGS_in_BM = ugli1.mean[match(merged.predictor.info$Predictor, ugli1.mean$trait),"mean"]
 merged.predictor.info$sdPGS_in_BM = ugli1.mean[match(merged.predictor.info$Predictor, ugli1.mean$trait),"sd"]
 
-write.csv(merged.predictor.info,"Tables/SupTable2_Predictors_20250624.csv", row.names = F )
+write.csv(merged.predictor.info,"Tables/SupTable2_Predictors.csv", row.names = F )
 
 ```
+
+# Heritability and Variance explained
+
+Both heritability and variance explained by each SNP are estimated in SBayesRC. The sum of variance explained by each SNP is equivallent to the heritability in observed scale. 
+
+```{r, fig.height= 8, fig.width=8, eval =F}
+
+predictor.list = read.csv("Tables/SupTable2_Predictors.csv")
+
+predictor.list$gap1 = predictor.list$total.variance - predictor.list$Life_Risk_based_h2_in_liability_scale
+
+hsq.vs.var1 = ggplot(data =predictor.list, 
+                    aes(x = Life_Risk_based_h2_in_liability_scale, y = total.variance)) + 
+  geom_point() + 
+  geom_point(data = subset(predictor.list, abs(gap1 ) > 0.1),aes(x = Life_Risk_based_h2_in_liability_scale, y = total.variance), color = "red" ) + 
+  geom_abline(intercept = 0, slope =1) +
+  geom_text_repel(data = subset(predictor.list, abs(gap1 ) > 0.1) , aes(label  = Label), color = "blue") + 
+  theme_bw() + xlab("Liability scale heritability") + ylab("Variance captured by SNPs")
+
+```
+
+
+
+```{r, fig.height= 6, fig.width=12, eval =F}
+
+predictor.list$gap2 = predictor.list$total.variance - predictor.list$SBayesRC_hsq
+
+hsq.vs.var2 = ggplot(data =predictor.list, 
+                    aes(x = SBayesRC_hsq, y = total.variance)) + 
+  geom_point() + 
+  geom_point(data = subset(predictor.list, abs(gap2 ) > 0.05),aes(x = SBayesRC_hsq, y = total.variance), color = "red" ) + 
+  geom_abline(intercept = 0, slope =1) +
+  geom_text_repel(data = subset(predictor.list, abs(gap2 ) > 0.05) , aes(label  = Label), color = "blue") + 
+  theme_bw() + xlab("Observed scale heritability") + ylab("Variance captured by SNPs")
+
+hsq.vs.var = ggarrange(hsq.vs.var1, hsq.vs.var2, nrow = 1, labels = c("A","B"))
+ggsave( "Figures/SupFig2_VarianceCaptured_vs_hsq.jpeg", hsq.vs.var, height = 6, width = 12)
+hsq.vs.var
+```
+
+
+
+![](Figures/SupFig2_VarianceCaptured_vs_hsq.jpeg)
