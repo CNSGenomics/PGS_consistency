@@ -28,3 +28,5 @@ To address this, we accessed genome-wide data generated on two CEPH control samp
 PGS were generated for each copy of the genome-wide data using the state-of-the-art method SBayesRC derived from genome-wide association data for 115 traits.  SBayesRC generates SNP weights for 7million SNPs with a default LD reference data; for a handful of traits the GWAS data available were sparse and so SNP weights for  only 1 million SNPs were generated for PGS calculation.
 
 Our results provide an empirical demonstration of minimal differences in PGS across genotyping batches and technical platforms particularly for the highly polygenic traits. For the small number of traits with very large effect SNPs, PGS are significantly impacted when the high effect SNPs are missed or incorrectly read. Our results provide the empirical support validating that PGS are subject to very little technical variability.
+
+This website is still in updating.
