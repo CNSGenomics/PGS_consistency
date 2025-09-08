@@ -29,6 +29,8 @@ We have developed an in-house pipeline for processing the raw plink data all the
 
 # Pre-imputation processing
 
+We used the tool [qsubshcom](https://github.com/zhilizheng/qsubshcom) to pipeline the steps and customized for our server. The detailed steps and parameters are explained here. 
+
 ## convert to binary format
 
 We usually transfer the data to binary format to save space and accelerate calculation speed.  

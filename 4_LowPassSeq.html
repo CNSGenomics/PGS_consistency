@@ -345,6 +345,9 @@ div.tocify {
 <li>
   <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
+<li>
+  <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -826,26 +829,24 @@ result = data.frame(result)
 result$Trait = predictor.list[match(result$variable, predictor.list$Predictor),&quot;Label&quot;]
 result$cor = paste0(&quot;cor=&quot;, round(result$correlation, 2) )
 result %&gt;% filter(correlation &lt; 0.95) %&gt;% arrange((correlation))</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["variable"],"name":[1],"type":["fct"],"align":["left"]},{"label":["correlation"],"name":[2],"type":["dbl"],"align":["right"]},{"label":["Trait"],"name":[3],"type":["chr"],"align":["left"]},{"label":["cor"],"name":[4],"type":["chr"],"align":["left"]}],"data":[{"1":"C4_01","2":"0.3673743","3":"Complement Component 4","4":"cor=0.37"},{"1":"CeliacDisease_01","2":"0.7931693","3":"Celiac disease","4":"cor=0.79"},{"1":"PBC_01","2":"0.8986654","3":"Primary biliary cirrhosis","4":"cor=0.9"},{"1":"C3_01","2":"0.9082594","3":"Complement Component 3","4":"cor=0.91"},{"1":"UKB_PPP_2022_TNF","2":"0.9117453","3":"TNF-alpha","4":"cor=0.91"},{"1":"UKB_PPP_2022_IL10","2":"0.9239051","3":"IL-10","4":"cor=0.92"},{"1":"SLE_01","2":"0.9314831","3":"Systemic lupus erythematosus","4":"cor=0.93"},{"1":"UKB_PPP_2022_IL15","2":"0.9343848","3":"IL-15","4":"cor=0.93"},{"1":"UKB_35BM_2021_Non_albumin_protein","2":"0.9456492","3":"Non-albumin protein","4":"cor=0.95"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>hist(result$correlation)</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
-<p>mean is 0.9709689</p>
-<p>SD is 0.062162</p>
+<pre class="r"><code>g.hist.cor.t = ggplot(data = result, aes(x = correlation)) + geom_histogram()
+ggsave( &quot;Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_traits.png&quot;, g.hist.cor.t, width = 8, height = 6)</code></pre>
+<p>mean is 0.97.</p>
+<p>SD is 0.06.</p>
+<p><img
+src="Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_traits.png" /></p>
 </div>
 <div id="across-samples" class="section level3" number="6.2.5">
 <h3><span class="header-section-number">6.2.5</span> across samples</h3>
 <pre class="r"><code>result.c.samples &lt;- melted.SALSA %&gt;%
   group_by(IID) %&gt;%
   summarise(correlation = cor(LPS, GSAv2))
-summary(result.c.samples$correlation)</code></pre>
-<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##  0.9350  0.9648  0.9733  0.9697  0.9782  0.9879</code></pre>
-<pre class="r"><code>hist(result.c.samples$correlation)</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+result.c.samples = data.frame(result.c.samples)
+
+g.hist.cor.s = ggplot(data = result.c.samples, aes(x = correlation)) + geom_histogram()
+ggsave( &quot;Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_samples.png&quot;, g.hist.cor.s, width = 8, height = 6)</code></pre>
+<p><img
+src="Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_samples.png" /></p>
 </div>
 </div>
 <div id="plot" class="section level2" number="6.3">
@@ -867,11 +868,10 @@ theme(
     strip.background = element_blank()
   ) +
   geom_text(data = result[result$variable %in% traits_binary,],aes(x = -1.5, y = 2, label = cor) )
-nbm.plot</code></pre>
-<pre><code>## Warning: Removed 81 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-20-1.png" width="1152" /></p>
-<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_binary_traits.jpeg&quot; , width = 12, height = 13)</code></pre>
+nbm.plot
+
+#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_binary_traits.jpeg&quot; , width = 12, height = 13)</code></pre>
+<p><img src="Figures/SupFig2_lcWGS_vs_GSAvs_binary_traits.jpeg" /></p>
 </div>
 <div id="quantitative" class="section level3" number="6.3.2">
 <h3><span class="header-section-number">6.3.2</span> quantitative</h3>
@@ -890,11 +890,11 @@ theme(
     strip.background = element_blank()
   ) +
   geom_text(data = result[result$variable %in% traits_quanti,],aes(x = -1.5, y = 2, label = cor) )
-nbm.plot</code></pre>
-<pre><code>## Warning: Removed 52 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-21-1.png" width="1152" /></p>
-<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_quantitative_traits.jpeg&quot; , width = 12, height = 9)</code></pre>
+nbm.plot
+
+#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_quantitative_traits.jpeg&quot; , width = 12, height = 9)</code></pre>
+<p><img
+src="Figures/SupFig2_lcWGS_vs_GSAvs_quantitative_traits.jpeg" /></p>
 </div>
 <div id="biomarker" class="section level3" number="6.3.3">
 <h3><span class="header-section-number">6.3.3</span> Biomarker</h3>
@@ -913,11 +913,10 @@ theme(
     strip.background = element_blank()
   ) +
   geom_text(data = result[result$variable %in% traits_35bm,],aes(x = -1.5, y = 2, label = cor) )
-nbm.plot</code></pre>
-<pre><code>## Warning: Removed 72 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-22-1.png" width="1152" /></p>
-<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_35BM.jpeg&quot; , width = 12, height = 13)</code></pre>
+nbm.plot
+
+#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_35BM.jpeg&quot; , width = 12, height = 13)</code></pre>
+<p><img src="Figures/SupFig2_lcWGS_vs_GSAvs_35BM.jpeg" /></p>
 </div>
 <div id="fatty-acid" class="section level3" number="6.3.4">
 <h3><span class="header-section-number">6.3.4</span> fatty acid</h3>
@@ -936,11 +935,11 @@ theme(
     strip.background = element_blank()
   ) +
   geom_text(data = result[result$variable %in% traits_fa,],aes(x = -1.5, y = 2, label = cor) )
-nbm.plot</code></pre>
-<pre><code>## Warning: Removed 37 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-23-1.png" width="1152" /></p>
-<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_FattyAcid_traits.jpeg&quot; , width = 12, height = 6.5)</code></pre>
+nbm.plot
+
+#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_FattyAcid_traits.jpeg&quot; , width = 12, height = 6.5)</code></pre>
+<p><img
+src="Figures/SupFig2_lcWGS_vs_GSAvs_FattyAcid_traits.jpeg" /></p>
 </div>
 <div id="ppp" class="section level3" number="6.3.5">
 <h3><span class="header-section-number">6.3.5</span> PPP</h3>
@@ -959,11 +958,10 @@ theme(
     strip.background = element_blank()
   ) +
   geom_text(data = result[result$variable %in% traits_ppp,],aes(x = -1.5, y = 2, label = cor) )
-nbm.plot</code></pre>
-<pre><code>## Warning: Removed 21 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-24-1.png" width="1152" /></p>
-<pre class="r"><code>#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_PPP.jpeg&quot; , width = 12, height = 4.5)</code></pre>
+nbm.plot
+
+#ggsave(plot = nbm.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_PPP.jpeg&quot; , width = 12, height = 4.5)</code></pre>
+<p><img src="Figures/SupFig2_lcWGS_vs_GSAvs_PPP.jpeg" /></p>
 </div>
 <div id="per-person-plot" class="section level3" number="6.3.6">
 <h3><span class="header-section-number">6.3.6</span> per person
@@ -983,11 +981,10 @@ theme(
     strip.background = element_blank()
   ) 
 
-person.plot</code></pre>
-<pre><code>## Warning: Removed 33 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-25-1.png" width="1152" /></p>
-<pre class="r"><code>#ggsave(plot = person.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_per_person.jpeg&quot; , width = 12, height = 16)</code></pre>
+person.plot
+
+#ggsave(plot = person.plot,filename =  &quot;Figures/SupFig2_lcWGS_vs_GSAvs_per_person.jpeg&quot; , width = 12, height = 16)</code></pre>
+<p><img src="Figures/SupFig2_lcWGS_vs_GSAvs_per_person.jpeg" /></p>
 </div>
 </div>
 </div>
@@ -996,13 +993,14 @@ person.plot</code></pre>
 outliers</h1>
 <pre class="r"><code>result = data.frame(result)
 
-ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correlation &lt; 0.95), &quot;variable&quot;],], aes(x = GSAv2, y = LPS)) + 
+g.outliers = ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correlation &lt; 0.9), &quot;variable&quot;],], aes(x = GSAv2, y = LPS)) + 
   geom_point(size = 0.1) + 
   facet_wrap(~variable, ncol = 4) + 
-  xlim(-3,3) + ylim(-3,3)</code></pre>
-<pre><code>## Warning: Removed 2 rows containing missing values or values outside the scale range
-## (`geom_point()`).</code></pre>
-<p><img src="4_LowPassSeq_files/figure-html/unnamed-chunk-26-1.png" width="1152" /></p>
+  xlim(-3,3) + ylim(-3,3)
+
+ggsave(&quot;Figures/outlier_traits_correlation_between_lcWGS_vs_GSA.jpeg&quot;, g.outliers, width = 12, height = 4)</code></pre>
+<p><img
+src="Figures/outlier_traits_correlation_between_lcWGS_vs_GSA.jpeg" /></p>
 </div>
 <div id="pgs-correlation-without-mhc-region" class="section level1"
 number="8">

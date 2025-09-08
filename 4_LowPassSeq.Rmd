@@ -481,7 +481,7 @@ ggsave("Figures/Ancestry_of_samples_in_LPS&GSAv2.png", width = 8, height = 6)
 
 ### standardize the two data
 
-```{r}
+```{r, eval = F}
 
 library(reshape2)
 
@@ -507,7 +507,7 @@ melted.lps.prs.norm = reshape2::melt(lps.prs.norm, id.vars = "IID" )
 melted.lps.prs.norm$value = as.numeric(melted.lps.prs.norm$value)
 ```
 
-```{r}
+```{r, eval = F}
 ## input inhouse imputed GSA data
 mnd.b3.bcc = read.csv("Data/LowPass/MND_B3_BCC_GSA_all_141_traits_GCTB_PRS.csv", row.names = 1)
 
@@ -537,7 +537,7 @@ melted.mnd.b3.bcc.norm$value = as.numeric(melted.mnd.b3.bcc.norm$value)
 
 ### select traits
 
-```{r}
+```{r, eval = F}
 predictor.list = read.csv("Tables/SupTable2_Predictors.csv")
 included_traits = predictor.list$Predictor
 ## grouping traits
@@ -554,7 +554,7 @@ melted.lps.prs.norm = melted.lps.prs.norm[melted.lps.prs.norm$variable %in% incl
 
 ### merge the two data
 
-```{r}
+```{r, eval = F}
 
 colnames(melted.mnd.b3.bcc.norm)[3] = "GSAv2"
 colnames(melted.lps.prs.norm)[3] = "LPS"
@@ -574,7 +574,7 @@ melted.SALSA = na.omit(melted.both)
 ### compare across traits
 
 
-```{r}
+```{r, eval = F}
 result <- melted.SALSA %>%
   group_by(variable) %>%
   summarise(correlation = cor(LPS, GSAv2, use = "complete.obs"), .groups = "drop")
@@ -585,37 +585,44 @@ result %>% filter(correlation < 0.95) %>% arrange((correlation))
 ```
 
 
-```{r}
-hist(result$correlation)
+```{r, eval = F}
+
+g.hist.cor.t = ggplot(data = result, aes(x = correlation)) + geom_histogram()
+ggsave( "Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_traits.png", g.hist.cor.t, width = 8, height = 6)
+
 ```
 
 
-mean is `r mean(result$correlation)`
+mean is 0.97.
 
-SD is `r sd(result$correlation)`
+SD is 0.06.
 
+![](Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_traits.png)
 
 
 
 ### across samples
 
 
-```{r}
+```{r, eval = F}
 result.c.samples <- melted.SALSA %>%
   group_by(IID) %>%
   summarise(correlation = cor(LPS, GSAv2))
-summary(result.c.samples$correlation)
+result.c.samples = data.frame(result.c.samples)
 
-hist(result.c.samples$correlation)
+g.hist.cor.s = ggplot(data = result.c.samples, aes(x = correlation)) + geom_histogram()
+ggsave( "Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_samples.png", g.hist.cor.s, width = 8, height = 6)
+
 ```
 
+![](Figures/histogram_of_correlation_between_lcWGS_vs_GSA_across_samples.png)
 
 
 ## plot
 
 ### binary
 
-```{r, fig.height=13, fig.width=12}
+```{r, fig.height=13, fig.width=12, eval = F}
 
 nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_binary,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
@@ -638,9 +645,11 @@ nbm.plot
 
 ```
 
+![](Figures/SupFig2_lcWGS_vs_GSAvs_binary_traits.jpeg)
+
 ### quantitative
 
-```{r, fig.height=12, fig.width=12}
+```{r, fig.height=12, fig.width=12, eval = F}
 
 nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_quanti,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
@@ -663,9 +672,12 @@ nbm.plot
 
 ```
 
+![](Figures/SupFig2_lcWGS_vs_GSAvs_quantitative_traits.jpeg)
+
+
 ### Biomarker
 
-```{r, fig.height=13, fig.width=12}
+```{r, fig.height=13, fig.width=12, eval = F}
 
 nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_35bm,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
@@ -688,10 +700,11 @@ nbm.plot
 
 ```
 
+![](Figures/SupFig2_lcWGS_vs_GSAvs_35BM.jpeg)
 
 ### fatty acid
 
-```{r, fig.height=6, fig.width=12}
+```{r, fig.height=6, fig.width=12,eval = F}
 
 nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_fa,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
@@ -714,10 +727,12 @@ nbm.plot
 
 ```
 
+![](Figures/SupFig2_lcWGS_vs_GSAvs_FattyAcid_traits.jpeg)
+
 
 ### PPP
 
-```{r, fig.height=6, fig.width=12}
+```{r, fig.height=6, fig.width=12, eval = F}
 
 nbm.plot = ggplot(data = melted.both[ melted.both$variable %in% traits_ppp,], aes(x = GSAv2, y = LPS)) +
   facet_wrap(~Trait,  ncol= 6, labeller = labeller(Trait = function(x) str_wrap(x, width = 20))) + 
@@ -740,12 +755,13 @@ nbm.plot
 
 ```
 
+![](Figures/SupFig2_lcWGS_vs_GSAvs_PPP.jpeg)
 
 
 ### per person plot
 
 
-```{r, fig.height=16, fig.width=12}
+```{r, fig.height=16, fig.width=12, eval = F}
 
 
 
@@ -770,18 +786,22 @@ person.plot
 
 ```
 
+![](Figures/SupFig2_lcWGS_vs_GSAvs_per_person.jpeg)
 
 # Find correlation outliers
 
-```{r,fig.width= 12, fig.height=8}
+```{r,fig.width= 12, fig.height=4, eval = F}
 result = data.frame(result)
 
-ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correlation < 0.95), "variable"],], aes(x = GSAv2, y = LPS)) + 
+g.outliers = ggplot(data = melted.SALSA[melted.SALSA$variable %in% result[which(result$correlation < 0.9), "variable"],], aes(x = GSAv2, y = LPS)) + 
   geom_point(size = 0.1) + 
   facet_wrap(~variable, ncol = 4) + 
   xlim(-3,3) + ylim(-3,3)
 
+ggsave("Figures/outlier_traits_correlation_between_lcWGS_vs_GSA.jpeg", g.outliers, width = 12, height = 4)
 ```
+
+![](Figures/outlier_traits_correlation_between_lcWGS_vs_GSA.jpeg)
 
 # PGS correlation without MHC region
 
