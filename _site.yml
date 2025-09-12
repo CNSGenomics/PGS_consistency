@@ -17,7 +17,12 @@ navbar:
       href: 4_LowPassSeq.html
     - text: "Benchmarking"
       href: 7_Benchmarking.html
-
+    - text: "PGS Consistency"
+      href: 5_Consistency.html
+    - text: "Effect of Imputation Panel"
+      href: 10_Imputation_Panel_effect.html
+    - text: "Effect of SNP Missing"
+      href: 6_MissingSNP.html
 
 output:
   html_document:

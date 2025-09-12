@@ -10,7 +10,6 @@
 
 
 
-<meta name="date" content="2025-06-20" />
 
 <title>Consistency of PGS from different platforms and batches</title>
 
@@ -39,8 +38,6 @@
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/pagedtable-1.1/css/pagedtable.css" rel="stylesheet" />
 <script src="site_libs/pagedtable-1.1/js/pagedtable.js"></script>
-<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
-<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -331,37 +328,34 @@ div.tocify {
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
-  <a href="index.html">Intro</a>
+  <a href="index.html">Introduction</a>
 </li>
 <li>
   <a href="0_PredictorPrep.html">Predictors</a>
 </li>
 <li>
-  <a href="1_GRP_ChipData.html">GRP_ChipData</a>
+  <a href="1_GRP_ChipData.html">HSU Data</a>
 </li>
 <li>
-  <a href="2_QIMR_ChipData.html">QIMR_ChipData</a>
+  <a href="2_QIMR_ChipData.html">QIMR Data</a>
 </li>
 <li>
-  <a href="3_WGS.html">WGS</a>
+  <a href="3_WGS.html">WGS data</a>
 </li>
 <li>
-  <a href="4_LowPassSeq.html">LowPass</a>
-</li>
-<li>
-  <a href="5_Consistency.html">Consistency</a>
-</li>
-<li>
-  <a href="10_Imputation_Panel_effect.html">Imputation Panel</a>
-</li>
-<li>
-  <a href="6_MissingSNP.html">MissingSNP</a>
-</li>
-<li>
-  <a href="11_convert_function.html">Convert_function</a>
+  <a href="4_LowPassSeq.html">lcWGS data</a>
 </li>
 <li>
   <a href="7_Benchmarking.html">Benchmarking</a>
+</li>
+<li>
+  <a href="5_Consistency.html">PGS Consistency</a>
+</li>
+<li>
+  <a href="10_Imputation_Panel_effect.html">Effect of Imputation Panel</a>
+</li>
+<li>
+  <a href="6_MissingSNP.html">Effect of SNP Missing</a>
 </li>
       </ul>
     </div><!--/.nav-collapse -->
@@ -382,14 +376,17 @@ div.tocify {
 
 <h1 class="title toc-ignore">Consistency of PGS from different platforms
 and batches</h1>
-<h4 class="date">20 June 2025</h4>
 
 </div>
 
 
-<div id="prepare-trait-list" class="section level1" number="1">
-<h1><span class="header-section-number">1</span> prepare trait list</h1>
-<p>We selected 129 traits to do the analysis. Each analysis will take
+<p><br> <br> <br></p>
+<div id="data-input" class="section level1" number="1">
+<h1><span class="header-section-number">1</span> Data Input</h1>
+<div id="prepare-trait-list" class="section level2" number="1.1">
+<h2><span class="header-section-number">1.1</span> prepare trait
+list</h2>
+<p>We selected 115 traits to do the analysis. Each analysis will take
 some of them as examples to put in the main figure, and separate the
 last of them into 5 groups to put in sup figures.</p>
 <pre class="r"><code>predictor.list = read.csv(&quot;Tables/SupTable2_Predictors.csv&quot;)
@@ -401,14 +398,12 @@ traits_quanti = predictor.list[which(predictor.list$Group == &quot;Quantitative&
 traits_35bm   = predictor.list[which(predictor.list$Group == &quot;Biomarker&quot;),&quot;Predictor&quot;]
 traits_pfa   = predictor.list[which(predictor.list$Group == &quot;Protein and Fatty Acid&quot;),&quot;Predictor&quot;]</code></pre>
 </div>
-<div id="input-benchmark-data" class="section level1" number="2">
-<h1><span class="header-section-number">2</span> input benchmark
-data</h1>
-<p>We will use the European samples in the 2and3 batch of Lifelines
-data. The data was imputed using HRC imputation panel in house.</p>
-<pre class="r"><code>#prs.bench.norm = read.csv(&quot;Data/LL/LifeLines2and3_Eur_140_traits_GCTB_PRS_self_standardized.csv&quot;, row.names = 1)
-#prs.bench.norm = read.csv(&quot;Data/LL/UGLI1_all_141_traits_GCTB_PRS.csv&quot;, row.names = 1)
-prs.bench.norm = read.csv(&quot;Data/LL/LifeLines1_Eur_140_traits_GCTB_PRS_self_standardized.csv&quot;)
+<div id="input-benchmark-data" class="section level2" number="1.2">
+<h2><span class="header-section-number">1.2</span> input benchmark
+data</h2>
+<p>We used the European samples in the batch 1 of Lifelines data. The
+data was imputed using HRC imputation panel in house.</p>
+<pre class="r"><code>prs.bench.norm = read.csv(&quot;Data/LL/LifeLines1_Eur_140_traits_GCTB_PRS_self_standardized.csv&quot;)
 
 ## extract used traits
 prs.bench.norm = prs.bench.norm[,colnames(prs.bench.norm)%in%included_traits]
@@ -421,11 +416,15 @@ melted.prs$value = as.numeric(melted.prs$value)
 ## add the Label of phenotype
 melted.prs$Trait = predictor.list[match(melted.prs$variable, predictor.list$Predictor),&quot;Label&quot;]</code></pre>
 </div>
-<div id="input-control-data" class="section level1" number="3">
-<h1><span class="header-section-number">3</span> input control data</h1>
+<div id="input-control-data" class="section level2" number="1.3">
+<h2><span class="header-section-number">1.3</span> input control
+data</h2>
+<p>We will use the standardized data for better visualization.</p>
 <pre class="r"><code>control.prs = read.csv(&quot;Data/LL_standardized_PGS_of_CEPH_samples.csv&quot;, row.names =1)</code></pre>
-<div id="rename-chips" class="section level2" number="3.1">
-<h2><span class="header-section-number">3.1</span> rename chips</h2>
+</div>
+<div id="rename-chips" class="section level2" number="1.4">
+<h2><span class="header-section-number">1.4</span> rename chips</h2>
+<p>We defined shorter chip name to replace the long names.</p>
 <pre class="r"><code>control.prs = control.prs  %&gt;%
   mutate(Array = recode(Chip,
     &quot;UQVn1_20032937X379897&quot; = &quot;GSAv3+MD+UQv1&quot;,
@@ -439,27 +438,28 @@ melted.prs$Trait = predictor.list[match(melted.prs$variable, predictor.list$Pred
     &quot;LowPass&quot; = &quot;lcWGS&quot;
   ))</code></pre>
 </div>
-<div id="selected-3-samples-with-hrc-and-melt" class="section level2"
-number="3.2">
-<h2><span class="header-section-number">3.2</span> selected 3 samples
-with HRC and melt</h2>
-<p>Analysis on this page won’t need TopMed imputed data. We will also
-only keep the samples useful in this comparison.</p>
+<div id="selected-samples" class="section level2" number="1.5">
+<h2><span class="header-section-number">1.5</span> selected samples</h2>
+<p>In this analysis, we will use 3 CEPH control samples, and only use
+the data imputed with HRC panel.</p>
 <pre class="r"><code>## exclude the TopMed imputed data
 control.prs = data.frame(control.prs[which(control.prs$imputation_panel != &quot;TopMedr3&quot; ), ])
-
 ## exclude none important control samples 
 control.prs = control.prs[control.prs$Study_ID%in% c(&quot;NA06997&quot;, &quot;NA07029&quot;, &quot;NA10861&quot;),]
-
 ## drop sample levels
 control.prs$Study_ID = factor(control.prs$Study_ID , levels = unique(control.prs$Study_ID ))
-
+## save a full copy for different analysis
 full.control.prs = control.prs</code></pre>
 </div>
-<div id="set-up-wgs-verticle-lines" class="section level2" number="3.3">
-<h2><span class="header-section-number">3.3</span> Set up WGS verticle
+</div>
+<div id="prepare-data-for-plot" class="section level1" number="2">
+<h1><span class="header-section-number">2</span> Prepare data for
+plot</h1>
+<div id="set-up-wgs-verticle-lines" class="section level2" number="2.1">
+<h2><span class="header-section-number">2.1</span> Set up WGS verticle
 lines</h2>
-<pre class="r"><code># set the position of the vertical line as WGS data
+<pre class="r"><code>control.prs = full.control.prs
+# set the position of the vertical line as WGS data
 data.vert = control.prs[which(control.prs$Chip ==&quot;WGS&quot;), which(colnames(control.prs)%in%c(included_traits ,&quot;Study_ID&quot; ))]
 
 row.names(data.vert) = data.vert$Study_ID
@@ -470,63 +470,43 @@ data.vert$variable = row.names(data.vert)
 data.vert$Trait = predictor.list[match(data.vert$variable, predictor.list$Predictor),&quot;Label&quot;]</code></pre>
 </div>
 <div id="add-position-for-control-samples" class="section level2"
-number="3.4">
-<h2><span class="header-section-number">3.4</span> add position for
+number="2.2">
+<h2><span class="header-section-number">2.2</span> add position for
 control samples</h2>
 <pre class="r"><code>## exclude WGS from data
 control.prs = control.prs[which(control.prs$Chip != &quot;WGS&quot;),]
-
 control.prs &lt;- control.prs %&gt;%
   group_by(Study_ID) %&gt;%
   mutate(y.position = row_number()-1) %&gt;%
   ungroup()  # Ungroup to return to normal data frame structure
-
 control.prs$y.position = 20*(control.prs$y.position)
 control.prs = data.frame(control.prs)</code></pre>
 </div>
-<div id="melt" class="section level2" number="3.5">
-<h2><span class="header-section-number">3.5</span> melt</h2>
+<div id="melt-the-data" class="section level2" number="2.3">
+<h2><span class="header-section-number">2.3</span> melt the data</h2>
 <pre class="r"><code>melted.control.prs = reshape2::melt(control.prs, 
                           id.vars =colnames(control.prs)[!colnames(control.prs)%in%included_traits], 
                           measure.vars = colnames(control.prs)[colnames(control.prs)%in%included_traits])
-
 melted.control.prs$value = as.numeric(melted.control.prs$value)
-
-
 ## add the phenotype 
 ## use phenotype name instead of predictor name 
 melted.control.prs$Trait = predictor.list[match(melted.control.prs$variable, predictor.list$Predictor),&quot;Label&quot;]</code></pre>
 </div>
 </div>
-<div id="figure-2" class="section level1" number="4">
-<h1><span class="header-section-number">4</span> Figure 2</h1>
+<div id="figure-2" class="section level1" number="3">
+<h1><span class="header-section-number">3</span> Figure 2</h1>
 <div id="fig2a.-height-with-only-2-controls-in-all-chips"
-class="section level2" number="4.1">
-<h2><span class="header-section-number">4.1</span> Fig2A. Height with
+class="section level2" number="3.1">
+<h2><span class="header-section-number">3.1</span> Fig2A. Height with
 only 2 controls in all chips</h2>
 <pre class="r"><code>sample.levels = c(&quot;NA07029&quot;, &quot;NA06997&quot;)
-
 array.levels = c(    
-   &quot;GSAv2&quot;,
-   &quot;GSAv3+MD&quot;,
-   &quot;GSAv3+MD+UQv1&quot;, 
-   &quot;ACov2&quot;,  
-   &quot;I610(QIMRB)&quot;, 
-   &quot;I660(QIMRB)&quot;,
-   &quot;lcWGS&quot;)
-
-
-color7 =c(&quot;#EA3323&quot;, &quot;#17BECF&quot;, 
-          &quot;#A12F9A&quot;, &quot;#4FAD5B&quot;,  
-          &quot;#F28500&quot;, &quot;#2F6EBA&quot;, 
-          &quot;#E31A88&quot;)
-
+   &quot;GSAv2&quot;, &quot;GSAv3+MD&quot;, &quot;GSAv3+MD+UQv1&quot;, 
+   &quot;ACov2&quot;, &quot;I610(QIMRB)&quot;, &quot;I660(QIMRB)&quot;, &quot;lcWGS&quot;)
+color7 =c(&quot;#EA3323&quot;, &quot;#17BECF&quot;, &quot;#A12F9A&quot;, &quot;#4FAD5B&quot;, &quot;#F28500&quot;, &quot;#2F6EBA&quot;, &quot;#E31A88&quot;)
 
 ht.melted.prs = melted.prs[which(melted.prs$variable ==&quot;Height_03&quot;  ),]
-
 ht.data.vert = data.vert[which(data.vert$variable == &quot;Height_03&quot;),]
-
-
 ht.melted.control.prs = melted.control.prs[which(melted.control.prs$variable == &quot;Height_03&quot; &amp; melted.control.prs$Study_ID %in% sample.levels ),]
 ht.melted.control.prs$Study_ID = factor(ht.melted.control.prs$Study_ID , levels = sample.levels)
 ht.melted.control.prs$Array &lt;- factor(ht.melted.control.prs$Array, levels = rev(array.levels) )
@@ -553,48 +533,39 @@ theme(
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab(&quot;PGS in SD unit&quot;) + ylab(&quot;&quot;)  
 
-ht.g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-10-1.png" width="768" /></p>
-<pre class="r"><code>#ggsave(ht.g.hist,  filename = &quot;Figures/Fig2.A.PGS_benchmarking_height.png&quot;, width = 8, height = 3)
-#ggsave(ht.g.hist,  filename = &quot;Figures/Fig2.A.PGS_benchmarking_height_with_LL.pdf&quot;, width =8, height = 4)
-#</code></pre>
-<p><img src="Figures/Fig2.A.PGS_benchmarking_height.png" /></p>
+ht.g.hist
+
+#ggsave(ht.g.hist,  filename = &quot;Figures/Fig2.A.PGS_benchmarking_height_with_LL.png&quot;, width = 8, height = 3)
+#ggsave(ht.g.hist,  filename = &quot;Figures/Fig2.A.PGS_benchmarking_height_with_LL.pdf&quot;, width =8, height = 4)</code></pre>
+<p><img src="Figures/Fig2.A.PGS_benchmarking_height_with_LL.png" /></p>
 </div>
 <div id="fig2b.-consistency-plot-with-8-traits." class="section level2"
-number="4.2">
-<h2><span class="header-section-number">4.2</span> Fig2B. Consistency
+number="3.2">
+<h2><span class="header-section-number">3.2</span> Fig2B. Consistency
 plot with 8 traits.</h2>
+<p>We chose eight traits to display in main figure.</p>
 <p>First row: BMI, PUFA (remove met-d) LDL cholesterol, brown hair</p>
 <p>Second row Ulcerative colitis, coronary artery disease, Alzheimer,
 Celiac</p>
 <pre class="r"><code>## define list
-example.traits = c(  &quot;BMI_02&quot;, &quot;UKB_FA_2022_met.d.PUFA&quot;, &quot;UKB_35BM_2021_LDL_direct_adjstatins&quot;,   &quot;HairColor_01&quot;, 
-                     &quot;UC_01&quot;,   &quot;CAD_01&quot;,   &quot;Alzheimer_02&quot;, &quot;CeliacDisease_01&quot;)
-
-
+example.traits = c(  &quot;BMI_02&quot;, &quot;UKB_FA_2022_met.d.PUFA&quot;, &quot;UKB_35BM_2021_LDL_direct_adjstatins&quot;, &quot;HairColor_01&quot;, 
+                     &quot;UC_01&quot;, &quot;CAD_01&quot;, &quot;Alzheimer_02&quot;, &quot;CeliacDisease_01&quot;)
 
 ## select traits in data and  simplify to only HRC imputed for control samples
 example.melted.prs = melted.prs[which(melted.prs$variable %in% example.traits ),]
-
 example.data.vert = data.vert[which(data.vert$variable %in% example.traits ),]
-
 example.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in% example.traits &amp;
                                       melted.control.prs$Array %in% array.levels &amp;
                                       melted.control.prs$Study_ID %in% sample.levels  ),]
 
-
 # set trait order
 order.matching.table = unique(example.melted.control.prs [,c(&quot;variable&quot;, &quot;Trait&quot;)])
 trait.order.for.plot = order.matching.table[match(example.traits, order.matching.table$variable), &quot;Trait&quot;]
-
-
 example.melted.prs$Trait = factor(example.melted.prs$Trait, levels = trait.order.for.plot)
 example.data.vert$Trait = factor(example.data.vert$Trait, levels =trait.order.for.plot)
 example.melted.control.prs$Trait = factor(example.melted.control.prs$Trait, levels = trait.order.for.plot)
 
-
 ## set array order
-
 example.melted.control.prs$Array &lt;- factor(example.melted.control.prs$Array, levels = rev(array.levels) )</code></pre>
 <pre class="r"><code>example.g.hist = ggplot() + 
   geom_histogram(data =example.melted.prs , aes(x = value ), bins = 150, fill = &quot;light grey&quot;, color = &quot;light grey&quot;) + 
@@ -618,27 +589,52 @@ theme(
     values = c( color7)) + 
   scale_y_continuous(labels = NULL, breaks = NULL)  # Remove both labels and ticks
 
-
-
-example.g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-12-1.png" width="768" /></p>
-<pre class="r"><code>#
-#ggsave(example.g.hist,
-#       filename = &quot;Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.png&quot;, width = 10, height = 4)
-#
-#
-## ggsave(example.g.hist,
-##        filename = &quot;Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.pdf&quot;, width = 10, height = 4)</code></pre>
+example.g.hist
+#ggsave(example.g.hist, filename = &quot;Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.png&quot;, width = 10, height = 4)</code></pre>
+<p><img src="Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.png" /></p>
 </div>
-<div id="fig2c.-slop-figure" class="section level2" number="4.3">
-<h2><span class="header-section-number">4.3</span> Fig2C. slop
+<div id="fig2c.-slop-figure" class="section level2" number="3.3">
+<h2><span class="header-section-number">3.3</span> Fig2C. slop
 figure</h2>
-<pre><code>##      GSA 
-## 1.004117</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre class="r"><code>## slop figure example
+example.test.data = data.frame(
+   WGS = as.vector(as.matrix(
+     full.control.prs[which(
+     full.control.prs$Study_ID ==&quot;NA07029&quot; &amp; 
+     full.control.prs$Chip ==&quot;WGS&quot;),]
+     )),
+  GSA = as.vector(as.matrix(
+    full.control.prs[which(full.control.prs$Study_ID ==&quot;NA07029&quot; &amp; 
+  full.control.prs$Batch ==&quot;GRP_B11_GSResults_20220225_MD&quot; ),]
+  )),
+  Predictor = colnames(full.control.prs)
+  )
+
+example.test.data$GSA = as.numeric( example.test.data$GSA)
+example.test.data$WGS = as.numeric( example.test.data$WGS)
+example.test.data = example.test.data[example.test.data$Predictor %in% predictor.list$Predictor,]
+example.test.data$Trait = predictor.list[match(example.test.data$Predictor, predictor.list$Predictor),&quot;Label&quot;]
+
+example.plot.gsa.vs.wgs = ggplot(data = example.test.data, aes(x = GSA, y = WGS)) + 
+  geom_point(shape = 21, color =  &quot;#2F6EBA&quot;) + 
+  geom_abline() +    
+  theme_classic(base_size = 14) +
+theme(
+   panel.grid.major = element_blank(), # Remove major grid lines
+    panel.grid.minor = element_blank(), # Remove minor grid lines
+    plot.title = element_text(hjust = 0.5),
+    axis.title = element_text(),
+    axis.text = element_text(size = 12)
+  ) +
+  labs( #title = &quot;PGS of 129 traits from \n 1 example genotyping event&quot;, 
+       x = &quot;PGS derived from GSAv3+MD&quot;, 
+       y = &quot;PGS derived from WGS&quot;)
+example.plot.gsa.vs.wgs
+#ggsave(example.plot.gsa.vs.wgs, file = &quot;Figures/Fig2.C.example.plot.gsa.vs.wgs.png&quot;, width = 3, height = 3)</code></pre>
+<p><img src="Figures/Fig2.C.example.plot.gsa.vs.wgs.png" /></p>
 </div>
-<div id="output-fig2-combined" class="section level2" number="4.4">
-<h2><span class="header-section-number">4.4</span> output Fig2
+<div id="output-fig2-combined" class="section level2" number="3.4">
+<h2><span class="header-section-number">3.4</span> output Fig2
 combined</h2>
 <pre class="r"><code># Add manual tags to each plot
 pA &lt;- ht.g.hist + labs(tag = &quot;A&quot;)
@@ -650,26 +646,22 @@ top_row &lt;- pA + pC + plot_layout(widths = c(6, 5))
 final_plot &lt;- top_row / pB + plot_layout(heights = c(4, 4))
 
 # Display
-final_plot</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-14-1.png" width="1056" /></p>
-<pre class="r"><code>ggsave(plot = final_plot, filename = &quot;Figures/Fig2_combined_benchmarked_with_LL1.jpeg&quot;, width = 11, height = 8)</code></pre>
+final_plot
+ggsave(plot = final_plot, filename = &quot;Figures/Fig2_combined_benchmarked_with_LL1.jpeg&quot;, width = 11, height = 8)</code></pre>
+<p><img src="Figures/Fig2_combined_benchmarked_with_LL1.jpeg" /></p>
 </div>
 </div>
-<div id="sup-figure-1" class="section level1" number="5">
-<h1><span class="header-section-number">5</span> Sup Figure 1</h1>
-<div id="binary-traits" class="section level2" number="5.1">
-<h2><span class="header-section-number">5.1</span> Binary traits</h2>
-<pre class="r"><code>#nbm.list = predictor.list[(grep( &quot;Lot_Traits&quot;, predictor.list$Location, invert = T) ),&quot;Predictor&quot;]
-
-nbm.list = traits_binary
-#nbm.list = nbm.list[!nbm.list %in% example.traits]
-
+<div id="sup-figure-1" class="section level1" number="4">
+<h1><span class="header-section-number">4</span> Sup Figure 1</h1>
+<p>Same plot are made for all the 115 traits, and grouped in five
+groups.</p>
+<div id="binary-traits" class="section level2" number="4.1">
+<h2><span class="header-section-number">4.1</span> Binary traits</h2>
+<pre class="r"><code>nbm.list = traits_binary
 nbm.melted.prs = melted.prs[which(melted.prs$variable %in%nbm.list ),]
 nbm.data.vert = data.vert[which(data.vert$variable  %in%nbm.list ),]
 nbm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%nbm.list &amp; melted.control.prs$Study_ID %in% sample.levels),]
-
 nbm.melted.control.prs$y.position = nbm.melted.control.prs$y.position/2
-
 nbm.melted.control.prs$Array = factor(nbm.melted.control.prs$Array, levels = rev(array.levels))
 
 g.hist = ggplot() + 
@@ -695,25 +687,19 @@ theme(
   scale_shape_manual(name = &quot;CEPH Individuals&quot;, values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab(&quot;PGS in SD unit&quot;) + ylab(&quot;&quot;)  
-
+# ggsave(g.hist,   filename = (&quot;Figures/SupFig1A.PGS_benchmarking_binary_traits.jpeg&quot;), width = 12, height = 14)
 g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-15-1.png" width="1152" /></p>
-<pre class="r"><code>ggsave(g.hist,   filename = (&quot;Figures/SupFig1A.PGS_benchmarking_binary_traits.jpeg&quot;), width = 12, height = 14)
-#</code></pre>
+<p><img
+src="Figures/SupFig1A.PGS_benchmarking_binary_traits.jpeg" /></p>
 </div>
-<div id="quantitative-traits" class="section level2" number="5.2">
-<h2><span class="header-section-number">5.2</span> Quantitative
+<div id="quantitative-traits" class="section level2" number="4.2">
+<h2><span class="header-section-number">4.2</span> Quantitative
 traits</h2>
 <pre class="r"><code>nbm.list = traits_quanti
-#nbm.list = nbm.list[!nbm.list %in% example.traits]
-
 nbm.melted.prs = melted.prs[which(melted.prs$variable %in%nbm.list ),]
 nbm.data.vert = data.vert[which(data.vert$variable  %in%nbm.list ),]
 nbm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%nbm.list &amp; melted.control.prs$Study_ID %in% sample.levels),]
-
-
 nbm.melted.control.prs$y.position = nbm.melted.control.prs$y.position/2
-
 nbm.melted.control.prs$Array = factor(nbm.melted.control.prs$Array, levels = rev(array.levels))
 
 g.hist = ggplot() + 
@@ -739,29 +725,19 @@ theme(
   scale_shape_manual(name = &quot;CEPH Individuals&quot;, values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab(&quot;PGS in SD unit&quot;) + ylab(&quot;&quot;)  
-
+#ggsave(g.hist,   filename = (&quot;Figures/SupFig1B.PGS_benchmarking_quantitative_traits.jpeg&quot;), width = 12, height = 10)
 g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-16-1.png" width="1152" /></p>
-<pre class="r"><code>ggsave(g.hist,   filename = (&quot;Figures/SupFig1B.PGS_benchmarking_quantitative_traits.jpeg&quot;), width = 12, height = 10)
-#</code></pre>
+<p><img
+src="Figures/SupFig1B.PGS_benchmarking_quantitative_traits.jpeg" /></p>
 </div>
-<div id="ukb-biomarkers" class="section level2" number="5.3">
-<h2><span class="header-section-number">5.3</span> UKB Biomarkers</h2>
+<div id="ukb-biomarkers" class="section level2" number="4.3">
+<h2><span class="header-section-number">4.3</span> UKB Biomarkers</h2>
 <pre class="r"><code>bm.list = traits_35bm
-
-#bm.list = bm.list[!bm.list %in% example.traits]
-
-
 bm.melted.prs = melted.prs[which(melted.prs$variable %in%bm.list ),]
 bm.data.vert = data.vert[which(data.vert$variable  %in%bm.list ),]
 bm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%bm.list &amp; melted.control.prs$Study_ID %in% sample.levels),]
-
 bm.melted.control.prs$y.position = bm.melted.control.prs$y.position/2
-
 bm.melted.control.prs$Array = factor(bm.melted.control.prs$Array, levels = rev(array.levels))
-
-
-
 g.hist = ggplot() + 
   geom_histogram(data =bm.melted.prs , aes(x = value ), bins = 350, fill = &quot;light grey&quot;, color = &quot;light grey&quot;) + 
   facet_wrap(~Trait,  ncol= 5) + 
@@ -785,28 +761,18 @@ theme(
   scale_shape_manual(name = &quot;CEPH Individuals&quot;, values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab(&quot;PGS in SD unit&quot;) + ylab(&quot;&quot;)  
-
+#ggsave(g.hist,   filename = paste0(&quot;Figures/SupFig1C.PGS_benchmarking_35BM_traits.jpeg&quot;), width = 12, height = 14)
 g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-17-1.png" width="1152" /></p>
-<pre class="r"><code>ggsave(g.hist,   filename = paste0(&quot;Figures/SupFig1D.PGS_benchmarking_35BM_traits.jpeg&quot;), width = 12, height = 14)</code></pre>
+<p><img src="Figures/SupFig1C.PGS_benchmarking_35BM_traits.jpeg" /></p>
 </div>
-<div id="fatty-acids" class="section level2" number="5.4">
-<h2><span class="header-section-number">5.4</span> Fatty Acids</h2>
+<div id="fatty-acids" class="section level2" number="4.4">
+<h2><span class="header-section-number">4.4</span> Fatty Acids</h2>
 <pre class="r"><code>bm.list = traits_pfa[grep(&quot;UKB_FA_2022&quot;, traits_pfa)]
-
-#bm.list = bm.list[!bm.list %in% example.traits]
-
-
 bm.melted.prs = melted.prs[which(melted.prs$variable %in%bm.list ),]
 bm.data.vert = data.vert[which(data.vert$variable  %in%bm.list ),]
 bm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%bm.list &amp; melted.control.prs$Study_ID %in% sample.levels),]
-
 bm.melted.control.prs$y.position = bm.melted.control.prs$y.position/2
-
 bm.melted.control.prs$Array = factor(bm.melted.control.prs$Array, levels = rev(array.levels))
-
-
-
 g.hist = ggplot() + 
   geom_histogram(data =bm.melted.prs , aes(x = value ), bins = 250, fill = &quot;light grey&quot;, color = &quot;light grey&quot;) + 
   facet_wrap(~Trait,  ncol= 5) + 
@@ -830,30 +796,19 @@ theme(
   scale_shape_manual(name = &quot;CEPH Individuals&quot;, values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab(&quot;PGS in SD unit&quot;) + ylab(&quot;&quot;)  
-
+#ggsave(g.hist,   filename = (&quot;Figures/SupFig1D.PGS_benchmarking_FF_traits.jpeg&quot;), width = 12, height = 7.5)
 g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-18-1.png" width="1152" /></p>
-<pre class="r"><code>ggsave(g.hist,   filename = (&quot;Figures/SupFig1C.PGS_benchmarking_FF_traits.jpeg&quot;), width = 12, height = 7.5)
-#</code></pre>
+<p><img src="Figures/SupFig1D.PGS_benchmarking_FF_traits.jpeg" /></p>
 </div>
-<div id="proteomics-traits" class="section level2" number="5.5">
-<h2><span class="header-section-number">5.5</span> proteomics
+<div id="proteomics-traits" class="section level2" number="4.5">
+<h2><span class="header-section-number">4.5</span> proteomics
 traits</h2>
 <pre class="r"><code>bm.list = traits_pfa[grep(&quot;UKB_PPP&quot;, traits_pfa)]
-
-#bm.list = bm.list[!bm.list %in% example.traits]
-
-
 bm.melted.prs = melted.prs[which(melted.prs$variable %in%bm.list ),]
 bm.data.vert = data.vert[which(data.vert$variable  %in%bm.list ),]
 bm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%bm.list &amp; melted.control.prs$Study_ID %in% sample.levels),]
-
 bm.melted.control.prs$y.position = bm.melted.control.prs$y.position/2
-
 bm.melted.control.prs$Array = factor(bm.melted.control.prs$Array, levels = rev(array.levels))
-
-
-
 g.hist = ggplot() + 
   geom_histogram(data =bm.melted.prs , aes(x = value ), bins = 250, fill = &quot;light grey&quot;, color = &quot;light grey&quot;) + 
   facet_wrap(~Trait,  ncol= 5) + 
@@ -877,32 +832,35 @@ theme(
   scale_shape_manual(name = &quot;CEPH Individuals&quot;, values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab(&quot;&quot;) + ylab(&quot;&quot;)  
-
+#ggsave(g.hist,   filename = (&quot;Figures/SupFig1E.PGS_benchmarking_pp_traits.jpeg&quot;), width = 12, height = 4.5)
 g.hist</code></pre>
-<p><img src="5_Consistency_files/figure-html/unnamed-chunk-19-1.png" width="1152" /></p>
-<pre class="r"><code>ggsave(g.hist,   filename = (&quot;Figures/SupFig1C.PGS_benchmarking_pp_traits.jpeg&quot;), width = 12, height = 4.5)
-#</code></pre>
+<p><img src="Figures/SupFig1E.PGS_benchmarking_pp_traits.jpeg" /></p>
 </div>
 </div>
-<div id="slop-comparing-to-wgs" class="section level1" number="6">
-<h1><span class="header-section-number">6</span> slop comparing to
+<div id="slop-of-comparing-to-wgs" class="section level1" number="5">
+<h1><span class="header-section-number">5</span> slop of comparing to
 WGS</h1>
-<pre class="r"><code>square &lt;- function(x){return(x^2)}
-
-control.prs = full.control.prs
-
+<div id="calculate-slop-for-each-event" class="section level2"
+number="5.1">
+<h2><span class="header-section-number">5.1</span> calculate slop for
+each event</h2>
+<pre class="r"><code>control.prs = full.control.prs
 control.prs$Slope = NA
 control.prs$Rsquare = NA
+square &lt;- function(x){return(x^2)}
 
 for (i in 1:nrow(control.prs)){
 test.data = data.frame(x=as.vector(as.matrix(( control.prs[i, (colnames(control.prs)%in%included_traits) ]))),
                        WGS = as.vector(as.matrix(( control.prs[which(control.prs$Chip == &quot;WGS&quot; &amp;
-                          control.prs$Study_ID == control.prs[i,&quot;Study_ID&quot;]  ), (colnames(control.prs)%in%included_traits) ]))) 
-                       )
-
+                          control.prs$Study_ID == control.prs[i,&quot;Study_ID&quot;]  ), (colnames(control.prs)%in%included_traits) ]))))
 control.prs[i,&quot;Slope&quot;]  = coef(lm(formula = WGS ~ x, data = test.data))[2]
 control.prs[i,&quot;Rsquare&quot;]  = square(cor(test.data$WGS, test.data$x))
 }</code></pre>
+</div>
+<div id="summarize-on-sample-and-chip-level" class="section level2"
+number="5.2">
+<h2><span class="header-section-number">5.2</span> summarize on sample
+and chip level</h2>
 <pre class="r"><code>slope.summary = control.prs %&gt;% 
   filter(Chip != &quot;WGS&quot;) %&gt;%   
   group_by(Study_ID, Chip) %&gt;% 
@@ -916,17 +874,18 @@ control.prs[i,&quot;Rsquare&quot;]  = square(cor(test.data$WGS, test.data$x))
     sd_Rsquare = sd(Rsquare, na.rm = TRUE) ,
     min_Rsquare = min(Rsquare, na.rm = TRUE),
     max_Rsquare = max(Rsquare, na.rm = TRUE)
-) %&gt;%
-  arrange(Study_ID, -count, Chip)
-
-
+) %&gt;% arrange(Study_ID, -count, Chip)
 write.csv(slope.summary, paste(&quot;Tables/original_table_for_summarizing_slope_and_Rsquare.csv&quot;) )
 slope.summary</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Chip"],"name":[2],"type":["chr"],"align":["left"]},{"label":["count"],"name":[3],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[11],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"UQVn1_20032937X379897","3":"33","4":"0.9976272","5":"0.0021963693","6":"0.9933789","7":"1.0017991","8":"0.9899593","9":"4.555360e-04","10":"0.9891100","11":"0.9910831"},{"1":"NA06997","2":"GSAMD-24v3-0-EA_20034606","3":"29","4":"0.9985584","5":"0.0017783194","6":"0.9947926","7":"1.0033707","8":"0.9901046","9":"5.144632e-04","10":"0.9891552","11":"0.9916296"},{"1":"NA06997","2":"GSAMD-24v2-0_20024620","3":"3","4":"1.0040112","5":"0.0026826818","6":"1.0012975","7":"1.0066618","8":"0.9901936","9":"1.505719e-04","10":"0.9900243","11":"0.9903125"},{"1":"NA06997","2":"Axiom_HGCoV2_1.r3","3":"1","4":"1.0000009","5":"NA","6":"1.0000009","7":"1.0000009","8":"0.9913667","9":"NA","10":"0.9913667","11":"0.9913667"},{"1":"NA06997","2":"LowPass","3":"1","4":"0.9930674","5":"NA","6":"0.9930674","7":"0.9930674","8":"0.9428518","9":"NA","10":"0.9428518","11":"0.9428518"},{"1":"NA07029","2":"GSAMD-24v3-0-EA_20034606","3":"21","4":"1.0026784","5":"0.0013359334","6":"0.9998824","7":"1.0049904","8":"0.9967188","9":"2.891936e-04","10":"0.9959288","11":"0.9970283"},{"1":"NA07029","2":"UQVn1_20032937X379897","3":"20","4":"1.0026342","5":"0.0021739068","6":"0.9985644","7":"1.0075089","8":"0.9968501","9":"2.666449e-04","10":"0.9964468","11":"0.9976849"},{"1":"NA07029","2":"GSAMD-24v2-0_20024620","3":"3","4":"1.0103656","5":"0.0009558793","6":"1.0094565","7":"1.0113622","8":"0.9951358","9":"2.894235e-05","10":"0.9951128","11":"0.9951683"},{"1":"NA07029","2":"Human610-Quadv1_B","3":"3","4":"0.9919242","5":"0.0013404570","6":"0.9903773","7":"0.9927431","8":"0.9759842","9":"6.405940e-05","10":"0.9759308","11":"0.9760552"},{"1":"NA07029","2":"Axiom_HGCoV2_1.r3","3":"1","4":"0.9999920","5":"NA","6":"0.9999920","7":"0.9999920","8":"0.9988009","9":"NA","10":"0.9988009","11":"0.9988009"},{"1":"NA07029","2":"Human660W-Quad_v1_C","3":"1","4":"0.9925689","5":"NA","6":"0.9925689","7":"0.9925689","8":"0.9758518","9":"NA","10":"0.9758518","11":"0.9758518"},{"1":"NA10861","2":"GSAMD-24v1-0_20011747","3":"106","4":"0.9957874","5":"0.0015760501","6":"0.9910135","7":"1.0000486","8":"0.9922456","9":"4.249521e-04","10":"0.9902035","11":"0.9936701"},{"1":"NA10861","2":"Human370v1_C","3":"4","4":"0.9925727","5":"0.0002834579","6":"0.9921945","7":"0.9928788","8":"0.9894355","9":"1.692601e-04","10":"0.9892116","11":"0.9895670"},{"1":"NA10861","2":"Human610-Quadv1_B","3":"2","4":"0.9923985","5":"0.0002749806","6":"0.9922040","7":"0.9925929","8":"0.9895275","9":"6.258424e-05","10":"0.9894832","11":"0.9895717"},{"1":"NA10861","2":"Human660W-Quad_v1_C","3":"2","4":"0.9930672","5":"0.0019032620","6":"0.9917214","7":"0.9944130","8":"0.9898332","9":"5.130319e-04","10":"0.9894705","11":"0.9901960"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Chip"],"name":[2],"type":["chr"],"align":["left"]},{"label":["count"],"name":[3],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[11],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"UQVn1_20032937X379897","3":"33","4":"0.9976272","5":"0.0021963693","6":"0.9933789","7":"1.0017991","8":"0.9899593","9":"4.555360e-04","10":"0.9891100","11":"0.9910831","_rn_":"1"},{"1":"NA06997","2":"GSAMD-24v3-0-EA_20034606","3":"29","4":"0.9985584","5":"0.0017783194","6":"0.9947926","7":"1.0033707","8":"0.9901046","9":"5.144632e-04","10":"0.9891552","11":"0.9916296","_rn_":"2"},{"1":"NA06997","2":"GSAMD-24v2-0_20024620","3":"3","4":"1.0040112","5":"0.0026826818","6":"1.0012975","7":"1.0066618","8":"0.9901936","9":"1.505719e-04","10":"0.9900243","11":"0.9903125","_rn_":"3"},{"1":"NA06997","2":"Axiom_HGCoV2_1.r3","3":"1","4":"1.0000009","5":"NA","6":"1.0000009","7":"1.0000009","8":"0.9913667","9":"NA","10":"0.9913667","11":"0.9913667","_rn_":"4"},{"1":"NA06997","2":"LowPass","3":"1","4":"0.9930674","5":"NA","6":"0.9930674","7":"0.9930674","8":"0.9428518","9":"NA","10":"0.9428518","11":"0.9428518","_rn_":"5"},{"1":"NA07029","2":"GSAMD-24v3-0-EA_20034606","3":"21","4":"1.0026784","5":"0.0013359334","6":"0.9998824","7":"1.0049904","8":"0.9967188","9":"2.891936e-04","10":"0.9959288","11":"0.9970283","_rn_":"6"},{"1":"NA07029","2":"UQVn1_20032937X379897","3":"20","4":"1.0026342","5":"0.0021739068","6":"0.9985644","7":"1.0075089","8":"0.9968501","9":"2.666449e-04","10":"0.9964468","11":"0.9976849","_rn_":"7"},{"1":"NA07029","2":"GSAMD-24v2-0_20024620","3":"3","4":"1.0103656","5":"0.0009558793","6":"1.0094565","7":"1.0113622","8":"0.9951358","9":"2.894235e-05","10":"0.9951128","11":"0.9951683","_rn_":"8"},{"1":"NA07029","2":"Human610-Quadv1_B","3":"3","4":"0.9919242","5":"0.0013404570","6":"0.9903773","7":"0.9927431","8":"0.9759842","9":"6.405940e-05","10":"0.9759308","11":"0.9760552","_rn_":"9"},{"1":"NA07029","2":"Axiom_HGCoV2_1.r3","3":"1","4":"0.9999920","5":"NA","6":"0.9999920","7":"0.9999920","8":"0.9988009","9":"NA","10":"0.9988009","11":"0.9988009","_rn_":"10"},{"1":"NA07029","2":"Human660W-Quad_v1_C","3":"1","4":"0.9925689","5":"NA","6":"0.9925689","7":"0.9925689","8":"0.9758518","9":"NA","10":"0.9758518","11":"0.9758518","_rn_":"11"},{"1":"NA10861","2":"GSAMD-24v1-0_20011747","3":"106","4":"0.9957874","5":"0.0015760501","6":"0.9910135","7":"1.0000486","8":"0.9922456","9":"4.249521e-04","10":"0.9902035","11":"0.9936701","_rn_":"12"},{"1":"NA10861","2":"Human370v1_C","3":"4","4":"0.9925727","5":"0.0002834579","6":"0.9921945","7":"0.9928788","8":"0.9894355","9":"1.692601e-04","10":"0.9892116","11":"0.9895670","_rn_":"13"},{"1":"NA10861","2":"Human610-Quadv1_B","3":"2","4":"0.9923985","5":"0.0002749806","6":"0.9922040","7":"0.9925929","8":"0.9895275","9":"6.258424e-05","10":"0.9894832","11":"0.9895717","_rn_":"14"},{"1":"NA10861","2":"Human660W-Quad_v1_C","3":"2","4":"0.9930672","5":"0.0019032620","6":"0.9917214","7":"0.9944130","8":"0.9898332","9":"5.130319e-04","10":"0.9894705","11":"0.9901960","_rn_":"15"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+</div>
+<div id="summarize-on-sample-level" class="section level2" number="5.3">
+<h2><span class="header-section-number">5.3</span> summarize on sample
+level</h2>
 <pre class="r"><code>slope.summary2 = control.prs %&gt;% 
   filter(Chip != &quot;WGS&quot;) %&gt;%   
   group_by(Study_ID) %&gt;% 
@@ -939,14 +898,18 @@ slope.summary</code></pre>
     mean_Rsquare = round(mean(Rsquare, na.rm = TRUE), 4) ,
     sd_Rsquare = round(sd(Rsquare, na.rm = TRUE), 4) ,
     min_Rsquare = round(min(Rsquare, na.rm = TRUE),4),
-    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)
-)
+    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4))
 slope.summary2</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["count"],"name":[2],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"67","3":"0.9983","4":"0.0025","5":"0.9931","6":"1.0067","7":"0.9894","8":"0.0058","9":"0.9429","10":"0.9916"},{"1":"NA07029","2":"49","3":"1.0022","4":"0.0040","5":"0.9904","6":"1.0114","7":"0.9950","8":"0.0058","9":"0.9759","10":"0.9988"},{"1":"NA10861","2":"114","3":"0.9956","4":"0.0017","5":"0.9910","6":"1.0000","7":"0.9921","8":"0.0008","9":"0.9892","10":"0.9937"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["count"],"name":[2],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[3],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"67","3":"0.9983","4":"0.0025","5":"0.9931","6":"1.0067","7":"0.9894","8":"0.0058","9":"0.9429","10":"0.9916","_rn_":"1"},{"1":"NA07029","2":"49","3":"1.0022","4":"0.0040","5":"0.9904","6":"1.0114","7":"0.9950","8":"0.0058","9":"0.9759","10":"0.9988","_rn_":"2"},{"1":"NA10861","2":"114","3":"0.9956","4":"0.0017","5":"0.9910","6":"1.0000","7":"0.9921","8":"0.0008","9":"0.9892","10":"0.9937","_rn_":"3"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+</div>
+<div id="summarize-on-sample-and-platform-level" class="section level2"
+number="5.4">
+<h2><span class="header-section-number">5.4</span> summarize on sample
+and platform level</h2>
 <pre class="r"><code>slope.summary3 = control.prs %&gt;% 
   filter(Chip != &quot;WGS&quot;) %&gt;%   
   group_by(Study_ID, Platform) %&gt;% 
@@ -959,15 +922,18 @@ slope.summary2</code></pre>
     mean_Rsquare = round(mean(Rsquare, na.rm = TRUE), 4) ,
     sd_Rsquare = round(sd(Rsquare, na.rm = TRUE), 4) ,
     min_Rsquare = round(min(Rsquare, na.rm = TRUE),4),
-    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)
-)
-
+    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4))
 slope.summary3</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Platform"],"name":[2],"type":["chr"],"align":["left"]},{"label":["count"],"name":[3],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[11],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"1xWGS_pilot","3":"1","4":"0.9931","5":"NA","6":"0.9931","7":"0.9931","8":"0.9429","9":"NA","10":"0.9429","11":"0.9429"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"66","4":"0.9984","5":"0.0024","6":"0.9934","7":"1.0067","8":"0.9901","9":"5e-04","10":"0.9891","11":"0.9916"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"45","4":"1.0031","5":"0.0026","6":"0.9986","7":"1.0114","8":"0.9967","9":"6e-04","10":"0.9951","11":"0.9988"},{"1":"NA07029","2":"QIMR","3":"4","4":"0.9921","5":"0.0011","6":"0.9904","7":"0.9927","8":"0.9760","9":"1e-04","10":"0.9759","11":"0.9761"},{"1":"NA10861","2":"QIMR","3":"114","4":"0.9956","5":"0.0017","6":"0.9910","7":"1.0000","8":"0.9921","9":"8e-04","10":"0.9892","11":"0.9937"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Platform"],"name":[2],"type":["chr"],"align":["left"]},{"label":["count"],"name":[3],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[4],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[11],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"1xWGS_pilot","3":"1","4":"0.9931","5":"NA","6":"0.9931","7":"0.9931","8":"0.9429","9":"NA","10":"0.9429","11":"0.9429","_rn_":"1"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"66","4":"0.9984","5":"0.0024","6":"0.9934","7":"1.0067","8":"0.9901","9":"5e-04","10":"0.9891","11":"0.9916","_rn_":"2"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"45","4":"1.0031","5":"0.0026","6":"0.9986","7":"1.0114","8":"0.9967","9":"6e-04","10":"0.9951","11":"0.9988","_rn_":"3"},{"1":"NA07029","2":"QIMR","3":"4","4":"0.9921","5":"0.0011","6":"0.9904","7":"0.9927","8":"0.9760","9":"1e-04","10":"0.9759","11":"0.9761","_rn_":"4"},{"1":"NA10861","2":"QIMR","3":"114","4":"0.9956","5":"0.0017","6":"0.9910","7":"1.0000","8":"0.9921","9":"8e-04","10":"0.9892","11":"0.9937","_rn_":"5"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
+</div>
+<div id="summarize-on-sample-platform-and-chip-level"
+class="section level2" number="5.5">
+<h2><span class="header-section-number">5.5</span> summarize on sample,
+platform and chip level</h2>
 <pre class="r"><code>slope.summary4 = control.prs %&gt;% 
   filter(Chip != &quot;WGS&quot;) %&gt;%   
   group_by(Study_ID, Platform, Chip) %&gt;% 
@@ -980,442 +946,15 @@ slope.summary3</code></pre>
     mean_Rsquare = round(mean(Rsquare, na.rm = TRUE), 4) ,
     sd_Rsquare = round(sd(Rsquare, na.rm = TRUE), 4) ,
     min_Rsquare = round(min(Rsquare, na.rm = TRUE),4),
-    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)
-)
+    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)) %&gt;% 
+  arrange(Study_ID, Chip,Platform)
 
-slope.summary4 %&gt;% arrange(Study_ID, Chip,Platform)</code></pre>
+slope.summary4</code></pre>
 <div data-pagedtable="false">
 <script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Platform"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Chip"],"name":[3],"type":["chr"],"align":["left"]},{"label":["count"],"name":[4],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[12],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"Inhouse_RT_GRP","3":"Axiom_HGCoV2_1.r3","4":"1","5":"1.0000","6":"NA","7":"1.0000","8":"1.0000","9":"0.9914","10":"NA","11":"0.9914","12":"0.9914"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"GSAMD-24v2-0_20024620","4":"3","5":"1.0040","6":"0.0027","7":"1.0013","8":"1.0067","9":"0.9902","10":"2e-04","11":"0.9900","12":"0.9903"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"GSAMD-24v3-0-EA_20034606","4":"29","5":"0.9986","6":"0.0018","7":"0.9948","8":"1.0034","9":"0.9901","10":"5e-04","11":"0.9892","12":"0.9916"},{"1":"NA06997","2":"1xWGS_pilot","3":"LowPass","4":"1","5":"0.9931","6":"NA","7":"0.9931","8":"0.9931","9":"0.9429","10":"NA","11":"0.9429","12":"0.9429"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"UQVn1_20032937X379897","4":"33","5":"0.9976","6":"0.0022","7":"0.9934","8":"1.0018","9":"0.9900","10":"5e-04","11":"0.9891","12":"0.9911"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"Axiom_HGCoV2_1.r3","4":"1","5":"1.0000","6":"NA","7":"1.0000","8":"1.0000","9":"0.9988","10":"NA","11":"0.9988","12":"0.9988"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"GSAMD-24v2-0_20024620","4":"3","5":"1.0104","6":"0.0010","7":"1.0095","8":"1.0114","9":"0.9951","10":"0e+00","11":"0.9951","12":"0.9952"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"GSAMD-24v3-0-EA_20034606","4":"21","5":"1.0027","6":"0.0013","7":"0.9999","8":"1.0050","9":"0.9967","10":"3e-04","11":"0.9959","12":"0.9970"},{"1":"NA07029","2":"QIMR","3":"Human610-Quadv1_B","4":"3","5":"0.9919","6":"0.0013","7":"0.9904","8":"0.9927","9":"0.9760","10":"1e-04","11":"0.9759","12":"0.9761"},{"1":"NA07029","2":"QIMR","3":"Human660W-Quad_v1_C","4":"1","5":"0.9926","6":"NA","7":"0.9926","8":"0.9926","9":"0.9759","10":"NA","11":"0.9759","12":"0.9759"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"UQVn1_20032937X379897","4":"20","5":"1.0026","6":"0.0022","7":"0.9986","8":"1.0075","9":"0.9969","10":"3e-04","11":"0.9964","12":"0.9977"},{"1":"NA10861","2":"QIMR","3":"GSAMD-24v1-0_20011747","4":"106","5":"0.9958","6":"0.0016","7":"0.9910","8":"1.0000","9":"0.9922","10":"4e-04","11":"0.9902","12":"0.9937"},{"1":"NA10861","2":"QIMR","3":"Human370v1_C","4":"4","5":"0.9926","6":"0.0003","7":"0.9922","8":"0.9929","9":"0.9894","10":"2e-04","11":"0.9892","12":"0.9896"},{"1":"NA10861","2":"QIMR","3":"Human610-Quadv1_B","4":"2","5":"0.9924","6":"0.0003","7":"0.9922","8":"0.9926","9":"0.9895","10":"1e-04","11":"0.9895","12":"0.9896"},{"1":"NA10861","2":"QIMR","3":"Human660W-Quad_v1_C","4":"2","5":"0.9931","6":"0.0019","7":"0.9917","8":"0.9944","9":"0.9898","10":"5e-04","11":"0.9895","12":"0.9902"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
+{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["chr"],"align":["left"]},{"label":["Platform"],"name":[2],"type":["chr"],"align":["left"]},{"label":["Chip"],"name":[3],"type":["chr"],"align":["left"]},{"label":["count"],"name":[4],"type":["int"],"align":["right"]},{"label":["mean_slope"],"name":[5],"type":["dbl"],"align":["right"]},{"label":["sd_slope"],"name":[6],"type":["dbl"],"align":["right"]},{"label":["min_slope"],"name":[7],"type":["dbl"],"align":["right"]},{"label":["max_slope"],"name":[8],"type":["dbl"],"align":["right"]},{"label":["mean_Rsquare"],"name":[9],"type":["dbl"],"align":["right"]},{"label":["sd_Rsquare"],"name":[10],"type":["dbl"],"align":["right"]},{"label":["min_Rsquare"],"name":[11],"type":["dbl"],"align":["right"]},{"label":["max_Rsquare"],"name":[12],"type":["dbl"],"align":["right"]}],"data":[{"1":"NA06997","2":"Inhouse_RT_GRP","3":"Axiom_HGCoV2_1.r3","4":"1","5":"1.0000","6":"NA","7":"1.0000","8":"1.0000","9":"0.9914","10":"NA","11":"0.9914","12":"0.9914","_rn_":"1"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"GSAMD-24v2-0_20024620","4":"3","5":"1.0040","6":"0.0027","7":"1.0013","8":"1.0067","9":"0.9902","10":"2e-04","11":"0.9900","12":"0.9903","_rn_":"2"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"GSAMD-24v3-0-EA_20034606","4":"29","5":"0.9986","6":"0.0018","7":"0.9948","8":"1.0034","9":"0.9901","10":"5e-04","11":"0.9892","12":"0.9916","_rn_":"3"},{"1":"NA06997","2":"1xWGS_pilot","3":"LowPass","4":"1","5":"0.9931","6":"NA","7":"0.9931","8":"0.9931","9":"0.9429","10":"NA","11":"0.9429","12":"0.9429","_rn_":"4"},{"1":"NA06997","2":"Inhouse_RT_GRP","3":"UQVn1_20032937X379897","4":"33","5":"0.9976","6":"0.0022","7":"0.9934","8":"1.0018","9":"0.9900","10":"5e-04","11":"0.9891","12":"0.9911","_rn_":"5"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"Axiom_HGCoV2_1.r3","4":"1","5":"1.0000","6":"NA","7":"1.0000","8":"1.0000","9":"0.9988","10":"NA","11":"0.9988","12":"0.9988","_rn_":"6"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"GSAMD-24v2-0_20024620","4":"3","5":"1.0104","6":"0.0010","7":"1.0095","8":"1.0114","9":"0.9951","10":"0e+00","11":"0.9951","12":"0.9952","_rn_":"7"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"GSAMD-24v3-0-EA_20034606","4":"21","5":"1.0027","6":"0.0013","7":"0.9999","8":"1.0050","9":"0.9967","10":"3e-04","11":"0.9959","12":"0.9970","_rn_":"8"},{"1":"NA07029","2":"QIMR","3":"Human610-Quadv1_B","4":"3","5":"0.9919","6":"0.0013","7":"0.9904","8":"0.9927","9":"0.9760","10":"1e-04","11":"0.9759","12":"0.9761","_rn_":"9"},{"1":"NA07029","2":"QIMR","3":"Human660W-Quad_v1_C","4":"1","5":"0.9926","6":"NA","7":"0.9926","8":"0.9926","9":"0.9759","10":"NA","11":"0.9759","12":"0.9759","_rn_":"10"},{"1":"NA07029","2":"Inhouse_RT_GRP","3":"UQVn1_20032937X379897","4":"20","5":"1.0026","6":"0.0022","7":"0.9986","8":"1.0075","9":"0.9969","10":"3e-04","11":"0.9964","12":"0.9977","_rn_":"11"},{"1":"NA10861","2":"QIMR","3":"GSAMD-24v1-0_20011747","4":"106","5":"0.9958","6":"0.0016","7":"0.9910","8":"1.0000","9":"0.9922","10":"4e-04","11":"0.9902","12":"0.9937","_rn_":"12"},{"1":"NA10861","2":"QIMR","3":"Human370v1_C","4":"4","5":"0.9926","6":"0.0003","7":"0.9922","8":"0.9929","9":"0.9894","10":"2e-04","11":"0.9892","12":"0.9896","_rn_":"13"},{"1":"NA10861","2":"QIMR","3":"Human610-Quadv1_B","4":"2","5":"0.9924","6":"0.0003","7":"0.9922","8":"0.9926","9":"0.9895","10":"1e-04","11":"0.9895","12":"0.9896","_rn_":"14"},{"1":"NA10861","2":"QIMR","3":"Human660W-Quad_v1_C","4":"2","5":"0.9931","6":"0.0019","7":"0.9917","8":"0.9944","9":"0.9898","10":"5e-04","11":"0.9895","12":"0.9902","_rn_":"15"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
   </script>
 </div>
-</div>
-<div id="count-control-samples" class="section level1" number="7">
-<h1><span class="header-section-number">7</span> Count control
-samples</h1>
-<pre class="r"><code>control.prs = full.control.prs</code></pre>
-<div id="count-based-on-both-imputation-panel-and-chip"
-class="section level2" number="7.1">
-<h2><span class="header-section-number">7.1</span> count based on both
-imputation panel and chip</h2>
-<pre class="r"><code>tech.table = as.data.frame(table(control.prs[,c(&quot;Study_ID&quot;, &quot;Technical&quot;)])) %&gt;% filter(Freq &gt; 0)%&gt;% arrange(desc(Freq))
-
-tech.table[which(tech.table$Study_ID == &quot;NA10861&quot;),]</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Technical"],"name":[2],"type":["fct"],"align":["left"]},{"label":["Freq"],"name":[3],"type":["int"],"align":["right"]}],"data":[{"1":"NA10861","2":"GSAMD-24v1-0_20011747_HRCr1.1","3":"106","_rn_":"1"},{"1":"NA10861","2":"Human370v1_C_HRCr1.1","3":"4","_rn_":"6"},{"1":"NA10861","2":"Human610-Quadv1_B_HRCr1.1","3":"2","_rn_":"10"},{"1":"NA10861","2":"Human660W-Quad_v1_C_HRCr1.1","3":"2","_rn_":"11"},{"1":"NA10861","2":"WGS_HRCr1.1","3":"1","_rn_":"18"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>tech.table[which(tech.table$Study_ID == &quot;NA06997&quot;),]</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Technical"],"name":[2],"type":["fct"],"align":["left"]},{"label":["Freq"],"name":[3],"type":["int"],"align":["right"]}],"data":[{"1":"NA06997","2":"UQVn1_20032937X379897_HRCr1.1","3":"33","_rn_":"2"},{"1":"NA06997","2":"GSAMD-24v3-0-EA_20034606_HRCr1.1","3":"29","_rn_":"3"},{"1":"NA06997","2":"GSAMD-24v2-0_20024620_HRCr1.1","3":"3","_rn_":"7"},{"1":"NA06997","2":"Axiom_HGCoV2_1.r3_HRCr1.1","3":"1","_rn_":"12"},{"1":"NA06997","2":"LowPass_HRCr1.1","3":"1","_rn_":"15"},{"1":"NA06997","2":"WGS_HRCr1.1","3":"1","_rn_":"16"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>tech.table[which(tech.table$Study_ID == &quot;NA07029&quot;),]</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":[""],"name":["_rn_"],"type":[""],"align":["left"]},{"label":["Study_ID"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Technical"],"name":[2],"type":["fct"],"align":["left"]},{"label":["Freq"],"name":[3],"type":["int"],"align":["right"]}],"data":[{"1":"NA07029","2":"GSAMD-24v3-0-EA_20034606_HRCr1.1","3":"21","_rn_":"4"},{"1":"NA07029","2":"UQVn1_20032937X379897_HRCr1.1","3":"20","_rn_":"5"},{"1":"NA07029","2":"GSAMD-24v2-0_20024620_HRCr1.1","3":"3","_rn_":"8"},{"1":"NA07029","2":"Human610-Quadv1_B_HRCr1.1","3":"3","_rn_":"9"},{"1":"NA07029","2":"Axiom_HGCoV2_1.r3_HRCr1.1","3":"1","_rn_":"13"},{"1":"NA07029","2":"Human660W-Quad_v1_C_HRCr1.1","3":"1","_rn_":"14"},{"1":"NA07029","2":"WGS_HRCr1.1","3":"1","_rn_":"17"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-</div>
-<div id="sample-across-all-platforms" class="section level2"
-number="7.2">
-<h2><span class="header-section-number">7.2</span> sample across all
-platforms</h2>
-<pre class="r"><code> as.data.frame(table(control.prs[which(control.prs$imputation_panel != &quot;TopMedr3&quot;), &quot;Study_ID&quot;])) %&gt;% filter(Freq &gt; 0) %&gt;% arrange(desc(Freq))</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Var1"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Freq"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"NA10861","2":"115"},{"1":"NA06997","2":"68"},{"1":"NA07029","2":"50"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-</div>
-<div id="sample-across-different-platforms" class="section level2"
-number="7.3">
-<h2><span class="header-section-number">7.3</span> sample across
-different platforms</h2>
-<pre class="r"><code># Create the table and convert it to a data frame
-control_table &lt;- as.data.frame(table(control.prs[which(control.prs$imputation_panel != &quot;TopMedr3&quot;), c(&quot;Platform&quot;, &quot;Study_ID&quot;)]))
-
-# Filter out rows where Freq is 0
-control_table &lt;- control_table %&gt;% filter(Freq &gt; 0) %&gt;% arrange(desc(Freq))
-
-# Display the filtered table using kable
-control_table %&gt;%
-  kable(caption = &quot;Control samples in each Chip&quot;) %&gt;%
-  kable_classic(full_width = F, html_font = &quot;Cambria&quot;)</code></pre>
-<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>
-Control samples in each Chip
-</caption>
-<thead>
-<tr>
-<th style="text-align:left;">
-Platform
-</th>
-<th style="text-align:left;">
-Study_ID
-</th>
-<th style="text-align:right;">
-Freq
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-QIMR
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-114
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Inhouse_RT_GRP
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-66
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Inhouse_RT_GRP
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-45
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-QIMR
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-1xWGS_pilot
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WGS_1000g
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WGS_1000g
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WGS_1000g
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div id="sample-across-different-chips" class="section level2"
-number="7.4">
-<h2><span class="header-section-number">7.4</span> sample across
-different chips</h2>
-<pre class="r"><code># Create the table and convert it to a data frame
-control_table &lt;- as.data.frame(table(control.prs[which(control.prs$imputation_panel != &quot;TopMedr3&quot;), c(&quot;Chip&quot;, &quot;Study_ID&quot;)]))
-
-# Filter out rows where Freq is 0
-control_table &lt;- control_table %&gt;% filter(Freq &gt; 0) %&gt;% arrange(desc(Freq))
-
-# Display the filtered table using kable
-control_table %&gt;%
-  kable(caption = &quot;Control samples in each Chip&quot;) %&gt;%
-  kable_classic(full_width = F, html_font = &quot;Cambria&quot;)</code></pre>
-<table class=" lightable-classic" style="font-family: Cambria; width: auto !important; margin-left: auto; margin-right: auto;">
-<caption>
-Control samples in each Chip
-</caption>
-<thead>
-<tr>
-<th style="text-align:left;">
-Chip
-</th>
-<th style="text-align:left;">
-Study_ID
-</th>
-<th style="text-align:right;">
-Freq
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-GSAMD-24v1-0_20011747
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-106
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-UQVn1_20032937X379897
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-33
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GSAMD-24v3-0-EA_20034606
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-29
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GSAMD-24v3-0-EA_20034606
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-21
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-UQVn1_20032937X379897
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-20
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Human370v1_C
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-4
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GSAMD-24v2-0_20024620
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-GSAMD-24v2-0_20024620
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Human610-Quadv1_B
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-3
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Human610-Quadv1_B
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Human660W-Quad_v1_C
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-2
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Axiom_HGCoV2_1.r3
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-LowPass
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WGS
-</td>
-<td style="text-align:left;">
-NA06997
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Axiom_HGCoV2_1.r3
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-Human660W-Quad_v1_C
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WGS
-</td>
-<td style="text-align:left;">
-NA07029
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-WGS
-</td>
-<td style="text-align:left;">
-NA10861
-</td>
-<td style="text-align:right;">
-1
-</td>
-</tr>
-</tbody>
-</table>
-</div>
-<div id="number-of-batch-per-platform" class="section level2"
-number="7.5">
-<h2><span class="header-section-number">7.5</span> number of batch per
-platform</h2>
-<pre class="r"><code>batches.with.control = as.data.frame(table(control.prs[which(control.prs$imputation_panel != &quot;TopMedr3&quot;),c(&quot;Platform&quot;, &quot;Batch&quot;)]))
-
-batches.with.control &lt;- batches.with.control %&gt;% filter(Freq &gt; 0) %&gt;% arrange(desc(Freq))
-
-data.frame(table(batches.with.control[,c(&quot;Platform&quot;)])) </code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Var1"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Freq"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"1xWGS_pilot","2":"1"},{"1":"Inhouse_RT_GRP","2":"68"},{"1":"QIMR","2":"5"},{"1":"WGS_1000g","2":"1"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<p>Ideally I’m keeping only the controls with over 10 replicates for
-analysis.</p>
-<pre class="r"><code>high.freq.control = as.data.frame(table(control.prs[which(control.prs$imputation_panel != &quot;TopMedr3&quot;), &quot;Study_ID&quot;])) %&gt;% 
-  filter(Freq &gt; 10)
-
-control.prs = control.prs[which(control.prs$Study_ID %in% high.freq.control$Var1),]
-high.freq.control</code></pre>
-<div data-pagedtable="false">
-<script data-pagedtable-source type="application/json">
-{"columns":[{"label":["Var1"],"name":[1],"type":["fct"],"align":["left"]},{"label":["Freq"],"name":[2],"type":["int"],"align":["right"]}],"data":[{"1":"NA06997","2":"68"},{"1":"NA07029","2":"50"},{"1":"NA10861","2":"115"}],"options":{"columns":{"min":{},"max":[10]},"rows":{"min":[10],"max":[10]},"pages":{}}}
-  </script>
-</div>
-<pre class="r"><code>con.in.table2 = control.prs[which(control.prs$Study_ID %in% c(&quot;NA06990&quot;, &quot;NA07023&quot;, &quot;NA07057&quot;) ),]
-
-table(con.in.table2[,c(&quot;Study_ID&quot;, &quot;imputation_panel&quot;,&quot;Batch&quot; )])</code></pre>
-<pre><code>## &lt; table of extent 3 x 0 x 0 &gt;</code></pre>
 </div>
 </div>
 

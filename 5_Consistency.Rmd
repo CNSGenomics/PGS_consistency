@@ -1,6 +1,5 @@
 ---
 title: "Consistency of PGS from different platforms and batches"
-date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
   html_document:
     toc: TRUE
@@ -37,16 +36,19 @@ library(patchwork)
 ```
 
 
+<br>
+<br>
+<br>
 
 
+# Data Input
+## prepare trait list 
 
-# prepare trait list 
-
-We selected 129 traits to do the analysis. 
+We selected 115 traits to do the analysis. 
 Each analysis will take some of them as examples to put in the main figure, and separate the last of them into 5 groups to put in sup figures. 
 
 
-```{r}
+```{r, eval = F}
 
 predictor.list = read.csv("Tables/SupTable2_Predictors.csv")
 included_traits = predictor.list$Predictor
@@ -60,14 +62,12 @@ traits_pfa   = predictor.list[which(predictor.list$Group == "Protein and Fatty A
 ```
 
 
-# input benchmark data
+## input benchmark data
 
-We will use the European samples in the 2and3 batch of Lifelines data. 
+We used the European samples in the batch 1 of Lifelines data. 
 The data was imputed using HRC imputation panel in house. 
 
-```{r}
-#prs.bench.norm = read.csv("Data/LL/LifeLines2and3_Eur_140_traits_GCTB_PRS_self_standardized.csv", row.names = 1)
-#prs.bench.norm = read.csv("Data/LL/UGLI1_all_141_traits_GCTB_PRS.csv", row.names = 1)
+```{r, eval = F}
 prs.bench.norm = read.csv("Data/LL/LifeLines1_Eur_140_traits_GCTB_PRS_self_standardized.csv")
 
 ## extract used traits
@@ -85,18 +85,19 @@ melted.prs$Trait = predictor.list[match(melted.prs$variable, predictor.list$Pred
 
 
 
-# input control data
+## input control data
 
-```{r}
+We will use the standardized data for better visualization. 
+
+```{r, eval = F}
 control.prs = read.csv("Data/LL_standardized_PGS_of_CEPH_samples.csv", row.names =1)
-
 ```
 
 ## rename chips
 
-```{r}
+We defined shorter chip name to replace the long names. 
 
-
+```{r, eval = F}
 control.prs = control.prs  %>%
   mutate(Array = recode(Chip,
     "UQVn1_20032937X379897" = "GSAv3+MD+UQv1",
@@ -109,38 +110,30 @@ control.prs = control.prs  %>%
     "Human660W-Quad_v1_C" = "I660(QIMRB)",
     "LowPass" = "lcWGS"
   ))
-
-
 ```
 
-## selected 3 samples with HRC and melt
+## selected samples
+
+In this analysis, we will use 3 CEPH control samples, and only use the data imputed with HRC panel.
 
 
-Analysis on this page won't need TopMed imputed data. 
-We will also only keep the samples useful in this comparison. 
-
-```{r}
-
+```{r, eval = F}
 ## exclude the TopMed imputed data
 control.prs = data.frame(control.prs[which(control.prs$imputation_panel != "TopMedr3" ), ])
-
 ## exclude none important control samples 
 control.prs = control.prs[control.prs$Study_ID%in% c("NA06997", "NA07029", "NA10861"),]
-
 ## drop sample levels
 control.prs$Study_ID = factor(control.prs$Study_ID , levels = unique(control.prs$Study_ID ))
-
+## save a full copy for different analysis
 full.control.prs = control.prs
-
 ```
-
-
-
+# Prepare data for plot
 
 
 ## Set up WGS verticle lines
 
-```{r, message=FALSE, warning=FALSE}
+```{r, message=FALSE, warning=FALSE, eval = F}
+control.prs = full.control.prs
 # set the position of the vertical line as WGS data
 data.vert = control.prs[which(control.prs$Chip =="WGS"), which(colnames(control.prs)%in%c(included_traits ,"Study_ID" ))]
 
@@ -157,32 +150,25 @@ data.vert$Trait = predictor.list[match(data.vert$variable, predictor.list$Predic
 ## add position for control samples
 
 
-```{r}
-
-
+```{r, eval = F}
 ## exclude WGS from data
 control.prs = control.prs[which(control.prs$Chip != "WGS"),]
-
 control.prs <- control.prs %>%
   group_by(Study_ID) %>%
   mutate(y.position = row_number()-1) %>%
   ungroup()  # Ungroup to return to normal data frame structure
-
 control.prs$y.position = 20*(control.prs$y.position)
 control.prs = data.frame(control.prs)
 ```
 
 
-## melt
+## melt the data
 
-```{r}
+```{r, eval = F}
 melted.control.prs = reshape2::melt(control.prs, 
                           id.vars =colnames(control.prs)[!colnames(control.prs)%in%included_traits], 
                           measure.vars = colnames(control.prs)[colnames(control.prs)%in%included_traits])
-
 melted.control.prs$value = as.numeric(melted.control.prs$value)
-
-
 ## add the phenotype 
 ## use phenotype name instead of predictor name 
 melted.control.prs$Trait = predictor.list[match(melted.control.prs$variable, predictor.list$Predictor),"Label"]
@@ -196,31 +182,16 @@ melted.control.prs$Trait = predictor.list[match(melted.control.prs$variable, pre
 
 ## Fig2A. Height with only 2 controls in all chips
 
-```{r, fig.width=8, fig.height=3}
+```{r, fig.width=8, fig.height=3, eval = F}
 
 sample.levels = c("NA07029", "NA06997")
-
 array.levels = c(    
-   "GSAv2",
-   "GSAv3+MD",
-   "GSAv3+MD+UQv1", 
-   "ACov2",  
-   "I610(QIMRB)", 
-   "I660(QIMRB)",
-   "lcWGS")
-
-
-color7 =c("#EA3323", "#17BECF", 
-          "#A12F9A", "#4FAD5B",  
-          "#F28500", "#2F6EBA", 
-          "#E31A88")
-
+   "GSAv2", "GSAv3+MD", "GSAv3+MD+UQv1", 
+   "ACov2", "I610(QIMRB)", "I660(QIMRB)", "lcWGS")
+color7 =c("#EA3323", "#17BECF", "#A12F9A", "#4FAD5B", "#F28500", "#2F6EBA", "#E31A88")
 
 ht.melted.prs = melted.prs[which(melted.prs$variable =="Height_03"  ),]
-
 ht.data.vert = data.vert[which(data.vert$variable == "Height_03"),]
-
-
 ht.melted.control.prs = melted.control.prs[which(melted.control.prs$variable == "Height_03" & melted.control.prs$Study_ID %in% sample.levels ),]
 ht.melted.control.prs$Study_ID = factor(ht.melted.control.prs$Study_ID , levels = sample.levels)
 ht.melted.control.prs$Array <- factor(ht.melted.control.prs$Array, levels = rev(array.levels) )
@@ -229,7 +200,7 @@ ht.melted.control.prs$y.position = ht.melted.control.prs$y.position/2
 ```
 
 
-```{r, fig.width=8, fig.height=4}
+```{r, fig.width=8, fig.height=4, eval = F}
 
 ht.g.hist = ggplot() + 
   geom_histogram(data =ht.melted.prs , aes(x = value ), bins = 150, fill = "light grey", color = "light grey") + 
@@ -255,20 +226,19 @@ theme(
 
 ht.g.hist
 
-#ggsave(ht.g.hist,  filename = "Figures/Fig2.A.PGS_benchmarking_height.png", width = 8, height = 3)
+#ggsave(ht.g.hist,  filename = "Figures/Fig2.A.PGS_benchmarking_height_with_LL.png", width = 8, height = 3)
 #ggsave(ht.g.hist,  filename = "Figures/Fig2.A.PGS_benchmarking_height_with_LL.pdf", width =8, height = 4)
-#
 
 ```
 
-![](Figures/Fig2.A.PGS_benchmarking_height.png)
+![](Figures/Fig2.A.PGS_benchmarking_height_with_LL.png)
 
 
 
 
 ## Fig2B. Consistency plot with 8 traits. 
 
-
+We chose eight traits to display in main figure. 
 
 First row:
 BMI, PUFA (remove met-d) LDL cholesterol, brown hair
@@ -277,43 +247,33 @@ Second row
 Ulcerative colitis, coronary artery disease, Alzheimer, Celiac
 
 
-```{r, fig.width=8, fig.height=3}
-
+```{r, fig.width=8, fig.height=3, eval = F}
 ## define list
-example.traits = c(  "BMI_02", "UKB_FA_2022_met.d.PUFA", "UKB_35BM_2021_LDL_direct_adjstatins",   "HairColor_01", 
-                     "UC_01",   "CAD_01",   "Alzheimer_02", "CeliacDisease_01")
-
-
+example.traits = c(  "BMI_02", "UKB_FA_2022_met.d.PUFA", "UKB_35BM_2021_LDL_direct_adjstatins", "HairColor_01", 
+                     "UC_01", "CAD_01", "Alzheimer_02", "CeliacDisease_01")
 
 ## select traits in data and  simplify to only HRC imputed for control samples
 example.melted.prs = melted.prs[which(melted.prs$variable %in% example.traits ),]
-
 example.data.vert = data.vert[which(data.vert$variable %in% example.traits ),]
-
 example.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in% example.traits &
                                       melted.control.prs$Array %in% array.levels &
                                       melted.control.prs$Study_ID %in% sample.levels  ),]
 
-
 # set trait order
 order.matching.table = unique(example.melted.control.prs [,c("variable", "Trait")])
 trait.order.for.plot = order.matching.table[match(example.traits, order.matching.table$variable), "Trait"]
-
-
 example.melted.prs$Trait = factor(example.melted.prs$Trait, levels = trait.order.for.plot)
 example.data.vert$Trait = factor(example.data.vert$Trait, levels =trait.order.for.plot)
 example.melted.control.prs$Trait = factor(example.melted.control.prs$Trait, levels = trait.order.for.plot)
 
-
 ## set array order
-
 example.melted.control.prs$Array <- factor(example.melted.control.prs$Array, levels = rev(array.levels) )
 
 ```
 
 
 
-```{r, fig.width=8, fig.height=3}
+```{r, fig.width=8, fig.height=3, eval = F}
 
 example.g.hist = ggplot() + 
   geom_histogram(data =example.melted.prs , aes(x = value ), bins = 150, fill = "light grey", color = "light grey") + 
@@ -337,54 +297,35 @@ theme(
     values = c( color7)) + 
   scale_y_continuous(labels = NULL, breaks = NULL)  # Remove both labels and ticks
 
-
-
 example.g.hist
-
-#
-#ggsave(example.g.hist,
-#       filename = "Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.png", width = 10, height = 4)
-#
-#
-## ggsave(example.g.hist,
-##        filename = "Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.pdf", width = 10, height = 4)
-
-
+#ggsave(example.g.hist, filename = "Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.png", width = 10, height = 4)
 ```
 
+![](Figures/Fig2.B.PGS_benchmarking_Fig2B_8_traits.png)
 
 ## Fig2C. slop figure
 
 
 
-```{r, eval = T, echo = F}
+```{r, eval = F}
 ## slop figure example
 example.test.data = data.frame(
-  
    WGS = as.vector(as.matrix(
      full.control.prs[which(
      full.control.prs$Study_ID =="NA07029" & 
      full.control.prs$Chip =="WGS"),]
      )),
-  
   GSA = as.vector(as.matrix(
     full.control.prs[which(full.control.prs$Study_ID =="NA07029" & 
   full.control.prs$Batch =="GRP_B11_GSResults_20220225_MD" ),]
   )),
-  
   Predictor = colnames(full.control.prs)
-  
   )
 
- example.test.data$GSA = as.numeric( example.test.data$GSA)
- example.test.data$WGS = as.numeric( example.test.data$WGS)
-
+example.test.data$GSA = as.numeric( example.test.data$GSA)
+example.test.data$WGS = as.numeric( example.test.data$WGS)
 example.test.data = example.test.data[example.test.data$Predictor %in% predictor.list$Predictor,]
-
 example.test.data$Trait = predictor.list[match(example.test.data$Predictor, predictor.list$Predictor),"Label"]
-
-coef(lm(formula = WGS~GSA, data = example.test.data))[2]
-
 
 example.plot.gsa.vs.wgs = ggplot(data = example.test.data, aes(x = GSA, y = WGS)) + 
   geom_point(shape = 21, color =  "#2F6EBA") + 
@@ -400,31 +341,16 @@ theme(
   labs( #title = "PGS of 129 traits from \n 1 example genotyping event", 
        x = "PGS derived from GSAv3+MD", 
        y = "PGS derived from WGS")
-
-
-
-  
 example.plot.gsa.vs.wgs
-
-#
-#example.plot.gsa.vs.wgs +
-#  geom_text(aes(label = Trait), vjust = -1, hjust = 1, size = 2)+ 
-#  labs(title = paste0("r2 = ", round((cor( example.test.data$GSA, example.test.data$WGS ))^2, digits = 3)))
-#
-#
-#ggsave(example.plot.gsa.vs.wgs +
-#  geom_text(aes(label = Trait), vjust = -1, hjust = 1, size = 2), file = "Figures/example.plot.gsa.vs.wgs_labelled.png", width = 5, height = 5)
-#
 #ggsave(example.plot.gsa.vs.wgs, file = "Figures/Fig2.C.example.plot.gsa.vs.wgs.png", width = 3, height = 3)
-#
+
 ```
 
+![](Figures/Fig2.C.example.plot.gsa.vs.wgs.png)
 
 ## output Fig2 combined
 
-```{r, fig.width=11, fig.height=8}
-
-
+```{r, fig.width=11, fig.height=8, eval = F}
 # Add manual tags to each plot
 pA <- ht.g.hist + labs(tag = "A")
 pC <- example.plot.gsa.vs.wgs + labs(tag = "C")
@@ -436,30 +362,23 @@ final_plot <- top_row / pB + plot_layout(heights = c(4, 4))
 
 # Display
 final_plot
-
 ggsave(plot = final_plot, filename = "Figures/Fig2_combined_benchmarked_with_LL1.jpeg", width = 11, height = 8)
-
-
 ```
+
+![](Figures/Fig2_combined_benchmarked_with_LL1.jpeg)
 
 # Sup Figure 1
 
+Same plot are made for all the 115 traits, and grouped in five groups.
+
 ## Binary traits
 
-```{r,  fig.width=12, fig.height= 12, warning=F, message=F}
-
-
-#nbm.list = predictor.list[(grep( "Lot_Traits", predictor.list$Location, invert = T) ),"Predictor"]
-
+```{r,  fig.width=12, fig.height= 12, warning=F, message=F, eval = F}
 nbm.list = traits_binary
-#nbm.list = nbm.list[!nbm.list %in% example.traits]
-
 nbm.melted.prs = melted.prs[which(melted.prs$variable %in%nbm.list ),]
 nbm.data.vert = data.vert[which(data.vert$variable  %in%nbm.list ),]
 nbm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%nbm.list & melted.control.prs$Study_ID %in% sample.levels),]
-
 nbm.melted.control.prs$y.position = nbm.melted.control.prs$y.position/2
-
 nbm.melted.control.prs$Array = factor(nbm.melted.control.prs$Array, levels = rev(array.levels))
 
 g.hist = ggplot() + 
@@ -485,32 +404,23 @@ theme(
   scale_shape_manual(name = "CEPH Individuals", values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab("PGS in SD unit") + ylab("")  
-
+# ggsave(g.hist,   filename = ("Figures/SupFig1A.PGS_benchmarking_binary_traits.jpeg"), width = 12, height = 14)
 g.hist
-
-ggsave(g.hist,   filename = ("Figures/SupFig1A.PGS_benchmarking_binary_traits.jpeg"), width = 12, height = 14)
-#
-
 ```
 
   
-
+![](Figures/SupFig1A.PGS_benchmarking_binary_traits.jpeg)
 
 
 ## Quantitative traits
 
-```{r,  fig.width=12, fig.height= 10, warning=F, message=F}
+```{r,  fig.width=12, fig.height= 10, warning=F, message=F, eval = F}
 
 nbm.list = traits_quanti
-#nbm.list = nbm.list[!nbm.list %in% example.traits]
-
 nbm.melted.prs = melted.prs[which(melted.prs$variable %in%nbm.list ),]
 nbm.data.vert = data.vert[which(data.vert$variable  %in%nbm.list ),]
 nbm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%nbm.list & melted.control.prs$Study_ID %in% sample.levels),]
-
-
 nbm.melted.control.prs$y.position = nbm.melted.control.prs$y.position/2
-
 nbm.melted.control.prs$Array = factor(nbm.melted.control.prs$Array, levels = rev(array.levels))
 
 g.hist = ggplot() + 
@@ -536,34 +446,22 @@ theme(
   scale_shape_manual(name = "CEPH Individuals", values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab("PGS in SD unit") + ylab("")  
-
+#ggsave(g.hist,   filename = ("Figures/SupFig1B.PGS_benchmarking_quantitative_traits.jpeg"), width = 12, height = 10)
 g.hist
-
-ggsave(g.hist,   filename = ("Figures/SupFig1B.PGS_benchmarking_quantitative_traits.jpeg"), width = 12, height = 10)
-#
-
 ```
 
+![](Figures/SupFig1B.PGS_benchmarking_quantitative_traits.jpeg)
 
 ## UKB Biomarkers
 
-```{r,  fig.width=12, fig.height= 14, warning=F, message=F}
+```{r,  fig.width=12, fig.height= 14, warning=F, message=F, eval = F}
 
 bm.list = traits_35bm
-
-#bm.list = bm.list[!bm.list %in% example.traits]
-
-
 bm.melted.prs = melted.prs[which(melted.prs$variable %in%bm.list ),]
 bm.data.vert = data.vert[which(data.vert$variable  %in%bm.list ),]
 bm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%bm.list & melted.control.prs$Study_ID %in% sample.levels),]
-
 bm.melted.control.prs$y.position = bm.melted.control.prs$y.position/2
-
 bm.melted.control.prs$Array = factor(bm.melted.control.prs$Array, levels = rev(array.levels))
-
-
-
 g.hist = ggplot() + 
   geom_histogram(data =bm.melted.prs , aes(x = value ), bins = 350, fill = "light grey", color = "light grey") + 
   facet_wrap(~Trait,  ncol= 5) + 
@@ -587,15 +485,12 @@ theme(
   scale_shape_manual(name = "CEPH Individuals", values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab("PGS in SD unit") + ylab("")  
-
+#ggsave(g.hist,   filename = paste0("Figures/SupFig1C.PGS_benchmarking_35BM_traits.jpeg"), width = 12, height = 14)
 g.hist
-
-ggsave(g.hist,   filename = paste0("Figures/SupFig1D.PGS_benchmarking_35BM_traits.jpeg"), width = 12, height = 14)
-
 ```
 
 
-
+![](Figures/SupFig1C.PGS_benchmarking_35BM_traits.jpeg)
 
 
 
@@ -603,23 +498,13 @@ ggsave(g.hist,   filename = paste0("Figures/SupFig1D.PGS_benchmarking_35BM_trait
 
 ## Fatty Acids 
 
-```{r,  fig.width=12, fig.height= 6, warning=F, message=F}
-
+```{r,  fig.width=12, fig.height= 6, warning=F, message=F, eval = F}
 bm.list = traits_pfa[grep("UKB_FA_2022", traits_pfa)]
-
-#bm.list = bm.list[!bm.list %in% example.traits]
-
-
 bm.melted.prs = melted.prs[which(melted.prs$variable %in%bm.list ),]
 bm.data.vert = data.vert[which(data.vert$variable  %in%bm.list ),]
 bm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%bm.list & melted.control.prs$Study_ID %in% sample.levels),]
-
 bm.melted.control.prs$y.position = bm.melted.control.prs$y.position/2
-
 bm.melted.control.prs$Array = factor(bm.melted.control.prs$Array, levels = rev(array.levels))
-
-
-
 g.hist = ggplot() + 
   geom_histogram(data =bm.melted.prs , aes(x = value ), bins = 250, fill = "light grey", color = "light grey") + 
   facet_wrap(~Trait,  ncol= 5) + 
@@ -643,34 +528,24 @@ theme(
   scale_shape_manual(name = "CEPH Individuals", values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab("PGS in SD unit") + ylab("")  
-
+#ggsave(g.hist,   filename = ("Figures/SupFig1D.PGS_benchmarking_FF_traits.jpeg"), width = 12, height = 7.5)
 g.hist
 
-ggsave(g.hist,   filename = ("Figures/SupFig1C.PGS_benchmarking_FF_traits.jpeg"), width = 12, height = 7.5)
-#
-
 ```
+
+![](Figures/SupFig1D.PGS_benchmarking_FF_traits.jpeg)
 
 ## proteomics traits
 
 
-```{r,  fig.width=12, fig.height= 4, warning=F, message=F}
+```{r,  fig.width=12, fig.height= 4, warning=F, message=F, eval = F}
 
 bm.list = traits_pfa[grep("UKB_PPP", traits_pfa)]
-
-#bm.list = bm.list[!bm.list %in% example.traits]
-
-
 bm.melted.prs = melted.prs[which(melted.prs$variable %in%bm.list ),]
 bm.data.vert = data.vert[which(data.vert$variable  %in%bm.list ),]
 bm.melted.control.prs = melted.control.prs[which(melted.control.prs$variable %in%bm.list & melted.control.prs$Study_ID %in% sample.levels),]
-
 bm.melted.control.prs$y.position = bm.melted.control.prs$y.position/2
-
 bm.melted.control.prs$Array = factor(bm.melted.control.prs$Array, levels = rev(array.levels))
-
-
-
 g.hist = ggplot() + 
   geom_histogram(data =bm.melted.prs , aes(x = value ), bins = 250, fill = "light grey", color = "light grey") + 
   facet_wrap(~Trait,  ncol= 5) + 
@@ -694,40 +569,34 @@ theme(
   scale_shape_manual(name = "CEPH Individuals", values = c(16,17) ) +
   scale_y_continuous(labels = NULL, breaks = NULL) + # Remove both labels and ticks
   xlab("") + ylab("")  
-
+#ggsave(g.hist,   filename = ("Figures/SupFig1E.PGS_benchmarking_pp_traits.jpeg"), width = 12, height = 4.5)
 g.hist
-
-ggsave(g.hist,   filename = ("Figures/SupFig1C.PGS_benchmarking_pp_traits.jpeg"), width = 12, height = 4.5)
-#
-
 ```
 
+![](Figures/SupFig1E.PGS_benchmarking_pp_traits.jpeg)
 
+# slop of comparing to WGS
 
-# slop comparing to WGS
+## calculate slop for each event
 
-
-```{r}
-square <- function(x){return(x^2)}
-
+```{r, eval = F}
 control.prs = full.control.prs
-
 control.prs$Slope = NA
 control.prs$Rsquare = NA
+square <- function(x){return(x^2)}
 
 for (i in 1:nrow(control.prs)){
 test.data = data.frame(x=as.vector(as.matrix(( control.prs[i, (colnames(control.prs)%in%included_traits) ]))),
                        WGS = as.vector(as.matrix(( control.prs[which(control.prs$Chip == "WGS" &
-                          control.prs$Study_ID == control.prs[i,"Study_ID"]  ), (colnames(control.prs)%in%included_traits) ]))) 
-                       )
-
+                          control.prs$Study_ID == control.prs[i,"Study_ID"]  ), (colnames(control.prs)%in%included_traits) ]))))
 control.prs[i,"Slope"]  = coef(lm(formula = WGS ~ x, data = test.data))[2]
 control.prs[i,"Rsquare"]  = square(cor(test.data$WGS, test.data$x))
 }
 ```
 
+## summarize on sample and chip level
 
-```{r}
+```{r, eval = F}
 slope.summary = control.prs %>% 
   filter(Chip != "WGS") %>%   
   group_by(Study_ID, Chip) %>% 
@@ -741,16 +610,19 @@ slope.summary = control.prs %>%
     sd_Rsquare = sd(Rsquare, na.rm = TRUE) ,
     min_Rsquare = min(Rsquare, na.rm = TRUE),
     max_Rsquare = max(Rsquare, na.rm = TRUE)
-) %>%
-  arrange(Study_ID, -count, Chip)
-
-
+) %>% arrange(Study_ID, -count, Chip)
 write.csv(slope.summary, paste("Tables/original_table_for_summarizing_slope_and_Rsquare.csv") )
 slope.summary
 ```
 
+```{r, echo = F}
+slope.summary = read.csv("Tables/original_table_for_summarizing_slope_and_Rsquare.csv", row.names = 1)
+slope.summary
+```
 
-```{r}
+## summarize on sample level
+
+```{r, eval = F}
 slope.summary2 = control.prs %>% 
   filter(Chip != "WGS") %>%   
   group_by(Study_ID) %>% 
@@ -763,15 +635,19 @@ slope.summary2 = control.prs %>%
     mean_Rsquare = round(mean(Rsquare, na.rm = TRUE), 4) ,
     sd_Rsquare = round(sd(Rsquare, na.rm = TRUE), 4) ,
     min_Rsquare = round(min(Rsquare, na.rm = TRUE),4),
-    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)
-)
+    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4))
 slope.summary2
 ```
 
 
+```{r, echo = F}
+slope.summary2 = read.csv("Tables/original_table_for_summarizing_slope_and_Rsquare_per_sample.csv", row.names = 1)
+slope.summary2
+```
 
+## summarize on sample and platform level
 
-```{r}
+```{r, eval = F}
 slope.summary3 = control.prs %>% 
   filter(Chip != "WGS") %>%   
   group_by(Study_ID, Platform) %>% 
@@ -784,14 +660,19 @@ slope.summary3 = control.prs %>%
     mean_Rsquare = round(mean(Rsquare, na.rm = TRUE), 4) ,
     sd_Rsquare = round(sd(Rsquare, na.rm = TRUE), 4) ,
     min_Rsquare = round(min(Rsquare, na.rm = TRUE),4),
-    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)
-)
-
+    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4))
 slope.summary3
 ```
 
 
-```{r}
+```{r, echo = F}
+slope.summary3 = read.csv("Tables/original_table_for_summarizing_slope_and_Rsquare_per_sample_lab.csv", row.names = 1)
+slope.summary3
+```
+
+## summarize on sample, platform and chip level
+
+```{r, eval = F}
 slope.summary4 = control.prs %>% 
   filter(Chip != "WGS") %>%   
   group_by(Study_ID, Platform, Chip) %>% 
@@ -804,117 +685,18 @@ slope.summary4 = control.prs %>%
     mean_Rsquare = round(mean(Rsquare, na.rm = TRUE), 4) ,
     sd_Rsquare = round(sd(Rsquare, na.rm = TRUE), 4) ,
     min_Rsquare = round(min(Rsquare, na.rm = TRUE),4),
-    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)
-)
+    max_Rsquare = round(max(Rsquare, na.rm = TRUE),4)) %>% 
+  arrange(Study_ID, Chip,Platform)
 
-slope.summary4 %>% arrange(Study_ID, Chip,Platform)
+slope.summary4
 ```
 
 
-
-
-# Count control samples
-
-```{r}
-control.prs = full.control.prs
-
-```
-
-## count based on both imputation panel and chip
-
-```{r}
-tech.table = as.data.frame(table(control.prs[,c("Study_ID", "Technical")])) %>% filter(Freq > 0)%>% arrange(desc(Freq))
-
-tech.table[which(tech.table$Study_ID == "NA10861"),]
-
-```
-
-```{r}
-
-tech.table[which(tech.table$Study_ID == "NA06997"),]
-
-```
-
-```{r}
-
-tech.table[which(tech.table$Study_ID == "NA07029"),]
-
-```
-
-## sample across all platforms
-
-```{r}
- as.data.frame(table(control.prs[which(control.prs$imputation_panel != "TopMedr3"), "Study_ID"])) %>% filter(Freq > 0) %>% arrange(desc(Freq))
+```{r, echo = F}
+slope.summary4 = read.csv("Tables/original_table_for_summarizing_slope_and_Rsquare_per_sample_lab_chip.csv", row.names = 1)
+slope.summary4
 ```
 
 
-## sample across different platforms
-
-
-
-```{r}
-# Create the table and convert it to a data frame
-control_table <- as.data.frame(table(control.prs[which(control.prs$imputation_panel != "TopMedr3"), c("Platform", "Study_ID")]))
-
-# Filter out rows where Freq is 0
-control_table <- control_table %>% filter(Freq > 0) %>% arrange(desc(Freq))
-
-# Display the filtered table using kable
-control_table %>%
-  kable(caption = "Control samples in each Chip") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
-```
-
-## sample across different chips
-
-```{r}
-# Create the table and convert it to a data frame
-control_table <- as.data.frame(table(control.prs[which(control.prs$imputation_panel != "TopMedr3"), c("Chip", "Study_ID")]))
-
-# Filter out rows where Freq is 0
-control_table <- control_table %>% filter(Freq > 0) %>% arrange(desc(Freq))
-
-# Display the filtered table using kable
-control_table %>%
-  kable(caption = "Control samples in each Chip") %>%
-  kable_classic(full_width = F, html_font = "Cambria")
-
-```
-
-
-## number of batch per platform
-
-```{r}
-batches.with.control = as.data.frame(table(control.prs[which(control.prs$imputation_panel != "TopMedr3"),c("Platform", "Batch")]))
-
-batches.with.control <- batches.with.control %>% filter(Freq > 0) %>% arrange(desc(Freq))
-
-data.frame(table(batches.with.control[,c("Platform")])) 
-```
-
-
-
-
-Ideally I'm keeping only the controls with over 10 replicates for analysis. 
-
-```{r}
-
-high.freq.control = as.data.frame(table(control.prs[which(control.prs$imputation_panel != "TopMedr3"), "Study_ID"])) %>% 
-  filter(Freq > 10)
-
-control.prs = control.prs[which(control.prs$Study_ID %in% high.freq.control$Var1),]
-high.freq.control
-
-```
-
-
-
-```{r}
-
-
-con.in.table2 = control.prs[which(control.prs$Study_ID %in% c("NA06990", "NA07023", "NA07057") ),]
-
-table(con.in.table2[,c("Study_ID", "imputation_panel","Batch" )])
-```
 
 
